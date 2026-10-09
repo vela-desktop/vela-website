@@ -1,0 +1,108 @@
+---
+import SectionLabel from '../SectionLabel.astro';
+import JournalLayout from '../journal/JournalLayout.astro';
+import { getPosts } from '../../lib/posts';
+import { LINKS } from '../../consts';
+
+const posts = await getPosts();
+---
+
+<section id="journal" class="journal" aria-labelledby="journal-title">
+  <div class="container--wide">
+    <header class="journal__masthead">
+      <SectionLabel number="04">Journal</SectionLabel>
+      <div class="journal__titles">
+        <h2 id="journal-title" class="journal__title" data-reveal>
+          The development <em>journal</em>
+        </h2>
+        <p class="journal__intro" data-reveal style="--reveal-delay: 80ms">
+          Long-form notes from Vela’s development: what was built, how it works, and why.
+        </p>
+      </div>
+      {
+        posts.length > 0 && (
+          <nav class="journal__links" aria-label="Journal">
+            <a class="link" href="/blog/">All entries <span class="arrow" aria-hidden="true">→</span></a>
+            <a class="link" href={LINKS.rss}>RSS</a>
+          </nav>
+        )
+      }
+    </header>
+
+    <JournalLayout posts={posts.slice(0, 6)} maxRows={3} />
+  </div>
+</section>
+
+<style>
+  .journal {
+    position: relative;
+    padding-block: var(--space-section);
+    background:
+      linear-gradient(180deg, var(--ink-1), var(--paper) 18rem, var(--paper) calc(100% - 12rem), var(--ink-1));
+  }
+
+  .journal::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    width: min(100% - 2 * var(--gutter), var(--width-page));
+    margin-inline: auto;
+    background: linear-gradient(90deg, transparent, var(--line-bright), transparent);
+  }
+
+  .journal__masthead {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-l);
+    align-items: end;
+    margin-bottom: var(--space-3xl);
+  }
+
+  .journal__masthead > :global(.section-label) {
+    grid-column: 1 / -1;
+  }
+
+  .journal__titles {
+    grid-column: 1 / span 9;
+  }
+
+  .journal__title {
+    font-family: var(--font-serif);
+    font-size: var(--step-6);
+    font-weight: 380;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+  }
+
+  .journal__title em {
+    padding-left: 0.04em;
+    font-style: italic;
+    color: var(--teal);
+  }
+
+  .journal__intro {
+    margin-top: var(--space-m);
+    max-width: 34rem;
+    font-size: var(--step-1);
+    color: var(--text-muted);
+  }
+
+  .journal__links {
+    grid-column: 10 / -1;
+    justify-self: end;
+    display: flex;
+    gap: 1.5rem;
+    font-size: var(--step--1);
+    font-weight: 500;
+  }
+
+  @media (max-width: 64rem) {
+    .journal__titles,
+    .journal__links {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+  }
+</style>

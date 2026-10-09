@@ -1,18 +1,29 @@
 {
   "name": "vela-website",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "description": "The website of Vela, a modern Linux desktop environment — velade.org",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "astro dev",
+    "check": "astro check",
     "build": "astro check && astro build",
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^5.0.0"
+    "@astrojs/markdown-satteri": "^0.4.3",
+    "@astrojs/mdx": "^8.0.3",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.3.8",
+    "github-slugger": "^2.0.0",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.0",
-    "typescript": "^5.0.0"
+    "@astrojs/check": "^0.9.10",
+    "typescript": "^6.0.3"
   }
 }

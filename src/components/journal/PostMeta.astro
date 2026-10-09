@@ -1,0 +1,41 @@
+---
+import { formatDate, readingTime, type Post } from '../../lib/posts';
+
+export interface Props {
+  post: Post;
+  class?: string;
+}
+
+const { post, class: className } = Astro.props;
+const minutes = readingTime(post);
+---
+
+<p class:list={['post-meta', className]}>
+  {post.data.draft && <span class="post-meta__draft">Draft</span>}
+  <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+  <span aria-hidden="true">·</span>
+  <span>{minutes} min read</span>
+</p>
+
+<style>
+  .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+  }
+
+  .post-meta__draft {
+    padding: 0.1rem 0.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--coral);
+    color: var(--ink-0);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+</style>

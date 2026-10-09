@@ -1,19 +1,16 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getCollection } from 'astro:content';
-const posts = (await getCollection('blog', ({ data }) => !data.draft))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
+import Hero from '../components/home/Hero.astro';
+import Desktop from '../components/home/Desktop.astro';
+import Philosophy from '../components/home/Philosophy.astro';
+import Journal from '../components/home/Journal.astro';
+import OpenSource from '../components/home/OpenSource.astro';
 ---
-<Base title="Vela — A modern Linux desktop">
-  <section class="hero">
-    <p class="eyebrow">A desktop environment for Linux</p>
-    <h1>A desktop that feels right.</h1>
-    <p>Vela is an independent Linux desktop environment focused on clarity, performance, and thoughtful details.</p>
-    <a class="action" href="/blog">Follow development →</a>
-  </section>
-  <section>
-    <div class="section-heading"><h2>Development journal</h2><a href="/blog">All posts →</a></div>
-    {posts.length ? <div class="post-list">{posts.map(post => <a href={`/blog/${post.id}/`} class="post"><time datetime={post.data.pubDate.toISOString()}>{post.data.pubDate.toLocaleDateString('en-US', { dateStyle: 'medium' })}</time><h3>{post.data.title}</h3><p>{post.data.description}</p></a>)}</div> : <p>Updates coming soon.</p>}
-  </section>
+
+<Base>
+  <Hero />
+  <Desktop />
+  <Philosophy />
+  <Journal />
+  <OpenSource />
 </Base>

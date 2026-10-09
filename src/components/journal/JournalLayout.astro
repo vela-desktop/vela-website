@@ -1,0 +1,162 @@
+---
+// The editorial arrangement of journal entries, used by the homepage and the
+// journal index. It composes itself from what exists:
+//   0 entries  → an honest empty state
+//   1          → a single feature
+//   2          → feature + one wide card
+//   3          → feature + two cards of different proportions
+//   4 or more  → feature + two cards + an index of the rest
+import PostFeature from './PostFeature.astro';
+import PostCard from './PostCard.astro';
+import PostRow from './PostRow.astro';
+import JournalEmpty from './JournalEmpty.astro';
+import type { Post } from '../../lib/posts';
+
+export interface Props {
+  posts: Post[];
+  /** Cap the number of index rows (homepage); omit to list everything. */
+  maxRows?: number;
+  /** Heading level for entry titles. */
+  headingLevel?: 'h2' | 'h3';
+  /** Group index rows by year (journal index). */
+  groupByYear?: boolean;
+  eager?: boolean;
+}
+
+const { posts, maxRows, headingLevel = 'h3', groupByYear = false, eager = false } = Astro.props;
+const total = posts.length;
+const numberOf = (i: number) => total - i;
+
+const [feature, ...others] = posts;
+const cards = others.slice(0, 2);
+const rest = others.slice(2);
+const rows = maxRows === undefined ? rest : rest.slice(0, maxRows);
+
+const groups = groupByYear
+  ? Object.entries(
+      rows.reduce<Record<string, Post[]>>((acc, post) => {
+        const year = String(post.data.pubDate.getUTCFullYear());
+        (acc[year] ??= []).push(post);
+        return acc;
+      }, {}),
+    ).sort(([a], [b]) => Number(b) - Number(a))
+  : [['', rows] as [string, Post[]]];
+---
+
+{
+  !feature ? (
+    <JournalEmpty headingLevel={headingLevel} />
+  ) : (
+    <div class="journal-layout">
+      <div data-reveal>
+        <PostFeature post={feature} number={numberOf(0)} headingLevel={headingLevel} eager={eager} />
+      </div>
+
+      {cards.length > 0 && (
+        <div class:list={['journal-layout__cards', `journal-layout__cards--${cards.length}`]}>
+          {cards.map((post, i) => (
+            <div data-reveal style={`--reveal-delay: ${i * 100}ms`}>
+              <PostCard
+                post={post}
+                number={numberOf(i + 1)}
+                size={i === 0 ? 'large' : 'small'}
+                headingLevel={headingLevel}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <div class="journal-layout__index">
+          {groups.map(([year, list]) => (
+            <section class="journal-layout__group" aria-label={year ? `Entries from ${year}` : 'More entries'}>
+              {year && <p class="journal-layout__year">{year}</p>}
+              <ol role="list">
+                {list.map((post) => (
+                  <PostRow post={post} number={numberOf(posts.indexOf(post))} headingLevel={headingLevel} />
+                ))}
+              </ol>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+<style>
+  .journal-layout {
+    display: grid;
+    gap: var(--space-3xl);
+  }
+
+  .journal-layout__cards {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-2xl);
+    padding-top: var(--space-2xl);
+    border-top: 1px solid var(--line-strong);
+  }
+
+  /* One card: a horizontal composition, offset from the feature's axis */
+  .journal-layout__cards--1 > div {
+    grid-column: 3 / -1;
+  }
+
+  .journal-layout__cards--1 :global(.card__link) {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: var(--gutter);
+    align-items: center;
+  }
+
+  .journal-layout__cards--1 :global(.card__body) {
+    padding-top: 0;
+  }
+
+  /* Two cards: unequal widths, the smaller one dropped lower */
+  .journal-layout__cards--2 > div:first-child {
+    grid-column: 1 / span 7;
+  }
+
+  .journal-layout__cards--2 > div:last-child {
+    grid-column: 9 / -1;
+    margin-top: var(--space-3xl);
+  }
+
+  .journal-layout__index {
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .journal-layout__group ol {
+    padding: 0;
+    list-style: none;
+  }
+
+  .journal-layout__year {
+    padding-block: var(--space-l) var(--space-2xs);
+    font-family: var(--font-serif);
+    font-size: var(--step-3);
+    font-style: italic;
+    color: var(--text-faint);
+  }
+
+  @media (max-width: 48rem) {
+    .journal-layout__cards--1 :global(.card__link) {
+      display: block;
+    }
+
+    .journal-layout__cards--1 :global(.card__body) {
+      padding-top: var(--space-m);
+    }
+
+    .journal-layout__cards > div,
+    .journal-layout__cards--2 > div:first-child,
+    .journal-layout__cards--2 > div:last-child {
+      grid-column: 1 / -1;
+      margin-top: 0;
+    }
+  }
+</style>

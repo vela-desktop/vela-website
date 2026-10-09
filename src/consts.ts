@@ -1,0 +1,52 @@
+// Site-wide facts and links. Everything here is user-visible: keep it accurate
+// and in sync with the Vela repository's README.
+
+export const SITE = {
+  name: 'Vela',
+  url: 'https://velade.org',
+  title: 'Vela — A modern, fluid and sharp Linux desktop',
+  description:
+    'Vela is an independent Linux desktop environment with its own Wayland compositor and Vulkan renderer, a Qt Quick shell, and a file manager and settings app built to match.',
+  tagline: 'A modern, fluid and sharp Linux desktop built for today’s hardware.',
+  status: 'Alpha',
+  license: 'GPL-3.0-or-later',
+  locale: 'en_US',
+} as const;
+
+const REPO = 'https://github.com/BrandoDev/vela';
+
+export const LINKS = {
+  repo: REPO,
+  readme: `${REPO}#readme`,
+  install: `${REPO}#install`,
+  build: `${REPO}#build-from-source`,
+  roadmap: `${REPO}#roadmap`,
+  contributing: `${REPO}#contributing`,
+  issues: `${REPO}/issues`,
+  commits: `${REPO}/commits/main`,
+  docs: `${REPO}/tree/main/docs`,
+  rendererDoc: `${REPO}/blob/main/docs/renderer.md`,
+  license: `${REPO}/blob/main/LICENSE`,
+  website: 'https://github.com/BrandoDev/vela-website',
+  rss: '/rss.xml',
+} as const;
+
+export const NAV = [
+  { label: 'Desktop', href: '/#desktop' },
+  { label: 'Philosophy', href: '/#philosophy' },
+  { label: 'Journal', href: '/blog/' },
+] as const;
+
+/**
+ * The "Next" list from the README roadmap. Shown on the homepage while the
+ * journal has no entries. Update it when the README changes.
+ */
+export const ROADMAP_NEXT = [
+  'Input methods and an emoji panel',
+  'An Updates page in Settings, with a notification when a new version is out',
+  'Start menu: recommended files, and search across files and settings',
+  'Screen recording in the snipping tool',
+  'More languages',
+  'Vela’s own login screen',
+  'HDR and color management',
+] as const;

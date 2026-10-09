@@ -1,24 +1,32 @@
 ---
 import '../styles/global.css';
-const { title = 'Vela', description = 'A modern Linux desktop environment.' } = Astro.props;
+import Head, { type Props as HeadProps } from '../components/Head.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+export type Props = HeadProps & {
+  /** Extra class on <body>, for page-level theming. */
+  bodyClass?: string;
+};
+
+const { bodyClass, ...head } = Astro.props;
 ---
+
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
-    <title>{title}</title>
+    <Head {...head} />
+    <slot name="head" />
   </head>
-  <body>
-    <header class="wrap header">
-      <a class="brand" href="/">Vela</a>
-      <nav aria-label="Main navigation">
-        <a href="/blog">Blog</a>
-        <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
-      </nav>
-    </header>
-    <main class="wrap"><slot /></main>
-    <footer class="wrap footer">Vela · Built for Linux</footer>
+  <body class={bodyClass}>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      import '../scripts/enhance';
+    </script>
   </body>
 </html>

@@ -1,12 +1,157 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getCollection } from 'astro:content';
-const posts = (await getCollection('blog', ({ data }) => !data.draft))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+import JournalLayout from '../../components/journal/JournalLayout.astro';
+import { getPosts } from '../../lib/posts';
+import { LINKS } from '../../consts';
+
+const posts = await getPosts();
+const count = posts.length;
+const latest = posts[0]?.data.pubDate;
 ---
-<Base title="Blog — Vela">
-  <section class="page-intro"><p class="eyebrow">Development journal</p><h1>Blog</h1><p>Notes from building Vela.</p></section>
-  <div class="post-list">
-    {posts.map(post => <a href={`/blog/${post.id}/`} class="post"><time datetime={post.data.pubDate.toISOString()}>{post.data.pubDate.toLocaleDateString('en-US', { dateStyle: 'medium' })}</time><h2>{post.data.title}</h2><p>{post.data.description}</p></a>)}
+
+<Base
+  title="Journal"
+  description="The Vela development journal: long-form notes on building a Linux desktop — the compositor, the renderer, the shell, and the reasoning behind them."
+>
+  <div class="journal-page">
+    <header class="masthead container--wide">
+      <div class="masthead__rule" aria-hidden="true">
+        <span>Vela</span>
+        <span>Development journal</span>
+        <span>{count === 0 ? 'No entries yet' : `${count} ${count === 1 ? 'entry' : 'entries'}`}</span>
+      </div>
+      <h1 class="masthead__title">
+        The <em>Journal</em>
+      </h1>
+      <div class="masthead__foot">
+        <p class="masthead__intro">
+          Notes on building a desktop: the compositor and renderer, the shell, and the decisions
+          behind them — written up at length, with the details left in.
+        </p>
+        <ul class="masthead__links" role="list">
+          <li><a class="link" href={LINKS.rss}>Subscribe by RSS</a></li>
+          <li><a class="link" href={LINKS.repo} rel="noopener">Source on GitHub <span class="arrow arrow--ne" aria-hidden="true">↗</span></a></li>
+          {
+            latest && (
+              <li class="masthead__updated">
+                Last entry{' '}
+                <time datetime={latest.toISOString()}>
+                  {latest.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}
+                </time>
+              </li>
+            )
+          }
+        </ul>
+      </div>
+    </header>
+
+    <div class="container--wide journal-page__body">
+      <JournalLayout posts={posts} headingLevel="h2" groupByYear eager />
+    </div>
   </div>
 </Base>
+
+<style>
+  .journal-page {
+    padding-top: calc(var(--header-height) + var(--space-2xl));
+    padding-bottom: var(--space-section);
+    background:
+      radial-gradient(60rem 30rem at 85% 0%, rgb(70 214 224 / 0.07), transparent 70%),
+      linear-gradient(180deg, var(--ink-1), var(--paper) 30rem);
+  }
+
+  .masthead__rule {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.75rem;
+    border-block: 1px solid var(--line-strong);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .masthead__title {
+    margin-top: var(--space-l);
+    font-family: var(--font-serif);
+    font-size: clamp(4rem, 1rem + 13vw, 13rem);
+    font-weight: 360;
+    line-height: 0.85;
+    letter-spacing: -0.045em;
+    text-wrap: nowrap;
+  }
+
+  .masthead__title em {
+    font-style: italic;
+    color: var(--teal);
+  }
+
+  .masthead__foot {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-m);
+    align-items: end;
+    margin-top: var(--space-xl);
+    padding-bottom: var(--space-l);
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .masthead__intro {
+    grid-column: 1 / span 6;
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .masthead__links {
+    grid-column: 8 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem 1.75rem;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+    font-weight: 500;
+  }
+
+  .masthead__updated {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    font-weight: 400;
+    color: var(--text-faint);
+    align-self: center;
+  }
+
+  .journal-page__body {
+    margin-top: var(--space-3xl);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .masthead__title {
+      animation: masthead-in var(--duration-entrance) var(--ease-expressive) both;
+    }
+  }
+
+  @keyframes masthead-in {
+    from { opacity: 0; transform: translate3d(0, 0.15em, 0); filter: blur(8px); }
+    to { opacity: 1; transform: none; filter: none; }
+  }
+
+  @media (max-width: 64rem) {
+    .masthead__intro,
+    .masthead__links {
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .masthead__rule span:first-child {
+      display: none;
+    }
+  }
+</style>

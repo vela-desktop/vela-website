@@ -1,0 +1,859 @@
+---
+import SectionLabel from '../SectionLabel.astro';
+import { LINKS } from '../../consts';
+
+// ── Sharp: what a row of alternating one-pixel lines becomes ──
+// Left: copied 1:1. Right: the same buffer resampled to 125% with bilinear
+// filtering — computed here, not drawn by hand.
+const COLS = 12;
+const ROWS = 7;
+const source = (x: number) => (Math.round(x) % 2 === 0 ? 1 : 0);
+const exact = Array.from({ length: COLS }, (_, i) => source(i));
+const scale = 1.25;
+const resampled = Array.from({ length: COLS }, (_, i) => {
+  const x = (i + 0.5) / scale - 0.5;
+  const x0 = Math.floor(x);
+  const t = x - x0;
+  const a = source(Math.max(0, x0));
+  const b = source(x0 + 1);
+  return a * (1 - t) + b * t;
+});
+const shade = (v: number) => {
+  const l = Math.round(8 + v * 86);
+  return `hsl(210 30% ${l}%)`;
+};
+
+// ── Fluid: frame ticks over the same 100 ms window ──
+const rates = [
+  { hz: 60, ticks: 6 },
+  { hz: 180, ticks: 18 },
+];
+
+const stack = [
+  { name: 'Apps', detail: 'Files · Settings' },
+  { name: 'Shell', detail: 'Qt Quick, blurred panels' },
+  { name: 'Compositor', detail: 'Scene graph · damage · frame clock' },
+  { name: 'Renderer', detail: 'Vulkan 1.4' },
+  { name: 'Display', detail: 'Direct scanout · VRR · tearing control' },
+];
+
+const pipeline = [
+  'input',
+  'state',
+  'predicted frame',
+  'render as late as possible',
+  'presentation feedback',
+  'correct the model',
+];
+
+const measures = [
+  { value: '17', unit: 'MiB', label: 'Compositor memory at idle (PSS)' },
+  { value: '0.1', unit: '%', label: 'Compositor CPU at idle, 3–7 wakeups per second' },
+  { value: '104', unit: 'ms', label: 'Files, cold start to first frame (median of 5)' },
+  { value: '0.05–0.13', unit: 'ms', label: 'GPU time per frame for live blur as the Start menu opens' },
+];
+---
+
+<section id="philosophy" class="philosophy" aria-labelledby="philosophy-title">
+  <div class="philosophy__grid-lines" aria-hidden="true"></div>
+
+  <div class="container--wide">
+    <SectionLabel number="03">Philosophy</SectionLabel>
+
+    <h2 id="philosophy-title" class="manifesto" data-reveal>
+      Efficiency through architecture, <em>not&nbsp;austerity.</em>
+    </h2>
+
+    <div class="manifesto__body">
+      <p class="manifesto__lead" data-reveal>
+        Use hardware when it improves the experience. Avoid overhead when it doesn’t. Vela does
+        not remove motion or effects to win a memory chart — its savings come from doing less
+        unnecessary work.
+      </p>
+      <p class="manifesto__aside" data-reveal style="--reveal-delay: 100ms">
+        Damage tracking skips what did not change. Direct scanout bypasses compositing when it
+        can. With nothing changing on screen, nothing is redrawn and the GPU sleeps.
+      </p>
+    </div>
+
+    <ol class="principles" role="list">
+      <!-- Modern -->
+      <li class="principle principle--modern">
+        <div class="principle__head" data-reveal>
+          <span class="principle__index">3.1</span>
+          <h3 class="principle__word">Modern</h3>
+        </div>
+        <div class="principle__text" data-reveal style="--reveal-delay: 80ms">
+          <p>
+            A shell, a file manager and a settings app designed as one desktop, on a compositor and
+            renderer written for them. Vela targets current hardware and modern displays on purpose.
+          </p>
+          <p>
+            It asks for a GPU with Vulkan 1.4, and in return the compositor draws live acrylic blur
+            behind the shell, and rounded corners and soft shadows around windows — sharp at every
+            scale.
+          </p>
+        </div>
+        <figure class="principle__figure stack" aria-labelledby="stack-caption">
+          <ol class="stack__layers" role="list">
+            {
+              stack.map((layer, i) => (
+                <li class="stack__layer" style={`--i: ${i}`} data-reveal>
+                  <span class="stack__name">{layer.name}</span>
+                  <span class="stack__detail">{layer.detail}</span>
+                </li>
+              ))
+            }
+          </ol>
+          <figcaption id="stack-caption" class="label">One stack, designed together</figcaption>
+        </figure>
+      </li>
+
+      <!-- Fluid -->
+      <li class="principle principle--fluid">
+        <div class="principle__head" data-reveal>
+          <span class="principle__index">3.2</span>
+          <h3 class="principle__word">Fluid</h3>
+        </div>
+        <div class="principle__text" data-reveal style="--reveal-delay: 80ms">
+          <p>
+            Animations advance on the monitor’s real vblanks, never on arbitrary timers: at 180 Hz
+            they take 180 steps per second. Each output keeps its own clock, predicts when the next
+            frame will reach the screen, and starts drawing as late as it safely can.
+          </p>
+          <p>
+            A slow app can’t hold the screen back: until its GPU finishes, the screen keeps its
+            previous frame, and the cursor and every other window stay on the vblank.
+          </p>
+        </div>
+        <figure class="principle__figure timeline" aria-labelledby="timeline-caption" data-reveal>
+          {
+            rates.map((rate) => (
+              <div class="timeline__row" style={`--ticks: ${rate.ticks}`}>
+                <span class="timeline__rate">{rate.hz} Hz</span>
+                <div class="timeline__track">
+                  {Array.from({ length: rate.ticks }, () => (
+                    <span class="timeline__tick">
+                      <span class="timeline__draw" />
+                    </span>
+                  ))}
+                  <span class="timeline__marker" />
+                </div>
+              </div>
+            ))
+          }
+          <div class="timeline__legend">
+            <span><i class="timeline__key timeline__key--draw"></i> drawing, as late as safely possible</span>
+            <span><i class="timeline__key timeline__key--tick"></i> vblank</span>
+            <span><i class="timeline__key timeline__key--marker"></i> animation step</span>
+          </div>
+          <figcaption id="timeline-caption" class="label">
+            The same 100 ms at two refresh rates: one animation step per vblank
+          </figcaption>
+        </figure>
+        <dl class="principle__facts" data-reveal>
+          <div>
+            <dt>1.1–1.9 ms</dt>
+            <dd>from drawing to light at every refresh rate from 60 to 360 Hz, against a whole frame period without late latching</dd>
+          </div>
+          <div>
+            <dt>0 missed vblanks</dt>
+            <dd>with an app whose GPU finishes 150 ms late — down from 47</dd>
+          </div>
+        </dl>
+      </li>
+
+      <!-- Sharp -->
+      <li class="principle principle--sharp">
+        <figure class="principle__figure pixels" aria-labelledby="pixels-caption" data-reveal>
+          <div class="pixels__panels">
+            <div class="pixels__panel">
+              <div class="pixels__grid" style={`--cols: ${COLS}`}>
+                {
+                  Array.from({ length: ROWS }, () =>
+                    exact.map((v) => <span style={`background: ${shade(v)}`} />),
+                  )
+                }
+              </div>
+              <p class="pixels__label"><strong>Copied 1:1</strong> at 125%: every line stays one pixel.</p>
+            </div>
+            <div class="pixels__panel">
+              <div class="pixels__grid" style={`--cols: ${COLS}`}>
+                {
+                  Array.from({ length: ROWS }, () =>
+                    resampled.map((v) => <span style={`background: ${shade(v)}`} />),
+                  )
+                }
+              </div>
+              <p class="pixels__label"><strong>Resampled</strong> to 125%: lines smear into grays.</p>
+            </div>
+          </div>
+          <figcaption id="pixels-caption" class="label">
+            Alternating one-pixel lines, magnified. Right: bilinear filtering, computed
+          </figcaption>
+        </figure>
+        <div class="principle__head" data-reveal>
+          <span class="principle__index">3.3</span>
+          <h3 class="principle__word">Sharp</h3>
+        </div>
+        <div class="principle__text" data-reveal style="--reveal-delay: 80ms">
+          <p>
+            Fractional scaling is pixel-exact when an app renders at the screen’s scale: its buffer
+            is copied 1:1 with no filtering, even at 125% or 175%. Window edges are rounded in
+            physical pixels, so two windows snapped side by side never gain a gap or an overlap.
+          </p>
+          <p>
+            An automated test checks it bit for bit after opening, snapping, maximizing and
+            restoring a window. A single differing pixel fails the test.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <!-- The pipeline -->
+    <div class="pipeline">
+      <div class="pipeline__head" data-reveal>
+        <p class="label label--accent">It owns the whole pipeline</p>
+        <p class="pipeline__text">
+          From the moment an app commits a surface to the moment the pixel lights up: its own scene
+          graph and Vulkan renderer on top of wlroots, with no <code>wlr_scene</code> and no
+          wlroots renderer.
+          <a class="link" href={LINKS.rendererDoc} rel="noopener">Read the renderer design <span class="arrow arrow--ne" aria-hidden="true">↗</span></a>
+        </p>
+      </div>
+      <ol class="pipeline__flow" role="list" data-reveal="fade">
+        {
+          pipeline.map((step, i) => (
+            <li style={`--i: ${i}`}>
+              <span class="pipeline__index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <span class="pipeline__step">{step}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <!-- Measured -->
+    <div class="measures">
+      <p class="measures__title label">Measured, not claimed</p>
+      <dl class="measures__list">
+        {
+          measures.map((m, i) => (
+            <div class="measure" data-reveal style={`--reveal-delay: ${i * 80}ms`}>
+              <dt class="measure__value">
+                {m.value}
+                <span class="measure__unit">{m.unit}</span>
+              </dt>
+              <dd class="measure__label">{m.label}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <p class="measures__note">
+        All figures from Vela’s primary development system — Ryzen 9 9950X, Radeon RX 9070 XT,
+        CachyOS, Mesa/RADV. Idle figures are sampled over 30 seconds by{' '}
+        <code>scripts/measure.sh</code>; late-latching figures come from the headless backend
+        running vkcube. Other hardware will differ.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .philosophy {
+    position: relative;
+    padding-block: var(--space-section);
+    isolation: isolate;
+  }
+
+  /* The editorial grid made visible, faintly */
+  .philosophy__grid-lines {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: min(100% - 2 * var(--gutter), var(--width-page));
+    margin-inline: auto;
+    background-image: linear-gradient(90deg, rgb(170 205 255 / 0.045) 1px, transparent 1px);
+    background-size: calc((100% + var(--gutter)) / 12) 100%;
+    mask-image: linear-gradient(180deg, transparent, #000 10%, #000 85%, transparent);
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 10%, #000 85%, transparent);
+    pointer-events: none;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  /* ── Manifesto: the editorial voice arrives ── */
+  .manifesto {
+    max-width: 15ch;
+    margin-top: var(--space-xl);
+    font-family: var(--font-serif);
+    font-size: var(--step-6);
+    font-weight: 380;
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+  }
+
+  .manifesto em {
+    font-style: italic;
+    font-weight: 330;
+    color: var(--teal);
+  }
+
+  .manifesto__body {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-m);
+    margin-top: var(--space-xl);
+  }
+
+  .manifesto__lead {
+    grid-column: 1 / span 6;
+    font-size: var(--step-2);
+    line-height: 1.4;
+  }
+
+  .manifesto__aside {
+    grid-column: 8 / span 4;
+    align-self: end;
+    color: var(--text-muted);
+  }
+
+  /* ── Principles ── */
+  .principles {
+    margin-top: var(--space-3xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  .principle {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-xl);
+    padding-block: var(--space-3xl);
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .principle__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .principle__index {
+    padding-top: 0.6em;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--teal);
+  }
+
+  .principle__word {
+    font-size: var(--step-6);
+    font-weight: 650;
+    font-variation-settings: 'wdth' 82;
+    line-height: 0.9;
+    letter-spacing: var(--tracking-display);
+  }
+
+  .principle__text p {
+    color: var(--text-muted);
+  }
+
+  .principle__text p:first-child {
+    color: var(--text);
+    font-size: var(--step-1);
+    line-height: 1.5;
+  }
+
+  .principle__text p + p {
+    margin-top: var(--space-s);
+  }
+
+  .principle__figure figcaption {
+    margin-top: var(--space-m);
+  }
+
+  /* Modern: words left, text right, the stack below the text */
+  .principle--modern .principle__head { grid-column: 1 / span 5; grid-row: 1; }
+  .principle--modern .principle__text { grid-column: 8 / -1; grid-row: 1 / span 2; }
+  .principle--modern .principle__figure { grid-column: 1 / span 6; grid-row: 2; }
+
+  /* Fluid: a wide band */
+  .principle--fluid .principle__head { grid-column: 1 / span 5; grid-row: 1; }
+  .principle--fluid .principle__text { grid-column: 7 / -1; grid-row: 1; }
+  .principle--fluid .principle__figure { grid-column: 1 / span 8; grid-row: 2; }
+  .principle--fluid .principle__facts { grid-column: 10 / -1; grid-row: 2; align-self: end; }
+
+  /* Sharp: mirrored — the figure leads */
+  .principle--sharp .principle__figure { grid-column: 1 / span 6; grid-row: 1 / span 2; align-self: center; }
+  .principle--sharp .principle__head { grid-column: 8 / -1; grid-row: 1; }
+  .principle--sharp .principle__text { grid-column: 8 / -1; grid-row: 2; }
+
+  /* ── Stack diagram ── */
+  .stack__layers {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .stack__layer {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-left: calc(var(--i) * clamp(0.5rem, 2.2vw, 2.25rem));
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-m);
+    background: linear-gradient(100deg, rgb(70 214 224 / calc(0.02 + var(--i) * 0.025)), rgb(12 26 43 / 0.55) 60%);
+    backdrop-filter: blur(6px);
+    --reveal-delay: calc(var(--i) * 90ms);
+  }
+
+  .stack__name {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .stack__detail {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  /* ── Timeline diagram ── */
+  .timeline {
+    padding: clamp(1.25rem, 1rem + 1.5vw, 2.25rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: linear-gradient(180deg, rgb(12 26 43 / 0.6), rgb(5 11 21 / 0.2));
+  }
+
+  .timeline__row {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .timeline__row + .timeline__row {
+    margin-top: 1.75rem;
+  }
+
+  .timeline__rate {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--text);
+  }
+
+  .timeline__track {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--ticks), minmax(0, 1fr));
+    height: 2.5rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .timeline__tick {
+    position: relative;
+    border-right: 1px solid var(--line-bright);
+  }
+
+  .timeline__draw {
+    position: absolute;
+    right: 1px;
+    bottom: 0;
+    width: max(3px, 28%);
+    height: 40%;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(180deg, var(--teal), rgb(70 214 224 / 0.35));
+  }
+
+  .timeline__marker {
+    position: absolute;
+    top: 0.2rem;
+    width: 0.65rem;
+    height: 0.65rem;
+    margin-left: -0.325rem;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 12px rgb(140 200 255 / 0.9);
+    /* rests on the last vblank when motion is reduced */
+    left: 100%;
+  }
+
+  .timeline__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 1.75rem;
+    font-size: var(--step--2);
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+
+  .timeline__key {
+    display: inline-block;
+    width: 0.7rem;
+    height: 0.7rem;
+    margin-right: 0.4rem;
+    vertical-align: -0.1rem;
+  }
+
+  .timeline__key--draw { background: var(--teal); border-radius: 2px; }
+  .timeline__key--tick { width: 1px; background: var(--line-bright); }
+  .timeline__key--marker { border-radius: 50%; background: #fff; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* One step per vblank: the 60 Hz marker jumps 6 times, the 180 Hz one 18
+       times, over the same period — the difference refresh rate makes. */
+    .timeline__marker {
+      left: 0;
+      animation: timeline-step 2.4s steps(var(--ticks), jump-start) infinite;
+    }
+  }
+
+  @keyframes timeline-step {
+    from { left: 0%; }
+    to { left: 100%; }
+  }
+
+  .principle__facts {
+    display: grid;
+    gap: var(--space-l);
+  }
+
+  .principle__facts dt {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    line-height: 1;
+  }
+
+  .principle__facts dd {
+    margin-top: 0.5rem;
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  /* ── Pixel diagram ── */
+  .pixels__panels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gutter);
+  }
+
+  .pixels__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    gap: 2px;
+    padding: 2px;
+    border-radius: var(--radius-s);
+    background: rgb(0 0 0 / 0.6);
+    box-shadow: 0 0 0 1px var(--line-strong);
+  }
+
+  .pixels__grid span {
+    aspect-ratio: 1;
+    border-radius: 1px;
+  }
+
+  .pixels__label {
+    margin-top: 0.85rem;
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .pixels__label strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ── Pipeline ── */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-xl);
+    padding-block: var(--space-3xl);
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .pipeline__head {
+    grid-column: 1 / span 5;
+  }
+
+  .pipeline__text {
+    margin-top: var(--space-s);
+    color: var(--text-muted);
+  }
+
+  .pipeline__text .link {
+    display: table;
+    margin-top: var(--space-s);
+  }
+
+  .pipeline__flow {
+    grid-column: 7 / -1;
+    display: grid;
+    gap: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .pipeline__flow li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.7rem 0 0.7rem 2.25rem;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    counter-increment: step;
+  }
+
+  .pipeline__flow li::before {
+    content: '';
+    position: absolute;
+    left: 0.45rem;
+    top: 50%;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-top: -0.3rem;
+    border: 1px solid var(--teal);
+    border-radius: 50%;
+    background: var(--ink-1);
+    transition: background-color 400ms var(--ease-decelerate);
+    transition-delay: calc(400ms + var(--i) * 140ms);
+  }
+
+  .pipeline__flow li::after {
+    content: '';
+    position: absolute;
+    left: calc(0.75rem - 0.5px);
+    top: calc(50% + 0.3rem);
+    height: calc(100% - 0.6rem);
+    width: 1px;
+    background: var(--line-strong);
+  }
+
+  .pipeline__flow li:last-child::after {
+    /* the loop closes: feedback corrects the model */
+    height: 0;
+  }
+
+  .pipeline__index {
+    display: none;
+    font-size: var(--step--2);
+    color: var(--teal);
+  }
+
+  .pipeline__step {
+    transition: color 400ms var(--ease-decelerate);
+    transition-delay: calc(400ms + var(--i) * 140ms);
+  }
+
+  :global(.js) .pipeline__flow.is-revealed li::before,
+  :global(html:not(.js)) .pipeline__flow li::before {
+    background: var(--teal);
+    box-shadow: 0 0 10px rgb(70 214 224 / 0.7);
+  }
+
+  :global(.js) .pipeline__flow.is-revealed .pipeline__step,
+  :global(html:not(.js)) .pipeline__step {
+    color: var(--text);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pipeline__flow li::before {
+      background: var(--teal);
+    }
+
+    .pipeline__step {
+      color: var(--text);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .pipeline__flow {
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      column-gap: var(--space-m);
+      margin-top: var(--space-l);
+    }
+
+    .pipeline__flow li {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.4rem;
+      padding: 1.75rem 0 0;
+      font-size: var(--step-0);
+    }
+
+    .pipeline__flow li::before {
+      left: 0;
+      top: 0;
+    }
+
+    /* connectors run horizontally to the next step */
+    .pipeline__flow li::after {
+      left: 0.9rem;
+      top: 0;
+      width: calc(100% + var(--space-m) - 1.2rem);
+      height: 1px;
+      background: linear-gradient(90deg, var(--teal), var(--line-strong));
+    }
+
+    .pipeline__flow li:last-child::after {
+      height: 0;
+    }
+
+    .pipeline__index {
+      display: block;
+    }
+  }
+
+  /* ── Measures ── */
+  .measures {
+    padding-top: var(--space-3xl);
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .measures__list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: var(--space-l);
+  }
+
+  .measure {
+    padding-right: var(--space-m);
+  }
+
+  .measure + .measure {
+    padding-left: var(--space-m);
+    border-left: 1px solid var(--line);
+  }
+
+  .measure__value {
+    font-family: var(--font-display);
+    font-size: var(--step-5);
+    font-weight: 600;
+    font-variation-settings: 'wdth' 84;
+    line-height: 1;
+    letter-spacing: var(--tracking-display);
+    white-space: nowrap;
+  }
+
+  .measure:last-child .measure__value {
+    font-size: var(--step-4);
+    padding-top: calc(var(--step-5) - var(--step-4));
+  }
+
+  .measure__unit {
+    margin-left: 0.15em;
+    font-size: 0.4em;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--teal);
+  }
+
+  .measure__label {
+    margin-top: var(--space-s);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    max-width: 16rem;
+  }
+
+  .measures__note {
+    max-width: 48rem;
+    margin-top: var(--space-xl);
+    font-size: var(--step--2);
+    line-height: 1.6;
+    color: var(--text-faint);
+  }
+
+  /* ── Tablet ── */
+  @media (max-width: 64rem) {
+    .manifesto__lead,
+    .manifesto__aside {
+      grid-column: 1 / -1;
+    }
+
+    .principle > * {
+      grid-column: 1 / -1 !important;
+      grid-row: auto !important;
+    }
+
+    .pipeline__head,
+    .pipeline__flow {
+      grid-column: 1 / -1;
+    }
+
+    .measures__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: var(--space-xl);
+    }
+
+    .measure:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .principle__head {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .principle__index {
+      padding-top: 0;
+    }
+
+    .stack__layer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+      margin-left: calc(var(--i) * 0.6rem);
+    }
+
+    .stack__detail {
+      text-align: left;
+    }
+
+    .timeline__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.5rem;
+    }
+
+    .pixels__panels {
+      gap: 1rem;
+    }
+
+    .measures__list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .measure,
+    .measure + .measure {
+      padding: var(--space-m) 0 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .measure:last-child .measure__value {
+      padding-top: 0;
+    }
+  }
+</style>

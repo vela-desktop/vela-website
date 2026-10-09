@@ -1,0 +1,134 @@
+/*
+ * Vela website — design tokens.
+ *
+ * The single source for color, type, space, shape, light and motion.
+ * Components use these roles; they never name a typeface or a raw color.
+ * See docs/design.md for the reasoning behind each group.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* ── Color ─────────────────────────────────────────────────────────────
+   * Drawn from Vela's default wallpaper: a deep navy field (#06182d is the
+   * desktop color under the wallpaper), teal light, and one warm coral spark.
+   */
+  --ink-0: #02060c;       /* deepest: footer, behind everything */
+  --ink-1: #050b15;       /* page background */
+  --ink-2: #08121f;       /* raised bands */
+  --ink-3: #0c1a2b;       /* surfaces */
+  --ink-4: #12243a;       /* surface hover */
+  --navy: #06182d;        /* Vela's desktop color */
+  --paper: #0a1019;       /* the journal's slightly warmer ground */
+
+  --text: #e8eef6;
+  --text-muted: #a2b0c3;
+  --text-faint: #7d8ca1;  /* ≥ 4.5:1 on --ink-1; metadata only */
+
+  --accent: #8cc8ff;          /* restrained blue: links, focus */
+  --accent-strong: #4da3ff;
+  --accent-ink: #04111f;      /* text on accent fills */
+  --teal: #46d6e0;            /* wallpaper highlight */
+  --mint: #5bdeca;            /* logo ribbon */
+  --coral: #ff9158;           /* the wallpaper's spark — use sparingly */
+
+  --line: rgb(170 205 255 / 0.1);
+  --line-strong: rgb(170 205 255 / 0.2);
+  --line-bright: rgb(200 225 255 / 0.36);
+
+  --selection: rgb(77 163 255 / 0.35);
+
+  /* ── Typography ────────────────────────────────────────────────────────
+   * Families are registered in astro.config.mjs (Fonts API) and exposed as
+   * --font-family-*. Change a typeface there; these roles stay the same.
+   */
+  --font-display: var(--font-family-sans);
+  --font-body: var(--font-family-sans);
+  --font-serif: var(--font-family-serif);
+  --font-mono: var(--font-family-mono);
+
+  /* Fluid type scale (min at ~375px, max at ~1440px) */
+  --step--2: 0.75rem;
+  --step--1: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --step-0: clamp(1rem, 0.97rem + 0.13vw, 1.0625rem);
+  --step-1: clamp(1.125rem, 1.07rem + 0.25vw, 1.3125rem);
+  --step-2: clamp(1.3125rem, 1.2rem + 0.5vw, 1.6875rem);
+  --step-3: clamp(1.625rem, 1.4rem + 1vw, 2.375rem);
+  --step-4: clamp(2rem, 1.6rem + 1.8vw, 3.375rem);
+  --step-5: clamp(2.5rem, 1.85rem + 2.9vw, 4.75rem);
+  --step-6: clamp(3rem, 2rem + 4.6vw, 6.75rem);
+  --step-hero: clamp(4.5rem, 1.6rem + 9.6vw, 10.25rem);
+
+  --leading-tight: 0.92;
+  --leading-snug: 1.15;
+  --leading-normal: 1.55;
+  --leading-prose: 1.7;
+
+  --tracking-tight: -0.035em;
+  --tracking-display: -0.045em;
+  --tracking-label: 0.14em;
+
+  /* ── Space ─────────────────────────────────────────────────────────── */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-s: 1rem;
+  --space-m: 1.5rem;
+  --space-l: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4.5rem;
+  --space-3xl: clamp(4.5rem, 3rem + 6vw, 8rem);
+  --space-section: clamp(6rem, 3.5rem + 10vw, 12rem);
+
+  /* ── Layout ────────────────────────────────────────────────────────── */
+  --gutter: clamp(1rem, 0.4rem + 2.6vw, 3rem);
+  --width-page: 90rem;      /* 1440px */
+  --width-content: 76rem;   /* 1216px */
+  --width-narrow: 52rem;
+  --measure: 40rem;         /* ~68 characters of prose */
+  --header-height: 4rem;
+
+  /* ── Shape ─────────────────────────────────────────────────────────── */
+  --radius-xs: 3px;
+  --radius-s: 6px;
+  --radius-m: 8px;          /* Vela's own overlay radius */
+  --radius-l: 14px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  /* ── Light & depth ─────────────────────────────────────────────────── */
+  --shadow-s: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px -6px rgb(0 0 0 / 0.5);
+  --shadow-window:
+    0 0 0 1px rgb(255 255 255 / 0.07),
+    0 2px 6px rgb(0 0 0 / 0.35),
+    0 30px 80px -20px rgb(0 0 0 / 0.75),
+    0 60px 160px -40px rgb(0 10 30 / 0.9);
+  --glow-teal: radial-gradient(closest-side, rgb(70 214 224 / 0.22), transparent);
+  --glow-blue: radial-gradient(closest-side, rgb(77 163 255 / 0.2), transparent);
+
+  /* ── Motion ────────────────────────────────────────────────────────────
+   * The first two curves and three durations are Vela's own
+   * (common/controls/Theme.qml, compositor/src/motion.h): the site moves
+   * the way the desktop does.
+   */
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --ease-accelerate: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-expressive: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 250ms;
+  --duration-reveal: 800ms;
+  --duration-entrance: 1100ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+    --duration-reveal: 0ms;
+    --duration-entrance: 0ms;
+  }
+}

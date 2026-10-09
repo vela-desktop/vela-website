@@ -1,0 +1,106 @@
+---
+import Base from '../layouts/Base.astro';
+import wallpaper from '../assets/brand/vela-wallpaper.svg?url';
+import { LINKS } from '../consts';
+---
+
+<Base title="Page not found" description="This page does not exist on velade.org." noindex>
+  <section class="lost">
+    <div class="lost__backdrop" aria-hidden="true">
+      <img src={wallpaper} alt="" width="1920" height="1073" decoding="async" />
+    </div>
+
+    <div class="lost__inner container--wide">
+      <p class="label label--accent">Error 404</p>
+      <h1 class="lost__title">
+        This frame was <em>never&nbsp;drawn.</em>
+      </h1>
+      <p class="lost__text">
+        The page you asked for doesn’t exist — it may have moved, or the link may be mistyped.
+      </p>
+      <ul class="lost__links" role="list">
+        <li><a class="button button--primary" href="/">Back to the homepage</a></li>
+        <li><a class="button" href="/blog/">Read the journal</a></li>
+        <li><a class="button button--ghost" href={LINKS.repo} rel="noopener">Vela on GitHub <span class="arrow arrow--ne" aria-hidden="true">↗</span></a></li>
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lost {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: 100svh;
+    padding-block: calc(var(--header-height) + var(--space-2xl)) var(--space-3xl);
+    isolation: isolate;
+    overflow: clip;
+  }
+
+  .lost__backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  .lost__backdrop img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 70% 30%;
+    opacity: 0.55;
+    filter: blur(28px) saturate(1.2);
+    transform: scale(1.1);
+  }
+
+  .lost__backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--ink-1) 15%, rgb(5 11 21 / 0.4)), linear-gradient(0deg, var(--ink-1), transparent 40%);
+  }
+
+  .lost__title {
+    max-width: 12ch;
+    margin-top: var(--space-m);
+    font-family: var(--font-serif);
+    font-size: var(--step-6);
+    font-weight: 380;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+  }
+
+  .lost__title em {
+    font-style: italic;
+    color: var(--teal);
+  }
+
+  .lost__text {
+    max-width: 32rem;
+    margin-top: var(--space-l);
+    font-size: var(--step-1);
+    color: var(--text-muted);
+  }
+
+  .lost__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: var(--space-xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .lost__backdrop img {
+      animation: lost-focus 1800ms var(--ease-decelerate) both;
+    }
+  }
+
+  /* The blurred backdrop pulls partly into focus — never fully: the frame was never drawn. */
+  @keyframes lost-focus {
+    from { filter: blur(60px) saturate(1.2); opacity: 0; }
+    to { filter: blur(28px) saturate(1.2); opacity: 0.55; }
+  }
+</style>
