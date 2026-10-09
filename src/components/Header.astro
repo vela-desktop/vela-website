@@ -1,0 +1,205 @@
+---
+import Logo from './Logo.astro';
+import { LINKS, NAV } from '../consts';
+
+const path = Astro.url.pathname;
+const isJournal = path.startsWith('/blog');
+---
+
+<header class="site-header" data-header>
+  <div class="site-header__inner container--wide">
+    <a class="brand" href="/" aria-label="Vela — home">
+      <Logo size={26} />
+      <span class="brand__name" aria-hidden="true">Vela</span>
+      <span class="brand__status" aria-hidden="true">Alpha</span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <ul role="list">
+        {
+          NAV.map((item) => {
+            const current = item.href === '/blog/' && isJournal;
+            return (
+              <li class:list={{ 'nav__item--secondary': item.href !== '/blog/' }}>
+                <a href={item.href} aria-current={current ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            );
+          })
+        }
+        <li>
+          <a class="nav__github" href={LINKS.repo} rel="noopener">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path
+                fill="currentColor"
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+              ></path>
+            </svg>
+            <span>GitHub</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    height: var(--header-height);
+    transition:
+      background-color var(--duration-slow) var(--ease-decelerate),
+      border-color var(--duration-slow) var(--ease-decelerate),
+      backdrop-filter var(--duration-slow) var(--ease-decelerate);
+    /* The solid state; without JS it is the only one. */
+    border-bottom: 1px solid var(--line);
+    background: rgb(5 11 21 / 0.72);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+
+  :global(.js) .site-header:not(.is-scrolled) {
+    border-bottom-color: transparent;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-m);
+    height: 100%;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--text);
+    text-decoration: none;
+    border-radius: var(--radius-s);
+  }
+
+  .brand__name {
+    font-family: var(--font-display);
+    font-size: 1.1875rem;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+  }
+
+  .brand__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.2em 0.6em 0.2em 0.5em;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .brand__status::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--coral);
+    box-shadow: 0 0 8px var(--coral);
+  }
+
+  .nav ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.25rem, 1.5vw, 1.25rem);
+    padding: 0;
+    list-style: none;
+  }
+
+  .nav a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.5rem 0.6rem;
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--radius-s);
+    transition: color var(--duration-fast) linear;
+  }
+
+  .nav a::after {
+    content: '';
+    position: absolute;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.25rem;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform var(--duration-slow) var(--ease-decelerate);
+  }
+
+  .nav a:hover,
+  .nav a[aria-current='page'] {
+    color: var(--text);
+  }
+
+  .nav a:hover::after,
+  .nav a[aria-current='page']::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  .nav__github {
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill) !important;
+    padding-inline: 0.85rem !important;
+    color: var(--text) !important;
+  }
+
+  .nav__github::after {
+    display: none;
+  }
+
+  .nav__github:hover {
+    border-color: var(--line-bright);
+    background: rgb(255 255 255 / 0.05);
+  }
+
+  .nav__github svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  @media (max-width: 40rem) {
+    .nav__item--secondary {
+      display: none;
+    }
+
+    .brand__status {
+      display: none;
+    }
+  }
+
+  @media (max-width: 22rem) {
+    .nav__github span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+  }
+</style>

@@ -1,0 +1,93 @@
+---
+import PostCover from './PostCover.astro';
+import PostMeta from './PostMeta.astro';
+import { postUrl, type Post } from '../../lib/posts';
+
+export interface Props {
+  post: Post;
+  number: number;
+  headingLevel?: 'h2' | 'h3';
+  eager?: boolean;
+}
+
+const { post, number, headingLevel = 'h3', eager = false } = Astro.props;
+const Heading = headingLevel;
+const kicker = `Entry ${String(number).padStart(2, '0')}`;
+---
+
+<article class="feature">
+  <a class="feature__link" href={postUrl(post)}>
+    <PostCover post={post} kicker={kicker} eager={eager} class="feature__cover" sizes="(max-width: 64rem) 94vw, 58vw" />
+    <div class="feature__body">
+      <p class="feature__kicker label label--accent">Latest · {kicker}</p>
+      <Heading class="feature__title">{post.data.title}</Heading>
+      <p class="feature__description">{post.data.description}</p>
+      <PostMeta post={post} />
+      <span class="feature__cta">Read the entry <span class="arrow" aria-hidden="true">→</span></span>
+    </div>
+  </a>
+</article>
+
+<style>
+  .feature__link {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-l);
+    align-items: end;
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--radius-m);
+  }
+
+  .feature__link :global(.feature__cover) {
+    grid-column: 1 / span 7;
+    --cover-ratio: 4 / 3;
+  }
+
+  .feature__body {
+    grid-column: 8 / -1;
+    padding-bottom: 0.5rem;
+  }
+
+  .feature__title {
+    margin-top: var(--space-s);
+    font-family: var(--font-serif);
+    font-size: var(--step-5);
+    font-weight: 420;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    transition: color var(--duration-normal) linear;
+  }
+
+  .feature__description {
+    margin-block: var(--space-m);
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .feature__cta {
+    display: inline-block;
+    margin-top: var(--space-l);
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid var(--line-bright);
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+
+  .feature__link:hover .feature__title {
+    color: var(--accent);
+  }
+
+  @media (max-width: 64rem) {
+    .feature__link :global(.feature__cover),
+    .feature__body {
+      grid-column: 1 / -1;
+    }
+
+    .feature__link :global(.feature__cover) {
+      --cover-ratio: 16 / 9;
+    }
+  }
+</style>

@@ -1,0 +1,542 @@
+---
+import start from '../../assets/screenshots/start.webp';
+import startCrop from '../../assets/screenshots/start-menu-crop.webp';
+import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
+import { pictureSources, fallbackSrc } from '../../lib/images';
+import { LINKS } from '../../consts';
+
+const mobileQuery = '(max-width: 40rem)';
+const sources = [
+  ...(await pictureSources(startCrop, [432, 648, 864], mobileQuery)),
+  ...(await pictureSources(start, [960, 1280, 1600, 1920])),
+];
+const fallback = await fallbackSrc(start, 1600);
+
+const specs = [
+  { term: 'Compositor', detail: 'Wayland, own scene graph on wlroots' },
+  { term: 'Renderer', detail: 'Vulkan 1.4, no GL fallback' },
+  { term: 'Shell', detail: 'Qt 6 and Qt Quick' },
+  { term: 'License', detail: 'GPL-3.0-or-later' },
+  { term: 'Status', detail: 'Alpha, usable every day' },
+];
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero__backdrop" aria-hidden="true">
+    <img class="hero__wallpaper" src={wallpaper} alt="" width="1920" height="1073" decoding="async" />
+    <div class="hero__veil"></div>
+  </div>
+
+  <div class="hero__inner container--wide">
+    <p class="hero__eyebrow label">
+      <span>A desktop environment for Linux</span>
+      <span class="hero__eyebrow-stack">Wayland · Vulkan · Qt Quick</span>
+    </p>
+
+    <h1 id="hero-title" class="hero__title">
+      <span class="visually-hidden">Vela: </span>
+      <span class="hero__line hero__line--1"><span>Modern<span class="hero__stop">.</span></span></span>
+      <span class="hero__line hero__line--2"><span>Fluid<span class="hero__stop">.</span></span></span>
+      <span class="hero__line hero__line--3"><span>Sharp<span class="hero__stop">.</span></span></span>
+    </h1>
+
+    <div class="hero__aside">
+      <p class="hero__lede">
+        Vela is an independent desktop for Linux, with its own Wayland compositor and Vulkan
+        renderer, a Qt Quick shell, and a file manager and settings app built to match.
+      </p>
+      <div class="hero__actions">
+        <a class="button button--primary" href="#desktop">
+          Explore the desktop <span class="arrow" aria-hidden="true">↓</span>
+        </a>
+        <a class="button" href="/blog/">Read the journal</a>
+        <a class="button button--ghost" href={LINKS.repo} rel="noopener">
+          GitHub <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <figure class="hero__stage container--wide">
+    <div class="hero__tilt">
+      <div class="hero__screen shot">
+        <picture>
+          {sources.map((s) => <source type={s.type} srcset={s.srcset} media={s.media} sizes="(max-width: 40rem) 100vw, (max-width: 90rem) 94vw, 1344px" />)}
+          <img
+            src={fallback}
+            alt="The Vela desktop: the Start menu, with app search and pinned apps, open over the Files window, above a centered taskbar."
+            width="1920"
+            height="1080"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </picture>
+
+        <div class="callout callout--right" style="--x: 66.7%; --y: 63%; --len: 16;" aria-hidden="true">
+          <span class="callout__dot"></span>
+          <span class="callout__line"></span>
+          <span class="callout__text">
+            <span class="callout__title">Start</span>
+            Instant search, pinned apps, keyboard navigation
+          </span>
+        </div>
+        <div class="callout callout--left" style="--x: 19.3%; --y: 58%; --len: 2.5;" aria-hidden="true">
+          <span class="callout__dot"></span>
+          <span class="callout__line"></span>
+          <span class="callout__text">
+            <span class="callout__title">Files</span>
+            Tabs, breadcrumbs and previews
+          </span>
+        </div>
+      </div>
+    </div>
+    <figcaption class="hero__caption">
+      <span class="label">Fig. 01</span>
+      Unretouched screenshot: the Start menu over Files. The interface is shown in Italian, one of
+      the two languages Vela ships with.
+    </figcaption>
+  </figure>
+
+  <div class="container--wide">
+    <dl class="hero__specs">
+      {
+        specs.map((spec) => (
+          <div class="hero__spec">
+            <dt class="label">{spec.term}</dt>
+            <dd>{spec.detail}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    padding-top: calc(var(--header-height) + clamp(2.5rem, 1rem + 4vw, 5rem));
+    overflow: clip;
+  }
+
+  /* ── Atmosphere: Vela's own wallpaper, dimmed and dissolved into ink ── */
+  .hero__backdrop {
+    position: absolute;
+    inset: 0 0 auto;
+    height: min(120vh, 72rem);
+    z-index: -1;
+    overflow: hidden;
+  }
+
+  .hero__wallpaper {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 62% 0%;
+    opacity: 0.85;
+    transform-origin: 60% 30%;
+  }
+
+  .hero__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgb(5 11 21 / 0.88) 0%, rgb(5 11 21 / 0.55) 38%, rgb(5 11 21 / 0.1) 75%),
+      linear-gradient(180deg, rgb(5 11 21 / 0.1) 0%, rgb(5 11 21 / 0.35) 45%, var(--ink-1) 92%);
+  }
+
+  /* A faint veil of noise, as in Vela's acrylic recipe, to avoid banding */
+  .hero__veil::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── Type composition ── */
+  .hero__inner {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    align-items: end;
+  }
+
+  .hero__eyebrow {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.5rem;
+    margin-bottom: clamp(1.5rem, 1rem + 2vw, 2.75rem);
+    color: var(--text-muted);
+  }
+
+  .hero__eyebrow-stack {
+    color: var(--teal);
+  }
+
+  .hero__title {
+    grid-column: 1 / span 8;
+    font-size: var(--step-hero);
+    font-weight: 650;
+    font-variation-settings: 'wdth' 84;
+    line-height: 0.86;
+    letter-spacing: var(--tracking-display);
+    text-wrap: nowrap;
+  }
+
+  .hero__line {
+    display: block;
+    /* clip the rising words */
+    overflow: clip;
+    padding-bottom: 0.06em;
+    margin-bottom: -0.06em;
+  }
+
+  .hero__line > span {
+    display: inline-block;
+  }
+
+  .hero__line--2 {
+    padding-left: 0.55em;
+  }
+
+  .hero__line--3 {
+    padding-left: 1.1em;
+  }
+
+  .hero__line--3 > span {
+    background: linear-gradient(100deg, #fff 30%, #bfe4ff 70%, var(--teal));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero__stop {
+    color: var(--teal);
+    -webkit-text-fill-color: var(--teal);
+  }
+
+  .hero__aside {
+    grid-column: 9 / -1;
+    padding-bottom: 0.6rem;
+  }
+
+  .hero__lede {
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--text-muted);
+    max-width: 30rem;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: var(--space-l);
+  }
+
+  /* ── The stage ── */
+  .hero__stage {
+    position: relative;
+    margin-top: clamp(3rem, 1.5rem + 3.5vw, 4.5rem);
+    perspective: 2400px;
+  }
+
+  .hero__stage::before {
+    /* light spilling from behind the display */
+    content: '';
+    position: absolute;
+    inset: -12% -6% 20%;
+    z-index: -1;
+    background:
+      radial-gradient(50% 45% at 50% 55%, rgb(70 214 224 / 0.2), transparent 70%),
+      radial-gradient(40% 40% at 30% 60%, rgb(77 163 255 / 0.16), transparent 70%);
+    filter: blur(20px);
+    pointer-events: none;
+  }
+
+  .hero__tilt {
+    transform-origin: 50% 0%;
+  }
+
+  .hero__screen {
+    container-type: inline-size;
+    border-radius: var(--radius-l);
+  }
+
+  .hero__caption {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    max-width: 44rem;
+    margin-top: var(--space-m);
+    font-size: var(--step--1);
+    color: var(--text-faint);
+  }
+
+  .hero__caption .label {
+    flex: none;
+    color: var(--text-muted);
+  }
+
+  /* ── Callouts: technical-drawing annotations on the real screenshot ── */
+  .callout {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    display: none;
+    align-items: center;
+    pointer-events: none;
+    --dot: 9px;
+  }
+
+  .callout--left {
+    flex-direction: row-reverse;
+    transform: translateX(-100%);
+  }
+
+  .callout__dot {
+    position: relative;
+    width: var(--dot);
+    height: var(--dot);
+    flex: none;
+    margin: calc(var(--dot) / -2);
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow:
+      0 0 0 4px rgb(70 214 224 / 0.2),
+      0 0 16px rgb(70 214 224 / 0.8);
+  }
+
+  .callout__line {
+    width: calc(var(--len) * 1cqw);
+    height: 1px;
+    background: linear-gradient(90deg, var(--teal), rgb(255 255 255 / 0.6));
+    transform-origin: left;
+  }
+
+  .callout--left .callout__line {
+    background: linear-gradient(270deg, var(--teal), rgb(255 255 255 / 0.6));
+    transform-origin: right;
+  }
+
+  .callout__text {
+    display: block;
+    width: clamp(9rem, 14cqw, 12rem);
+    padding: 0.7rem 0.85rem;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: var(--radius-m);
+    background: rgb(4 12 24 / 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  .callout__title {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+
+  /* ── Spec strip ── */
+  .hero__specs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin-top: var(--space-2xl);
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .hero__spec {
+    padding: 1.1rem 1.25rem 0 0;
+  }
+
+  .hero__spec + .hero__spec {
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--line);
+  }
+
+  .hero__spec dd {
+    margin-top: 0.4rem;
+    font-size: var(--step--1);
+    color: var(--text);
+  }
+
+  /* ── Responsive composition ── */
+  @media (min-width: 64rem) {
+    .callout {
+      display: flex;
+    }
+  }
+
+  @media (max-width: 64rem) {
+    .hero__title {
+      grid-column: 1 / -1;
+    }
+
+    .hero__aside {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: var(--space-m) var(--gutter);
+      align-items: end;
+      margin-top: var(--space-xl);
+    }
+
+    .hero__actions {
+      margin-top: 0;
+    }
+
+    .hero__specs {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      row-gap: var(--space-m);
+    }
+
+    .hero__spec:nth-child(4) {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .hero__aside {
+      grid-template-columns: minmax(0, 1fr);
+      margin-top: var(--space-l);
+    }
+
+    .hero__actions .button--ghost {
+      padding-inline: 1.25em;
+    }
+
+    .hero__stage {
+      width: auto;
+      margin-inline: var(--gutter);
+    }
+
+    .hero__screen {
+      border-radius: var(--radius-l);
+    }
+
+    .hero__specs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hero__spec,
+    .hero__spec + .hero__spec {
+      padding: 1rem 0 0;
+      border-left: 0;
+    }
+
+    .hero__spec:nth-child(even) {
+      padding-left: 1rem;
+      border-left: 1px solid var(--line);
+    }
+
+    .hero__spec:last-child {
+      grid-column: 1 / -1;
+      padding-left: 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+      padding-top: 1rem;
+    }
+  }
+
+  /* ── Motion: the entrance, once, on load ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__wallpaper {
+      animation: hero-wallpaper 2400ms var(--ease-decelerate) both;
+    }
+
+    .hero__eyebrow {
+      animation: hero-fade 900ms var(--ease-decelerate) 100ms both;
+    }
+
+    .hero__line > span {
+      animation: hero-rise var(--duration-entrance) var(--ease-expressive) both;
+    }
+
+    .hero__line--1 > span { animation-delay: 120ms; }
+    .hero__line--2 > span { animation-delay: 220ms; }
+    .hero__line--3 > span { animation-delay: 320ms; }
+
+    .hero__aside {
+      animation: hero-up 1000ms var(--ease-expressive) 520ms both;
+    }
+
+    .hero__screen {
+      animation: hero-focus 1500ms var(--ease-expressive) 420ms both;
+    }
+
+    .callout__dot {
+      animation: hero-fade 500ms var(--ease-decelerate) 1500ms both;
+    }
+
+    .callout__line {
+      animation: hero-draw 700ms var(--ease-decelerate) 1600ms both;
+    }
+
+    .callout__text {
+      animation: hero-fade 600ms var(--ease-decelerate) 1950ms both;
+    }
+
+    .hero__specs {
+      animation: hero-fade 900ms var(--ease-decelerate) 900ms both;
+    }
+
+    /* The display settles flat as the page scrolls — tied to scroll position,
+       never hijacking it. Browsers without scroll timelines show it flat. */
+    @supports (animation-timeline: scroll()) {
+      .hero__tilt {
+        animation: hero-tilt linear both;
+        animation-timeline: scroll(root);
+        animation-range: 0 70vh;
+      }
+    }
+  }
+
+  @keyframes hero-rise {
+    from { transform: translate3d(0, 105%, 0); }
+    to { transform: none; }
+  }
+
+  @keyframes hero-up {
+    from { opacity: 0; transform: translate3d(0, 1.5rem, 0); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes hero-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes hero-focus {
+    from { opacity: 0; transform: translate3d(0, 3rem, 0) scale(0.97); filter: blur(16px); }
+    60% { filter: blur(0); }
+    to { opacity: 1; transform: none; filter: none; }
+  }
+
+  @keyframes hero-draw {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  @keyframes hero-wallpaper {
+    from { opacity: 0; transform: scale(1.08); }
+    to { opacity: 0.85; transform: none; }
+  }
+
+  @keyframes hero-tilt {
+    from { transform: rotateX(9deg) scale(0.96); }
+    to { transform: none; }
+  }
+</style>

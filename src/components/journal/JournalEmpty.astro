@@ -1,0 +1,142 @@
+---
+import PostCover from './PostCover.astro';
+import { LINKS, ROADMAP_NEXT } from '../../consts';
+
+export interface Props {
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { headingLevel = 'h3' } = Astro.props;
+const Heading = headingLevel;
+---
+
+<div class="empty">
+  <div class="empty__visual" data-reveal="focus">
+    <PostCover kicker="Awaiting its first entry" sizes="(max-width: 64rem) 94vw, 40vw" />
+  </div>
+
+  <div class="empty__body" data-reveal>
+    <p class="label label--accent">No entries yet</p>
+    <Heading class="empty__title">The journal starts here.</Heading>
+    <p class="empty__text">
+      This is where Vela’s development will be written up at length: the compositor and renderer,
+      the shell, and the reasoning behind the decisions. Nothing has been published yet. Until the
+      first entry is, the commit history and the design documents are the most complete record.
+    </p>
+    <ul class="empty__links" role="list">
+      <li><a class="link" href={LINKS.commits} rel="noopener">Commit history <span class="arrow arrow--ne" aria-hidden="true">↗</span></a></li>
+      <li><a class="link" href={LINKS.docs} rel="noopener">Design documents <span class="arrow arrow--ne" aria-hidden="true">↗</span></a></li>
+      <li><a class="link" href={LINKS.rss}>Subscribe by RSS</a></li>
+    </ul>
+  </div>
+
+  <aside class="empty__roadmap" aria-labelledby="roadmap-title" data-reveal style="--reveal-delay: 120ms">
+    <p id="roadmap-title" class="label">Next on the roadmap</p>
+    <ol role="list">
+      {ROADMAP_NEXT.map((item, i) => <li><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>{item}</li>)}
+    </ol>
+    <a class="link empty__roadmap-link" href={LINKS.roadmap} rel="noopener">
+      The full roadmap on GitHub <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+    </a>
+  </aside>
+</div>
+
+<style>
+  .empty {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-2xl);
+  }
+
+  .empty__visual {
+    grid-column: 1 / span 5;
+    --cover-ratio: 4 / 5;
+  }
+
+  .empty__body {
+    grid-column: 7 / -1;
+    align-self: center;
+  }
+
+  .empty__title {
+    margin-top: var(--space-s);
+    font-family: var(--font-serif);
+    font-size: var(--step-5);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+  }
+
+  .empty__text {
+    margin-top: var(--space-m);
+    max-width: 34rem;
+    font-size: var(--step-1);
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  .empty__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+    margin-top: var(--space-l);
+    padding: 0;
+    list-style: none;
+    font-weight: 500;
+  }
+
+  .empty__roadmap {
+    grid-column: 1 / -1;
+    padding-top: var(--space-l);
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .empty__roadmap ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: 0 var(--gutter);
+    margin-top: var(--space-m);
+    padding: 0;
+    list-style: none;
+  }
+
+  .empty__roadmap li {
+    display: flex;
+    gap: 0.9rem;
+    padding-block: 0.9rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--text-muted);
+  }
+
+  .empty__roadmap li span {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--teal);
+    padding-top: 0.2rem;
+  }
+
+  .empty__roadmap-link {
+    display: inline-block;
+    margin-top: var(--space-l);
+    font-size: var(--step--1);
+    font-weight: 500;
+  }
+
+  @media (max-width: 64rem) {
+    .empty__visual {
+      grid-column: 1 / span 6;
+    }
+
+    .empty__body {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .empty__visual {
+      grid-column: 1 / -1;
+      --cover-ratio: 16 / 10;
+    }
+  }
+</style>

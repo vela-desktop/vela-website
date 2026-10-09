@@ -1,0 +1,411 @@
+/*
+ * Long-form reading: the body of journal entries.
+ *
+ * A centered measure with two breakout tracks: "wide" for code, tables and
+ * figures that need room, and "full" for edge-to-edge images.
+ */
+
+.prose {
+  --prose-size: clamp(1.125rem, 1.06rem + 0.3vw, 1.3125rem);
+  --flow: 1.5em;
+
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(var(--gutter), 1fr)
+    [wide-start] minmax(0, 7rem)
+    [content-start] min(var(--measure), 100% - 2 * var(--gutter))
+    [content-end] minmax(0, 7rem)
+    [wide-end] minmax(var(--gutter), 1fr)
+    [full-end];
+  font-family: var(--font-serif);
+  font-size: var(--prose-size);
+  font-weight: 400;
+  font-optical-sizing: auto;
+  line-height: var(--leading-prose);
+  color: #d9e1ec;
+  hanging-punctuation: first;
+}
+
+.prose > * {
+  grid-column: content;
+  margin-top: var(--flow);
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+/* The opening paragraph is set a little larger */
+.prose > p:first-child {
+  font-size: 1.12em;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* ── Headings ── */
+.prose h2,
+.prose h3,
+.prose h4 {
+  position: relative;
+  font-family: var(--font-display);
+  color: var(--text);
+  scroll-margin-top: calc(var(--header-height) + 2rem);
+}
+
+.prose h2 {
+  margin-top: 2.6em;
+  font-size: 1.6em;
+  line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
+}
+
+.prose h3 {
+  margin-top: 2.1em;
+  font-size: 1.22em;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.prose h4 {
+  margin-top: 1.9em;
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.prose h2 + *,
+.prose h3 + *,
+.prose h4 + * {
+  margin-top: 0.75em;
+}
+
+.prose .heading-anchor {
+  margin-left: 0.35em;
+  color: var(--text-faint);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity var(--duration-normal) linear, color var(--duration-fast) linear;
+}
+
+.prose .heading-anchor::before {
+  content: '#';
+  font-family: var(--font-mono);
+  font-weight: 400;
+}
+
+.prose :is(h2, h3, h4):hover .heading-anchor,
+.prose .heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+.prose .heading-anchor:hover {
+  color: var(--accent);
+}
+
+@media (hover: none) {
+  .prose .heading-anchor {
+    opacity: 0.6;
+  }
+}
+
+/* ── Text ── */
+.prose a {
+  color: var(--accent);
+  text-decoration-color: rgb(140 200 255 / 0.4);
+  transition: text-decoration-color var(--duration-fast) linear;
+}
+
+.prose a:hover {
+  text-decoration-color: currentColor;
+}
+
+.prose strong {
+  font-weight: 650;
+  color: var(--text);
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose hr {
+  grid-column: content;
+  height: auto;
+  margin-block: 3em;
+  border: 0;
+  text-align: center;
+}
+
+.prose hr::before {
+  content: '· · ·';
+  font-family: var(--font-mono);
+  letter-spacing: 0.6em;
+  color: var(--text-faint);
+}
+
+/* ── Lists ── */
+.prose ul,
+.prose ol {
+  padding-left: 1.4em;
+}
+
+.prose li + li {
+  margin-top: 0.45em;
+}
+
+.prose li > ul,
+.prose li > ol {
+  margin-top: 0.45em;
+}
+
+.prose ul > li::marker {
+  color: var(--teal);
+}
+
+.prose ol > li::marker {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: var(--teal);
+}
+
+.prose li > p + p {
+  margin-top: 0.75em;
+}
+
+/* Task lists (GFM) */
+.prose li:has(> input[type='checkbox']) {
+  list-style: none;
+  margin-left: -1.4em;
+}
+
+.prose input[type='checkbox'] {
+  margin-right: 0.5em;
+  accent-color: var(--teal);
+}
+
+/* ── Quotes ── */
+.prose blockquote {
+  grid-column: content;
+  position: relative;
+  padding-left: 1.5em;
+  border-left: 2px solid var(--teal);
+  font-size: 1.15em;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.prose blockquote p + p {
+  margin-top: 0.75em;
+}
+
+/* ── Code ── */
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+}
+
+.prose :not(pre) > code {
+  padding: 0.05em 0.35em;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  background: rgb(140 200 255 / 0.06);
+  color: #dbeaff;
+  overflow-wrap: break-word;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.prose pre,
+.prose .code-block {
+  grid-column: wide;
+}
+
+.prose .code-block {
+  position: relative;
+}
+
+.prose .code-block > pre {
+  margin: 0;
+}
+
+.prose pre {
+  --astro-code-foreground: #d6e2f0;
+  --astro-code-background: #060d18;
+  --astro-code-token-comment: #6f8197;
+  --astro-code-token-keyword: #8cc8ff;
+  --astro-code-token-string: #8fe3cf;
+  --astro-code-token-string-expression: #8fe3cf;
+  --astro-code-token-constant: #ffb38a;
+  --astro-code-token-function: #c7d7ff;
+  --astro-code-token-parameter: #e8eef6;
+  --astro-code-token-punctuation: #8a9bb0;
+  --astro-code-token-link: #8cc8ff;
+
+  position: relative;
+  padding: 1.4rem 1.5rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--astro-code-background) !important;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  tab-size: 4;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.prose pre code {
+  font-size: inherit;
+}
+
+.prose pre[data-language]::before {
+  content: attr(data-language);
+  position: sticky;
+  left: 0;
+  display: block;
+  width: fit-content;
+  margin-bottom: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.prose pre[data-language='plaintext']::before,
+.prose pre[data-language='text']::before {
+  content: none;
+}
+
+.copy-button {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: rgb(5 11 21 / 0.85);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--duration-normal) linear, color var(--duration-fast) linear;
+}
+
+.code-block:hover .copy-button,
+.copy-button:focus-visible {
+  opacity: 1;
+}
+
+.copy-button:hover {
+  color: var(--text);
+}
+
+@media (hover: none) {
+  .copy-button {
+    opacity: 1;
+  }
+}
+
+/* ── Tables ── */
+.prose .table-wrap {
+  grid-column: wide;
+  overflow-x: auto;
+  border-top: 1px solid var(--line-strong);
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 0.82em;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose th {
+  padding: 0.85rem 1rem 0.65rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+}
+
+.prose td {
+  padding: 0.75rem 1rem 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  color: var(--text-muted);
+}
+
+.prose td:first-child {
+  color: var(--text);
+}
+
+/* ── Images and figures ── */
+.prose img {
+  border-radius: var(--radius-m);
+}
+
+.prose > p:has(> img:only-child) {
+  grid-column: wide;
+}
+
+.prose figure {
+  grid-column: content;
+}
+
+.prose figure.figure--wide {
+  grid-column: wide;
+}
+
+.prose figure.figure--full {
+  grid-column: full;
+}
+
+.prose figure.figure--full img {
+  border-radius: 0;
+}
+
+.prose figcaption {
+  margin-top: 0.85rem;
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+.prose figure.figure--full figcaption {
+  padding-inline: var(--gutter);
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin-inline: auto;
+}
+
+/* ── Footnotes ── */
+.prose .footnotes,
+.prose section[data-footnotes] {
+  margin-top: 3.5em;
+  padding-top: 1.5em;
+  border-top: 1px solid var(--line);
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.prose sup a {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  text-decoration: none;
+}
+
+.prose kbd {
+  font-size: 0.72em;
+}

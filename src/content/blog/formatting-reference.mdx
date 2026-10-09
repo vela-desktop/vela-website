@@ -1,0 +1,80 @@
+---
+title: "Formatting reference"
+description: "Every element a journal entry can use, in one place. A draft for authors: it is never published."
+pubDate: 2026-10-09
+draft: true
+tags: ["Reference"]
+---
+
+import Figure from '../../components/mdx/Figure.astro';
+import Aside from '../../components/mdx/Aside.astro';
+import snap from '../../assets/screenshots/snap.webp';
+
+This entry is a draft, so it only appears when running `npm run dev`. It exists to show how each Markdown and MDX element looks in the journal. Copy what you need, then delete what you don't. The first paragraph of an entry is set slightly larger, as an introduction.
+
+Ordinary paragraphs follow. Text can be **strong**, *emphasized*, or contain `inline code` and keyboard shortcuts such as <kbd>Super</kbd> <kbd>Tab</kbd>. Links look [like this](https://github.com/BrandoDev/vela). Footnotes are supported too.[^1]
+
+## A section heading
+
+Second-level headings divide an entry into sections. Hover one to reveal its anchor link; the `#` copies a direct URL to that section.
+
+### A smaller heading
+
+Third-level headings work inside a section.
+
+#### A label heading
+
+Fourth-level headings are set as small labels.
+
+## Lists
+
+- An unordered list item.
+- Another item, long enough to wrap onto a second line so that the hanging indent and the line height of list items can be checked properly.
+  - A nested item.
+
+1. An ordered list.
+2. Its markers are set in the monospace face.
+3. A third item.
+
+## Quotes
+
+> Use hardware when it improves the experience. Avoid overhead when it doesn't.
+
+## Code
+
+A fenced block with a language gets syntax highlighting, a language label and, with JavaScript, a copy button.
+
+```sh
+cmake -B build -G Ninja
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+```cpp
+// A long line to check horizontal scrolling inside the code block, which should never widen the page itself.
+static int round_edge(double logical, double scale) { return static_cast<int>(std::lround(logical * scale)); }
+```
+
+## Tables
+
+| Goal | Target | Today |
+|---|---|---|
+| Start menu | visible on the next frame after the key | ✔ |
+| Files cold start | first frame within 150 ms | 104 ms (median of 5) |
+| Compositor at idle | no CPU, few wakeups | 17 MiB, 0.1% CPU, 3–7 wakeups/s |
+
+## Images
+
+<Figure src={snap} alt="Files and Settings snapped side by side." caption="A wide figure, with a caption. Use width=&quot;content&quot;, &quot;wide&quot; or &quot;full&quot;." width="wide" />
+
+Plain Markdown images also work: `![Alt text](./image.webp)`, with the file next to the entry.
+
+<Aside title="Note">
+  An aside sets a short note apart from the running text. Use `tone="caution"` for warnings.
+</Aside>
+
+---
+
+A horizontal rule, above, marks a break between parts of an entry.
+
+[^1]: Footnotes collect at the end of the entry.

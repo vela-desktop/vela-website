@@ -1,0 +1,164 @@
+---
+import { Picture } from 'astro:assets';
+import dark from '../../assets/screenshots/files.webp';
+import light from '../../assets/screenshots/light.webp';
+
+const sizes = '(max-width: 90rem) 94vw, 1344px';
+const widths = [640, 960, 1280, 1600, 1920];
+---
+
+<div class="compare" data-compare style="--split: 50%">
+  <div class="compare__frame shot">
+    <Picture
+      src={dark}
+      formats={['avif', 'webp']}
+      fallbackFormat="webp"
+      widths={widths}
+      sizes={sizes}
+      alt="Files in dark mode, showing the Pictures folder, over the Vela desktop."
+      class="compare__img"
+      loading="lazy"
+    />
+    <div class="compare__light">
+      <Picture
+        src={light}
+        formats={['avif', 'webp']}
+        fallbackFormat="webp"
+        widths={widths}
+        sizes={sizes}
+        alt="The same Files window in light mode, with a light taskbar."
+        class="compare__img"
+        loading="lazy"
+      />
+    </div>
+
+    <input
+      class="compare__range"
+      type="range"
+      min="0"
+      max="100"
+      value="50"
+      step="1"
+      aria-label="Move the divider between dark and light mode"
+    />
+    <div class="compare__handle" aria-hidden="true">
+      <span class="compare__knob">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 6-6 6 6 6M15 6l6 6-6 6"></path>
+        </svg>
+      </span>
+    </div>
+    <span class="compare__tag compare__tag--dark" aria-hidden="true">Dark</span>
+    <span class="compare__tag compare__tag--light" aria-hidden="true">Light</span>
+  </div>
+</div>
+
+<style>
+  .compare__frame {
+    position: relative;
+    container-type: inline-size;
+    border-radius: var(--radius-l);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .compare__frame :global(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  .compare__light {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(0 0 0 var(--split));
+  }
+
+  .compare__handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--split);
+    width: 2px;
+    margin-left: -1px;
+    background: rgb(255 255 255 / 0.9);
+    box-shadow: 0 0 24px rgb(140 200 255 / 0.6);
+    pointer-events: none;
+  }
+
+  .compare__knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.92);
+    color: var(--ink-1);
+    box-shadow: 0 6px 24px rgb(0 0 0 / 0.45);
+    transform: translate(-50%, -50%);
+    transition: transform var(--duration-normal) var(--ease-decelerate);
+  }
+
+  .compare__knob svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .compare__range {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: ew-resize;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: pan-y;
+  }
+
+  /* Without JS the split is static: no control to offer. */
+  .compare:not(.is-interactive) .compare__range,
+  .compare:not(.is-interactive) .compare__knob {
+    display: none;
+  }
+
+  .compare__range:hover ~ .compare__handle .compare__knob,
+  .compare__range:active ~ .compare__handle .compare__knob {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+
+  .compare__range:focus-visible ~ .compare__handle .compare__knob {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+  }
+
+  .compare__tag {
+    position: absolute;
+    bottom: 1rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .compare__tag--dark {
+    left: 1rem;
+    background: rgb(4 12 24 / 0.7);
+    color: var(--text);
+  }
+
+  .compare__tag--light {
+    right: 1rem;
+    background: rgb(255 255 255 / 0.85);
+    color: var(--ink-1);
+  }
+</style>

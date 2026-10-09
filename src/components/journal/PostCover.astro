@@ -1,0 +1,147 @@
+---
+import { Picture } from 'astro:assets';
+import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
+import { seed, type Post } from '../../lib/posts';
+
+export interface Props {
+  post?: Post;
+  /** Shown on generated covers, e.g. "Entry 03". */
+  kicker?: string;
+  sizes?: string;
+  eager?: boolean;
+  class?: string;
+}
+
+const { post, kicker, sizes = '(max-width: 64rem) 94vw, 60vw', eager = false, class: className } = Astro.props;
+const cover = post?.data.cover;
+
+// Entries without a cover get a composition cut from Vela's wallpaper. The
+// crop, scale and hue are derived from the entry's id: stable between builds,
+// different between entries. The hue stays within ±18°, the way Vela's own
+// wallpaper set varies one design across colors.
+const n = seed(post?.id ?? 'journal');
+const pick = (shift: number, range: number) => ((n >>> shift) % 1000) / 1000 * range;
+const style = [
+  `--cover-x: ${Math.round(20 + pick(0, 60))}%`,
+  `--cover-y: ${Math.round(10 + pick(5, 50))}%`,
+  `--cover-scale: ${(1.15 + pick(10, 0.9)).toFixed(2)}`,
+  `--cover-hue: ${Math.round(-18 + pick(15, 36))}deg`,
+  `--cover-flip: ${(n & 1) === 0 ? 1 : -1}`,
+].join('; ');
+const firstTag = post?.data.tags[0];
+---
+
+<div class:list={['cover', { 'cover--generated': !cover }, className]}>
+  {
+    cover ? (
+      <Picture
+        src={cover}
+        formats={['avif', 'webp']}
+        fallbackFormat="webp"
+        widths={[480, 800, 1200, 1600]}
+        sizes={sizes}
+        alt={post?.data.coverAlt ?? ''}
+        loading={eager ? 'eager' : 'lazy'}
+        fetchpriority={eager ? 'high' : undefined}
+      />
+    ) : (
+      <div class="cover__art" style={style} aria-hidden="true">
+        <img src={wallpaper} alt="" width="1920" height="1073" loading={eager ? 'eager' : 'lazy'} decoding="async" />
+        <span class="cover__meta">
+          <span>Vela Journal</span>
+          {kicker && <span>{kicker}</span>}
+        </span>
+        {firstTag && <span class="cover__tag">{firstTag}</span>}
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .cover {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-m);
+    background: var(--navy);
+    aspect-ratio: var(--cover-ratio, 16 / 10);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  .cover :global(picture) {
+    display: block;
+    height: 100%;
+  }
+
+  .cover :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 900ms var(--ease-expressive);
+  }
+
+  .cover__art {
+    position: absolute;
+    inset: 0;
+  }
+
+  .cover__art img {
+    transform-origin: var(--cover-x) var(--cover-y);
+    transform: scale(var(--cover-scale)) scaleX(var(--cover-flip));
+    filter: hue-rotate(var(--cover-hue)) saturate(1.1);
+  }
+
+  .cover__art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgb(2 6 12 / 0.15), rgb(2 6 12 / 0.55)),
+      repeating-linear-gradient(90deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px calc(100% / 12));
+  }
+
+  .cover__meta,
+  .cover__tag {
+    position: absolute;
+    z-index: 1;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.85);
+  }
+
+  .cover__meta {
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .cover__tag {
+    left: 1rem;
+    bottom: 1rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid rgb(255 255 255 / 0.25);
+    border-radius: var(--radius-pill);
+    background: rgb(2 6 12 / 0.35);
+  }
+
+  /* Hover: the image drifts closer — linked from the parent card */
+  :global(a:hover) .cover :global(img),
+  :global(a:focus-visible) .cover :global(img) {
+    transform: scale(1.035);
+  }
+
+  :global(a:hover) .cover__art img,
+  :global(a:focus-visible) .cover__art img {
+    transform: scale(calc(var(--cover-scale) * 1.04)) scaleX(var(--cover-flip));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cover :global(img) {
+      transition: none;
+    }
+  }
+</style>

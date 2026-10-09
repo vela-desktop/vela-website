@@ -1,0 +1,346 @@
+---
+import SectionLabel from '../SectionLabel.astro';
+import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
+import { LINKS } from '../../consts';
+---
+
+<section id="open-source" class="open" aria-labelledby="open-title">
+  <div class="open__backdrop" aria-hidden="true">
+    <img src={wallpaper} alt="" width="1920" height="1073" loading="lazy" decoding="async" />
+  </div>
+
+  <div class="container--wide">
+    <SectionLabel number="05">Open source</SectionLabel>
+
+    <div class="open__head">
+      <h2 id="open-title" class="open__title" data-reveal>Built in the open.</h2>
+      <p class="open__lede" data-reveal style="--reveal-delay: 80ms">
+        Vela is free software under the GPL, version 3 or later. It is young, it moves fast, and
+        all of it — compositor, renderer, shell and apps — is developed in public.
+      </p>
+    </div>
+
+    <div class="open__status" data-reveal>
+      <p class="open__status-badge"><span class="dot" aria-hidden="true"></span> Alpha</p>
+      <div class="open__status-text">
+        <p>
+          You can already pick Vela at the login screen and use it every day: compositor, shell,
+          file manager, settings and lock screen. The GPU test suites pass in full on the primary
+          development machine, but some hardware-specific paths still rely on manual verification.
+          Expect rough edges, and expect things to change.
+        </p>
+        <p class="open__requirements">
+          <span class="label">Requires</span>
+          A GPU with Vulkan 1.4 — AMD or Intel with Mesa 25.0 or newer, or NVIDIA with the
+          proprietary driver 570 or newer, or NVK.
+        </p>
+      </div>
+    </div>
+
+    <ol class="paths" role="list">
+      <li class="path" data-reveal>
+        <span class="path__index">01</span>
+        <h3 class="path__title">Try it</h3>
+        <p>
+          On Arch Linux, CachyOS and EndeavourOS, Vela installs as a proper <code>vela-git</code>{' '}
+          package, updated with <code>vela-update</code>. Other distributions can
+          build from source.
+        </p>
+        <pre class="terminal" aria-label="Install commands for Arch-based distributions"><code><span class="terminal__prompt">$</span> git clone https://github.com/BrandoDev/vela.git
+<span class="terminal__prompt">$</span> cd vela/packaging/arch
+<span class="terminal__prompt">$</span> VELA_GIT_URL=file://$PWD/../.. makepkg -si</code></pre>
+        <a class="link" href={LINKS.install} rel="noopener">Installation guide <span class="arrow arrow--ne" aria-hidden="true">↗</span></a>
+      </li>
+
+      <li class="path" data-reveal style="--reveal-delay: 90ms">
+        <span class="path__index">02</span>
+        <h3 class="path__title">Follow along</h3>
+        <p>
+          Watch the repository for changes, read the journal for the reasoning behind them, or
+          subscribe to the feed.
+        </p>
+        <ul class="path__links" role="list">
+          <li><a class="link" href={LINKS.commits} rel="noopener">Recent commits <span class="arrow arrow--ne" aria-hidden="true">↗</span></a></li>
+          <li><a class="link" href="/blog/">The journal <span class="arrow" aria-hidden="true">→</span></a></li>
+          <li><a class="link" href={LINKS.rss}>RSS feed</a></li>
+        </ul>
+      </li>
+
+      <li class="path" data-reveal style="--reveal-delay: 180ms">
+        <span class="path__index">03</span>
+        <h3 class="path__title">Contribute</h3>
+        <p>
+          Issues and ideas are welcome. Before larger changes, open an issue to talk about it, and
+          sign off your commits under the Developer Certificate of Origin. If something breaks,{' '}
+          <code>vela-report</code> builds a diagnostic ZIP with only the evidence you choose — and
+          uploads nothing.
+        </p>
+        <ul class="path__links" role="list">
+          <li><a class="link" href={LINKS.issues} rel="noopener">Open an issue <span class="arrow arrow--ne" aria-hidden="true">↗</span></a></li>
+          <li><a class="link" href={LINKS.contributing} rel="noopener">Contributing <span class="arrow arrow--ne" aria-hidden="true">↗</span></a></li>
+        </ul>
+      </li>
+    </ol>
+
+    <a class="repo" href={LINKS.repo} rel="noopener" data-reveal>
+      <span class="repo__label label">The source</span>
+      <span class="repo__url">github.com/BrandoDev/vela</span>
+      <span class="repo__arrow arrow arrow--ne" aria-hidden="true">↗</span>
+    </a>
+  </div>
+</section>
+
+<style>
+  .open {
+    position: relative;
+    padding-block: var(--space-section) var(--space-3xl);
+    isolation: isolate;
+    overflow: clip;
+  }
+
+  /* Vela's wallpaper returns at the close, bookending the hero */
+  .open__backdrop {
+    position: absolute;
+    inset: auto 0 0;
+    height: 75%;
+    z-index: -1;
+  }
+
+  .open__backdrop img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 40%;
+    opacity: 0.4;
+    transform: scaleY(-1);
+  }
+
+  .open__backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, var(--ink-1) 0%, rgb(5 11 21 / 0.75) 45%, rgb(2 6 12 / 0.4) 75%, var(--ink-0) 100%);
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .open__head {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-m);
+    align-items: end;
+    margin-top: var(--space-xl);
+  }
+
+  .open__title {
+    grid-column: 1 / span 8;
+    font-size: var(--step-6);
+    font-weight: 650;
+    font-variation-settings: 'wdth' 84;
+    line-height: 0.92;
+    letter-spacing: var(--tracking-display);
+  }
+
+  .open__lede {
+    grid-column: 9 / -1;
+    font-size: var(--step-1);
+    color: var(--text-muted);
+  }
+
+  /* ── Status ── */
+  .open__status {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-m);
+    margin-top: var(--space-2xl);
+    padding: var(--space-l) 0;
+    border-block: 1px solid var(--line-strong);
+  }
+
+  .open__status-badge {
+    grid-column: 1 / span 3;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    flex: none;
+    border-radius: 50%;
+    background: var(--coral);
+    box-shadow: 0 0 14px var(--coral);
+  }
+
+  .open__status-text {
+    grid-column: 4 / span 8;
+    color: var(--text-muted);
+  }
+
+  .open__status-text p:first-child {
+    color: var(--text);
+    font-size: var(--step-1);
+    line-height: 1.5;
+  }
+
+  .open__requirements {
+    margin-top: var(--space-m);
+    font-size: var(--step--1);
+  }
+
+  .open__requirements .label {
+    margin-right: 0.75rem;
+    color: var(--teal);
+  }
+
+  /* ── Paths ── */
+  .paths {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--gutter);
+    margin-top: var(--space-3xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  .path {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-s);
+    padding-top: var(--space-m);
+    border-top: 1px solid var(--line-bright);
+    color: var(--text-muted);
+  }
+
+  .path__index {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--teal);
+  }
+
+  .path__title {
+    font-size: var(--step-3);
+    color: var(--text);
+  }
+
+  .path > .link,
+  .path__links {
+    margin-top: auto;
+    padding-top: var(--space-s);
+  }
+
+  .path > .link {
+    align-self: flex-start;
+    font-weight: 500;
+  }
+
+  .path__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    padding-left: 0;
+    list-style: none;
+    font-weight: 500;
+  }
+
+  .terminal {
+    margin-block: var(--space-2xs);
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: rgb(2 6 12 / 0.7);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .terminal__prompt {
+    color: var(--teal);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ── The big link ── */
+  .repo {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-m);
+    margin-top: var(--space-section);
+    padding-block: var(--space-l);
+    border-top: 1px solid var(--line-strong);
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .repo__url {
+    font-size: clamp(1.5rem, 0.5rem + 4.6vw, 5.5rem);
+    font-weight: 600;
+    font-variation-settings: 'wdth' 84;
+    line-height: 1;
+    letter-spacing: var(--tracking-display);
+    overflow-wrap: anywhere;
+    background: linear-gradient(90deg, var(--text), var(--text)) 0 100% / 0% 2px no-repeat;
+    transition:
+      background-size 600ms var(--ease-expressive),
+      color var(--duration-normal) linear;
+  }
+
+  .repo__arrow {
+    font-size: clamp(1.5rem, 0.5rem + 4vw, 4.5rem);
+    color: var(--teal);
+  }
+
+  .repo:hover .repo__url {
+    color: #fff;
+    background-size: 100% 2px;
+  }
+
+  @media (max-width: 64rem) {
+    .open__title,
+    .open__lede {
+      grid-column: 1 / -1;
+    }
+
+    .open__status-badge,
+    .open__status-text {
+      grid-column: 1 / -1;
+    }
+
+    .paths {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .path:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .paths {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .repo {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .repo__label {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

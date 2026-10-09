@@ -1,0 +1,53 @@
+---
+// A short note set apart from the running text, for MDX journal entries.
+//
+//   import Aside from '../../components/mdx/Aside.astro';
+//   <Aside title="Measured on">Ryzen 9 9950X, Radeon RX 9070 XT.</Aside>
+export interface Props {
+  title?: string;
+  tone?: 'note' | 'caution';
+}
+
+const { title, tone = 'note' } = Astro.props;
+---
+
+<aside class:list={['aside', `aside--${tone}`]}>
+  {title && <p class="aside__title">{title}</p>}
+  <div class="aside__body"><slot /></div>
+</aside>
+
+<style>
+  .aside {
+    padding: 1.1rem 1.35rem;
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--teal);
+    border-radius: 0 var(--radius-m) var(--radius-m) 0;
+    background: rgb(70 214 224 / 0.04);
+    font-family: var(--font-body);
+    font-size: 0.86em;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  .aside--caution {
+    border-left-color: var(--coral);
+    background: rgb(255 145 88 / 0.05);
+  }
+
+  .aside__title {
+    margin-bottom: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+
+  .aside--caution .aside__title {
+    color: var(--coral);
+  }
+
+  .aside__body :global(p + p) {
+    margin-top: 0.6em;
+  }
+</style>

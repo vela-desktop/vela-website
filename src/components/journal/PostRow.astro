@@ -1,0 +1,148 @@
+---
+import { formatShortDate, postUrl, readingTime, type Post } from '../../lib/posts';
+
+export interface Props {
+  post: Post;
+  number: number;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { post, number, headingLevel = 'h3' } = Astro.props;
+const Heading = headingLevel;
+---
+
+<li class="row">
+  <a class="row__link" href={postUrl(post)}>
+    <span class="row__number" aria-hidden="true">{String(number).padStart(2, '0')}</span>
+    <time class="row__date" datetime={post.data.pubDate.toISOString()}>{formatShortDate(post.data.pubDate)}</time>
+    <span class="row__main">
+      <Heading class="row__title">
+        {post.data.draft && <span class="row__draft">Draft</span>}
+        {post.data.title}
+      </Heading>
+      <span class="row__description">{post.data.description}</span>
+    </span>
+    <span class="row__aside">
+      {post.data.tags.slice(0, 2).map((tag) => <span class="row__tag">{tag}</span>)}
+      <span class="row__time">{readingTime(post)} min</span>
+      <span class="arrow" aria-hidden="true">→</span>
+    </span>
+  </a>
+</li>
+
+<style>
+  .row {
+    position: relative;
+    isolation: isolate;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .row__link {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3rem 8rem minmax(0, 1fr) auto;
+    gap: var(--space-m);
+    align-items: baseline;
+    padding-block: 1.6rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .row__link::before {
+    content: '';
+    position: absolute;
+    inset: 0 calc(var(--space-s) * -1);
+    z-index: -1;
+    border-radius: var(--radius-m);
+    background: rgb(255 255 255 / 0.025);
+    opacity: 0;
+    transition: opacity var(--duration-normal) var(--ease-decelerate);
+  }
+
+  .row__link:hover::before {
+    opacity: 1;
+  }
+
+  .row__number,
+  .row__date,
+  .row__aside {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+  }
+
+  .row__number {
+    color: var(--teal);
+  }
+
+  .row__title {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    font-weight: 450;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    transition: color var(--duration-normal) linear;
+  }
+
+  .row__link:hover .row__title {
+    color: var(--accent);
+  }
+
+  .row__description {
+    display: block;
+    margin-top: 0.4rem;
+    color: var(--text-muted);
+    max-width: 44rem;
+  }
+
+  .row__aside {
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    white-space: nowrap;
+  }
+
+  .row__tag {
+    padding: 0.1rem 0.5rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+  }
+
+  .row__draft {
+    margin-right: 0.5rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: var(--radius-pill);
+    background: var(--coral);
+    color: var(--ink-0);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    vertical-align: 0.2em;
+  }
+
+  @media (max-width: 48rem) {
+    .row__link {
+      grid-template-columns: 2.25rem minmax(0, 1fr);
+      gap: 0.4rem var(--space-s);
+    }
+
+    .row__date {
+      grid-column: 2;
+    }
+
+    .row__main {
+      grid-column: 2;
+    }
+
+    .row__aside {
+      grid-column: 2;
+      margin-top: 0.4rem;
+    }
+
+    .row__number {
+      grid-row: 1;
+    }
+  }
+</style>
