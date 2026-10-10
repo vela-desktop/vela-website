@@ -13,7 +13,7 @@ export const SITE = {
   locale: 'en_US',
 } as const;
 
-const REPO = 'https://github.com/BrandoDev/vela';
+const REPO = 'https://github.com/vela-desktop/vela';
 
 export const LINKS = {
   repo: REPO,
@@ -27,7 +27,7 @@ export const LINKS = {
   docs: `${REPO}/tree/main/docs`,
   rendererDoc: `${REPO}/blob/main/docs/renderer.md`,
   license: `${REPO}/blob/main/LICENSE`,
-  website: 'https://github.com/BrandoDev/vela-website',
+  website: 'https://github.com/vela-desktop/vela-website',
   rss: '/rss.xml',
 } as const;
 
