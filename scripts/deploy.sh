@@ -2,6 +2,7 @@
 # Build velade.org and publish it to the web server as a new release.
 #
 #   DEPLOY_HOST=deploy@<vm-address> scripts/deploy.sh
+#   DEPLOY_HOST=local scripts/deploy.sh      (when building on the web server itself)
 #
 # Each run uploads dist/ to $DEPLOY_PATH/releases/<timestamp>/ (unchanged files
 # are hard-linked to the previous release, so uploads stay small), then switches
@@ -26,11 +27,18 @@ test -f dist/index.html || { echo "dist/ is missing or incomplete; run the build
 release="$(date -u +%Y%m%dT%H%M%SZ)"
 echo "Uploading release $release to $DEPLOY_HOST:$DEPLOY_PATH"
 
-ssh "$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/releases'"
-rsync -az --delete --link-dest="$DEPLOY_PATH/current/" \
-  dist/ "$DEPLOY_HOST:$DEPLOY_PATH/releases/$release/"
+if [ "$DEPLOY_HOST" = "local" ]; then
+  on_host() { sh -c "$1"; }
+  target="$DEPLOY_PATH/releases/$release/"
+else
+  on_host() { ssh "$DEPLOY_HOST" "$1"; }
+  target="$DEPLOY_HOST:$DEPLOY_PATH/releases/$release/"
+fi
 
-ssh "$DEPLOY_HOST" "set -e
+on_host "mkdir -p '$DEPLOY_PATH/releases'"
+rsync -az --delete --chmod=D755,F644 --link-dest="$DEPLOY_PATH/current/" dist/ "$target"
+
+on_host "set -e
   cd '$DEPLOY_PATH'
   ln -sfn 'releases/$release' current.next
   mv -T current.next current
