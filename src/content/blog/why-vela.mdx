@@ -23,7 +23,7 @@ But I don't want to.
 
 Wanting a modern desktop shouldn't be a strange desire you satisfy with a weekend of tweaking. It should be the default. The baseline. It's what you get on Windows or macOS the first time you turn the computer on.
 
-I'm not trying to copy Windows. I want what it, and macOS, get right, and on this, the Linux desktop still has something to learn from them.
+I want what it, and macOS, get right, and on this, the Linux desktop still has something to learn from them.
 
 So I started building Vela.
 
@@ -35,7 +35,7 @@ So Vela owns the whole pipeline. It has its own Wayland compositor and Vulkan re
 
 - **Fluid.** Every animation advances on your monitor's real refreshes, never on an arbitrary timer: at 180 Hz, it can take 180 steps per second. A slow app can't hold the screen back; the cursor, the animations and every other window stay on time.
 - **Sharp.** Fractional scaling is designed around physical pixels. When an app renders at the screen's scale, its pixels reach the display one to one, even at 125% or 175%, and an automated test checks it bit for bit.
-- **Coherent.** Taskbar, Start menu, Snap layouts, Task View, quick settings, notifications, Files and Settings are designed as one desktop, not a collection of unrelated utilities.
+- **Coherent.** Taskbar, Start menu, Snap layouts, Task View, quick settings, notifications, Files and Settings are designed as one desktop, not a collection of unrelated utilities. And coming.
 
 None of this costs efficiency. On my main development machine, the compositor idles at 17 MiB and 0.1% CPU. Use the hardware when it improves the experience; avoid overhead when it doesn't. That's the whole idea.
 
