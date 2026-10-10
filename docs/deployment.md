@@ -76,8 +76,10 @@ as the *Forward Port* in the proxy.
 
 Optional:
 
-- To log real visitor addresses instead of the proxy's: `sudo a2enmod remoteip`,
-  replace `<NPM_PROXY_IP>` in the two `RemoteIP` lines, uncomment them, reload.
+- Real visitor addresses in logs: the virtual host reads them from the proxy's
+  `X-Real-IP` header once `sudo a2enmod remoteip` is enabled. It trusts that header
+  only from the proxy address in `RemoteIPInternalProxy`; set it to your
+  `<NPM_PROXY_IP>`. Without the module, logs show the proxy's address.
 - To hide Apache's version in the `Server` header, set `ServerTokens Prod` in
   `/etc/apache2/conf-available/security.conf`. This is global: it affects every
   site on the VM.
@@ -134,6 +136,39 @@ Options, as environment variables: `DEPLOY_PATH` (default `/var/www/velade.org`)
 
 When the repository is checked out on the web server itself, use
 `DEPLOY_HOST=local`: the same steps run locally, without SSH.
+
+### Automatically, on every push
+
+The VM can publish `main` by itself. A systemd timer checks GitHub every two
+minutes; when `main` has a new commit it builds that commit in a dedicated clone
+and publishes it with `scripts/deploy.sh`. A failed build leaves the live site
+untouched and is retried on the next run. It runs as an unprivileged `velade`
+account and needs no inbound connection or GitHub credentials (the repository is
+public).
+
+One-time setup, as root on the VM (Node.js is copied to `/opt/node-v24` so the
+service account can use it; any Node 22.12+ install works):
+
+```sh
+cp -a "$(dirname "$(dirname "$(command -v node)")")" /opt/node-v24
+adduser --system --group --home /var/lib/velade velade
+sudo -u velade git clone https://github.com/vela-desktop/vela-website.git /var/lib/velade/vela-website
+chown -R velade:velade /var/www/velade.org
+cp /var/lib/velade/vela-website/deploy/systemd/velade-autodeploy.* /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now velade-autodeploy.timer
+```
+
+Then:
+
+```sh
+systemctl start velade-autodeploy.service        # publish now, without waiting
+journalctl -u velade-autodeploy.service -n 50    # what the last runs did
+systemctl list-timers velade-autodeploy.timer    # when the next check is
+```
+
+With the timer active, publish only through it (or as `velade`): releases created
+by another account could not be pruned by the service.
 
 ### By hand
 
@@ -221,6 +256,9 @@ Write or edit content, commit, then publish:
 ```sh
 DEPLOY_HOST=deploy@<VM_IP> scripts/deploy.sh
 ```
+
+With automatic deploys, pushing to `main` is enough: the site updates within a
+few minutes.
 
 HTML is revalidated on every visit, so changes are visible immediately. Hashed
 assets in `/_astro/` are cached for a year; their file names change whenever their

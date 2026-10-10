@@ -1,0 +1,20 @@
+[Unit]
+Description=Publish velade.org when GitHub main changes
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=velade
+Group=velade
+Environment=HOME=/var/lib/velade
+Environment=PATH=/opt/node-v24/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/var/lib/velade/vela-website/deploy/autodeploy.sh
+TimeoutStartSec=15min
+Nice=10
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/velade /var/www/velade.org
