@@ -132,6 +132,9 @@ and Apache needs no reload. The five most recent releases are kept.
 Options, as environment variables: `DEPLOY_PATH` (default `/var/www/velade.org`),
 `KEEP` (releases to keep, default 5), `SKIP_BUILD=1` (upload the existing `dist/`).
 
+When the repository is checked out on the web server itself, use
+`DEPLOY_HOST=local`: the same steps run locally, without SSH.
+
 ### By hand
 
 ```sh
