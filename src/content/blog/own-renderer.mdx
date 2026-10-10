@@ -1,0 +1,76 @@
+---
+title: "Why Vela has its own renderer"
+description: "Vela is built on wlroots, but draws everything itself, with its own scene and a Vulkan-only renderer. Why I made that choice, and what it cost."
+pubDate: 2026-10-10
+draft: false
+tags: ["Renderer"]
+---
+
+import Aside from '../../components/mdx/Aside.astro';
+
+Most compositors built on wlroots use `wlr_scene`: a ready-made scene graph that handles what has changed on screen, which windows are visible, when apps may draw again, and when a fullscreen game can go straight to the display. It's good. Vela used it too, at the beginning.
+
+Then I replaced it, and the wlroots renderer with it. It's the biggest technical decision in Vela, and it raises an obvious question: *why not just use what's there?*
+
+## What wlroots still does
+
+wlroots remains the plumbing, and it's excellent plumbing: talking to the hardware (DRM/KMS, input through libinput, sessions), managing monitors and their modes, implementing the Wayland protocols, handling buffers.
+
+What Vela took over is everything between an app handing over a frame and a pixel lighting up: **the scene, the drawing, the timing of every frame, and the policy.**
+
+## Why
+
+Vela has five goals for its renderer, in this order:
+
+1. **Perfect sharpness at any scale**, from 100% to 200%.
+2. **Fluidity at any refresh rate**, from 60 to 360 Hz, and with VRR.
+3. **Minimal latency**, from your hand to the screen.
+4. **Lightness**: only what changes is drawn; with no changes, the GPU sleeps.
+5. **Effects**: live blur, rounded corners and shadows, sharp at every scale.
+
+Each of them needs control over something a general-purpose scene graph decides for you.
+
+- **Sharpness** means knowing exactly when an app's buffer lands 1:1 on the screen's pixels and then copying it without any filtering, snapping every window to whole physical pixels, and using a quality filter instead of the default bilinear one when resampling is unavoidable. Before that work, a centered window at 150% had up to **134 thousand** pixels that differed from what the app drew. Today an automated test checks every pixel at 100, 125, 150, 175, 200 and 225%, after opening, snapping, maximizing and restoring a window. A single differing pixel fails it.
+- **Fluidity and latency** mean owning *when* a frame is built: computing animations for the moment the frame will appear, and drawing as late as safely possible before each refresh. That's its own story: [Following the monitor, not a timer](/blog/frame-clock/).
+- **Effects** mean every element of the scene can carry a rounded clip, a shadow and a blurred background, and that the area to redraw grows where blur needs it.
+- **Robustness** means keeping each app's last *ready* frame, so a late app never holds the screen back. More in [A slow app can't freeze your desktop](/blog/slow-apps/).
+
+You can bolt some of this onto someone else's scene. You can't make all of it the foundation.
+
+## Vulkan, and nothing else
+
+The renderer is Vulkan 1.4, with no OpenGL or software fallback. One code path, written against modern features: dynamic rendering, timeline semaphores, push descriptors, and proper buffer and synchronization sharing with the kernel and with apps.
+
+The trade-off is real: Vela needs a GPU with Vulkan 1.4. In practice that's AMD from GCN onward and Intel from Skylake onward with Mesa 25.0 or newer, or NVIDIA with the proprietary driver 570 or newer, or NVK. On anything older, Vela says so clearly at startup instead of crashing.
+
+## One renderer, not two
+
+wlroots still draws a few things by itself: it prepares the hardware cursor, copies the screen for screenshots and screen sharing, and uploads the buffers of apps that draw on the CPU. Instead of keeping a second renderer around for that, Vela's renderer also implements wlroots' own renderer interface. Same GPU device, same shaders, same blending, same synchronization: wlroots thinks it's talking to its own renderer, and it's talking to Vela's.
+
+## Less copying, fewer bugs
+
+The scene doesn't copy each app's tree of surfaces. At drawing time it reads them directly from wlroots, and keeps only what's Vela's: positions, effects, animations. Less duplicated state means fewer ways for two copies to disagree.
+
+## What it cost
+
+Owning the scene means redoing everything `wlr_scene` gives for free:
+
+- working out which parts of the screen changed, and redrawing only those;
+- skipping whatever is covered by opaque windows, and not asking hidden apps to draw;
+- telling apps when to draw again, and which monitors they're on;
+- window and screen captures, for Alt+Tab previews and screenshots;
+- letting a fullscreen app go straight to the display.
+
+That was the longest part of the work. The old compositor kept working until the new scene matched it, verified with tests; only then did `wlr_scene` go away.
+
+It paid off. Dragging a window at 144 Hz used 17–29 ms of CPU over 3.4 seconds, against 34–36 ms with `wlr_scene`. At idle, the compositor uses no CPU.
+
+<Aside title="Not a criticism">
+  `wlr_scene` is the right choice for most compositors, and Vela wouldn't exist without wlroots. Vela's goals are narrower and stricter, and owning the path from an app's frame to the pixel is the only way I found to promise them.
+</Aside>
+
+## What's next
+
+There is still work underneath: 10-bit color, HDR and color management are the next stage of the renderer, and NVIDIA needs more testing. A smaller dependency on wlroots also helps with something else: wlroots changes its API with every minor version, and the less of it Vela uses, the less there is to follow.
+
+The whole design, with every decision and every measurement, is in [Vela's renderer documentation](https://github.com/vela-desktop/vela/blob/main/docs/renderer.md).

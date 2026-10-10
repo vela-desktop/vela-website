@@ -1,0 +1,86 @@
+---
+title: "Following the monitor, not a timer"
+description: "How Vela decides when to draw: one clock per monitor, animations computed for the moment you'll see them, and frames drawn as late as safely possible."
+pubDate: 2026-10-10
+draft: false
+tags: ["Renderer"]
+---
+
+import Aside from '../../components/mdx/Aside.astro';
+
+You judge how smooth a desktop is in the first few seconds: open a menu, drag a window, switch desktops. When it's right, you don't notice anything. When it's wrong, you can't stop noticing: a small stutter, an animation that feels slightly off, a cursor that trails behind your hand.
+
+A lot of that comes down to one question that most people never think about: **when does the desktop draw?** In Vela, the answer belongs to Vela: it's one of the reasons it [has its own renderer](/blog/own-renderer/).
+
+## The problem with timers
+
+The simple answer is a timer. Advance animations 60 times a second, or draw a new frame as soon as the previous one is on screen. Both are wrong in ways you can feel.
+
+- **Your monitor isn't a timer.** It refreshes at 144, 165 or 180 Hz, and its real refreshes drift against any clock you set. Frames get repeated or skipped, and motion judders.
+- **Drawing early means showing old news.** A frame drawn right after the previous refresh then waits almost a whole refresh before it lights up. At 60 Hz, that's up to 16.7 ms between what the desktop knew and what you see.
+
+Vela throws both ideas away.
+
+## One clock per monitor
+
+Every monitor gets its own frame cycle. A 60 Hz and a 240 Hz monitor connected together each run at their own pace; neither slows the other down.
+
+Animations advance on the monitor's **real** refreshes. At 180 Hz an animation can take 180 steps per second, and it takes the same time on every monitor. There is no constant tuned for one refresh rate.
+
+## Animating for the moment you'll see it
+
+When Vela draws a frame, it doesn't ask "what time is it now?". It asks "**when will this frame appear?**", and computes every animation for that moment: the last real refresh plus one period, from the presentation feedback the display reports back.
+
+That prediction has to be right, so the frame clock checks it. Sometimes a frame takes more than one refresh to reach the screen: when Vela runs in a window inside KDE, or on some drivers. The clock compares every presentation with its prediction, and when the last 8 agree on an offset of a whole number of refreshes, it learns that latency. Nested in KDE at 180 Hz, after learning, the prediction is off by **1 µs** on average.
+
+## Drawing as late as possible
+
+The second idea is called *late latching*. Instead of drawing right after the previous refresh, Vela measures how long a frame takes and starts drawing **that long, plus a small margin, before the next refresh**. Input and animations are sampled later, so what reaches the screen is fresher.
+
+The details are where it gets interesting:
+
+- **The cost** of a frame is measured from when it was supposed to start until it is really ready, GPU included, using GPU timestamps. Vela uses the *worst* cost of the last second, so one slow frame doesn't make the following ones miss their refresh.
+- **The margin** starts at 1 ms. A frame that shows up late makes it grow immediately; then it shrinks back by 0.25 ms per second.
+- **The budget is capped.** Cost plus margin never takes the whole refresh period: there is always time left for the next frame, so the refresh rate is never halved.
+- **It knows whose fault a delay is.** If a frame is late and the margin can still grow, the delay was Vela's. If the margin is already at its maximum, the delay belongs to the display, and it becomes learned latency.
+
+The result is the time from drawing to light, which is the latency the compositor adds to everything you do:
+
+| Refresh rate | Without late latching | With late latching |
+|---|---|---|
+| 60 Hz | 16.7 ms | 1.1–1.9 ms |
+| 360 Hz | 2.78 ms | 1.1–1.9 ms |
+
+With late latching it stays between 1.1 and 1.9 ms at every refresh rate from 60 to 360 Hz, measured with vkcube on a Radeon RX 9070 XT.
+
+## The bug that taught me the most
+
+The first time I ran Vela from a TTY, on real hardware, I had a 180 Hz monitor and a 75 Hz one side by side. Moving the mouse dragged the 180 Hz monitor **below 60 fps**.
+
+The cause: when only the cursor moved, Vela sent the display a commit without a new image. With DRM, a commit like that blocks until that monitor's next refresh. So every mouse movement stalled the compositor for about 12 ms, waiting on the slow monitor, and the fast one paid for it.
+
+The fix is a rule now: **never a commit without a buffer.** When only the cursor moves, Vela still submits a frame, with nothing marked as changed, which costs almost nothing to draw. The same setup today, dragging a window: 0 missed refreshes, 0.03 ms of CPU per frame.
+
+## Testing time itself
+
+You can't test timing on a clock that lies. wlroots' headless backend, which runs a compositor without a screen, uses a millisecond timer and truncates the period: at 144 Hz it actually produces 166 frames per second, and it "presents" each frame the instant it's submitted.
+
+So Vela has its own virtual refresh for tests, with nanosecond deadlines on an exact grid. A frame appears at the first refresh at which it was ready, GPU included; if it wasn't, the refresh is missed, as on a real monitor. On it, at 60, 75, 144, 165, 240 and 360 Hz: **0 missed refreshes, prediction error 0.**
+
+<Aside title="Try it yourself">
+  Run Vela with `VELA_DEBUG=1` and every two seconds it prints the frame cost, the margin, the time from drawing to light, the prediction error and the missed refreshes. `VELA_LATCH=0` turns late latching off, for comparison.
+</Aside>
+
+## And VRR?
+
+With variable refresh rate there is no fixed refresh to aim for: the monitor waits for the frame. Because animations are computed for the predicted presentation time rather than a fixed period, they stay correct. A fullscreen game that goes straight to the display is submitted as soon as it has a frame, without planning for a refresh that doesn't exist.
+
+By default VRR turns on only for fullscreen apps, because some monitors flicker with it on the desktop. You can change that in Settings.
+
+## Invisible, on purpose
+
+None of this shows up as a feature. There is no toggle called "frame clock". You only notice it when it's missing, and that's the point: a desktop should feel like it's moving with your monitor, not next to it.
+
+All of it assumes one more thing: that nothing else can make a frame wait. An app whose GPU is late could, and that's the subject of [A slow app can't freeze your desktop](/blog/slow-apps/).
+
+The whole design, with every number, is in [Vela's renderer documentation](https://github.com/vela-desktop/vela/blob/main/docs/renderer.md).

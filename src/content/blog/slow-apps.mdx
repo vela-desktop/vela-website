@@ -1,0 +1,73 @@
+---
+title: "A slow app can't freeze your desktop"
+description: "When one app's GPU falls behind, the rest of the screen shouldn't pay for it. How Vela keeps the cursor and every other window on time: from 47 missed refreshes to 0."
+pubDate: 2026-10-10
+draft: false
+tags: ["Renderer"]
+---
+
+import Aside from '../../components/mdx/Aside.astro';
+
+You have probably seen this: one app gets busy, and suddenly the whole desktop hitches. The cursor stutters, an animation skips, windows that have nothing to do with it stop being smooth.
+
+Often the desktop isn't slow at all. It's **waiting**.
+
+## How one app can hold everything back
+
+Modern apps draw with the GPU. To save time, they hand their new frame to the compositor *before* the GPU has finished drawing it, together with a fence: a promise that says "this will be ready when the fence is signaled".
+
+If the compositor puts that frame on screen right away, its own frame now depends on that promise. And if the app's GPU work is late, the whole frame is late: the cursor, the animations and every other window miss the monitor's refresh along with it. All the care that goes into [following the monitor](/blog/frame-clock/) is lost in one go.
+
+It's a group photo waiting for the one person who is still getting ready.
+
+## The idea: don't wait, show what's ready
+
+The fix, in principle, is simple. Apply an app's new frame only **when it's actually ready**. Until then, keep showing its previous frame, which is complete, and let everything else move on schedule.
+
+This isn't my invention: KWin and Mutter work this way. Doing it in Vela was harder than it sounds. wlroots 0.20 has a way to hold back an app's update, but it doesn't expose the fence of a held update when the app uses *explicit sync*, which is exactly what modern apps use, Firefox and apps drawing through Mesa's drivers included. Covering only the older *implicit sync* would have fixed the wrong apps. So I waited until it could be done properly, as a stage of its own.
+
+## How Vela does it
+
+When an app sends a frame whose buffer isn't ready, Vela holds that update and keeps the app's last ready state, which is what every frame draws in the meantime. This is one of the places where [having its own scene](/blog/own-renderer/) matters: that "last ready state" is Vela's to keep. How it knows the buffer is ready depends on the app:
+
+- **Explicit sync:** Vela finds the fence of the held update and waits until it is *signaled*, through the event loop. wlroots on its own only waits for the fence to *exist*.
+- **Implicit sync:** Vela takes the buffer's pending write fences and polls them in the event loop.
+- **Shared-memory buffers**, drawn by the CPU, are always ready.
+
+Updates are applied in order, and the "you can draw again" signal goes back to the app together with its update. So the app is naturally paced by its own GPU, and nobody else is.
+
+## The part I didn't expect
+
+With that in place, explicit sync was solved. Implicit sync barely improved: from 47 missed refreshes to 36.
+
+The reason was underneath, in the driver. On AMD, RADV makes every imported buffer part of every GPU submission, and the kernel makes a submission wait for the pending writes of every implicitly synced buffer in it. Vela kept imported app buffers in a cache. So a buffer that was no longer on screen, but that the app was busy redrawing, still made **every** frame wait for that app.
+
+The fix: keep a buffer imported only while it's actually in use, and import it again when the app sends it back. A new import costs **9 µs** (median; 40 µs at most). A stall costs whole frames.
+
+## The numbers
+
+The test uses a deliberately slow app whose GPU work finishes about **150 ms** after it hands over each frame, while the cursor moves for one second, at 60 Hz:
+
+| | Missed refreshes | Frames presented |
+|---|---|---|
+| Explicit sync, before | 47 | 8 |
+| Explicit sync, now | **0** | **59** |
+| Implicit sync, before | 47 | 9 |
+| Implicit sync, holding updates only | 36 | 19 |
+| Implicit sync, now | **0** | **58** |
+
+From 8 frames in a second to 59, with an app that is 150 ms late on every frame.
+
+<Aside title="A test that proves itself">
+  This measurement runs in Vela's functional tests on every run. The test also turns the waiting off and checks that the output really does stall, so it can't pass by accident.
+</Aside>
+
+## What's still left
+
+One case remains: a *synchronized subsurface*, a part of a window that must update together with its parent, reaches the screen one step after its parent when its buffer is late, instead of together with it. It's rare, and it's written down.
+
+## What you notice
+
+Nothing, and that's the point. A slow app gets slow on its own. The cursor, your animations and every other window keep following your monitor.
+
+The full details are in [Vela's renderer documentation](https://github.com/vela-desktop/vela/blob/main/docs/renderer.md).
