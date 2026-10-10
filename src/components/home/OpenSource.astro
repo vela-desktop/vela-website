@@ -2,6 +2,9 @@
 import SectionLabel from '../SectionLabel.astro';
 import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
 import { LINKS } from '../../consts';
+
+const cloneCommand = `git clone ${LINKS.repo}.git`;
+const repoDisplay = LINKS.repo.replace('https://', '');
 ---
 
 <section id="open-source" class="open" aria-labelledby="open-title">
@@ -46,7 +49,7 @@ import { LINKS } from '../../consts';
           package, updated with <code>vela-update</code>. Other distributions can
           build from source.
         </p>
-        <pre class="terminal" aria-label="Install commands for Arch-based distributions"><code><span class="terminal__prompt">$</span> git clone https://github.com/vela-desktop/vela.git
+        <pre class="terminal" aria-label="Install commands for Arch-based distributions"><code><span class="terminal__prompt">$</span> {cloneCommand}
 <span class="terminal__prompt">$</span> cd vela/packaging/arch
 <span class="terminal__prompt">$</span> VELA_GIT_URL=file://$PWD/../.. makepkg -si</code></pre>
         <a class="link" href={LINKS.install} rel="noopener">Installation guide <span class="arrow arrow--ne" aria-hidden="true">↗</span></a>
@@ -84,7 +87,7 @@ import { LINKS } from '../../consts';
 
     <a class="repo" href={LINKS.repo} rel="noopener" data-reveal>
       <span class="repo__label label">The source</span>
-      <span class="repo__url">github.com/vela-desktop/vela</span>
+      <span class="repo__url">{repoDisplay}</span>
       <span class="repo__arrow arrow arrow--ne" aria-hidden="true">↗</span>
     </a>
   </div>
