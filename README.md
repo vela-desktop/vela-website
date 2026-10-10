@@ -1,6 +1,6 @@
 # velade.org
 
-The website of [Vela](https://github.com/BrandoDev/vela), a modern Linux desktop
+The website of [Vela](https://github.com/vela-desktop/vela), a modern Linux desktop
 environment: a product presentation and a development journal, built with
 [Astro](https://astro.build/) as a fully static site and served by Apache.
 
@@ -83,7 +83,7 @@ DEPLOY_HOST=deploy@<vm-address> scripts/deploy.sh
 ## Assets and licenses
 
 - Screenshots, the Vela logo and the wallpaper come from the
-  [Vela repository](https://github.com/BrandoDev/vela) and are licensed under
+  [Vela repository](https://github.com/vela-desktop/vela) and are licensed under
   GPL-3.0-or-later. Website-specific crops and the corrected wallpaper copy are
   described in [docs/design.md](docs/design.md#assets).
 - Fonts are licensed under the SIL Open Font License 1.1; the license texts are in

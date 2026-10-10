@@ -16,3 +16,4 @@ dist/
 
 # reference snapshot of the Vela repository (not part of the website)
 /vela-main.zip
+/.reference/

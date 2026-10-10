@@ -1,0 +1,46 @@
+---
+title: "Why Vela?"
+description: "Wanting a modern Linux desktop shouldn't be a strange desire. Why I started building Vela, and what modern means to me."
+pubDate: 2026-10-10
+draft: true
+---
+
+Over the last few years I tried to switch from Windows to Linux more times than I can count. And every time, I liked almost everything about it.
+
+Linux is fantastic. I love the power of the terminal, Btrfs and its snapshots, living on the leading edge of software. None of that was ever the problem.
+
+The problem was what I saw on the screen.
+
+Out of the box, Windows feels current. The Linux desktop still feels like 2013. Not in what it can do, but in how it looks, moves and responds: the animations, the icons, the small details that tell you whether something was designed this decade.
+
+It's an aesthetic thing, I know. But aesthetics are not a small thing when you look at something all day. And I had just bought a high-end desktop machine. I wanted to actually use it, not feel like I was back in 2013 because of the animations and icons in front of me.
+
+## "Just customize it"
+
+Yes, I know. I can customize. That's the first answer anyone gives, and with enough themes, extensions and evenings, you can get close.
+
+But I don't want to.
+
+Wanting a modern desktop shouldn't be a strange desire you satisfy with a weekend of tweaking. It should be the default. The baseline. It's what you get on Windows or macOS the first time you turn the computer on.
+
+I'm not trying to copy Windows. I want what it, and macOS, get right, and on this, the Linux desktop still has something to learn from them.
+
+So I started building Vela.
+
+## Modern is not a theme
+
+You can't get there by painting new icons on an old foundation. Much of what makes a desktop feel right happens underneath: when a frame is drawn, how sharp a window is at 125%, whether an animation keeps up with your monitor.
+
+So Vela owns the whole pipeline. It has its own Wayland compositor and Vulkan renderer, a Qt Quick shell, and a file manager and settings app built to match. In practice:
+
+- **Fluid.** Every animation advances on your monitor's real refreshes, never on an arbitrary timer: at 180 Hz, it can take 180 steps per second. A slow app can't hold the screen back; the cursor, the animations and every other window stay on time.
+- **Sharp.** Fractional scaling is designed around physical pixels. When an app renders at the screen's scale, its pixels reach the display one to one, even at 125% or 175%, and an automated test checks it bit for bit.
+- **Coherent.** Taskbar, Start menu, Snap layouts, Task View, quick settings, notifications, Files and Settings are designed as one desktop, not a collection of unrelated utilities.
+
+None of this costs efficiency. On my main development machine, the compositor idles at 17 MiB and 0.1% CPU. Use the hardware when it improves the experience; avoid overhead when it doesn't. That's the whole idea.
+
+## Where it is today
+
+Vela is alpha software. You can already pick it at the login screen, next to Plasma, and use it every day: compositor, shell, file manager, settings, lock screen. There is still a lot to do, from input methods to HDR to Vela's own login screen, and this journal is where I'll write about it as it happens.
+
+If you've ever felt the same way, [try Vela, follow along, or tell me what's missing](https://github.com/vela-desktop/vela). A modern desktop should be the normal thing to expect.
