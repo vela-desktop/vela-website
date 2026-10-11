@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { slug } from 'github-slugger';
 
 export type Post = CollectionEntry<'blog'>;
 
@@ -16,6 +17,11 @@ export async function getPosts(): Promise<Post[]> {
 
 export function postUrl(post: Post): string {
   return `/blog/${post.id}/`;
+}
+
+/** The page listing every entry with a tag: "Renderer" → /blog/topics/renderer/. */
+export function topicUrl(tag: string): string {
+  return `/blog/topics/${slug(tag)}/`;
 }
 
 /** The generated social preview image of an entry (src/pages/og/blog/). */

@@ -4,7 +4,7 @@ import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import PostMeta from '../../components/journal/PostMeta.astro';
 import SailMark from '../../components/journal/SailMark.astro';
-import { formatDate, getPosts, ogImageUrl, postUrl, type Post } from '../../lib/posts';
+import { formatDate, getPosts, ogImageUrl, postUrl, topicUrl, type Post } from '../../lib/posts';
 import { LINKS } from '../../consts';
 import { articleSchema } from '../../lib/schema';
 import '../../styles/prose.css';
@@ -52,7 +52,7 @@ const ogImage = cover
       {
         tags.length > 0 && (
           <ul class="article__tags" role="list" aria-label="Topics">
-            {tags.map((tag) => <li>{tag}</li>)}
+            {tags.map((tag) => <li><a href={topicUrl(tag)}>{tag}</a></li>)}
           </ul>
         )
       }
@@ -183,7 +183,8 @@ const ogImage = cover
     list-style: none;
   }
 
-  .article__tags li {
+  .article__tags a {
+    display: block;
     padding: 0.2rem 0.65rem;
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-pill);
@@ -192,6 +193,12 @@ const ogImage = cover
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--teal);
+    text-decoration: none;
+    transition: border-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .article__tags a:hover {
+    border-color: var(--teal);
   }
 
   .article__title {

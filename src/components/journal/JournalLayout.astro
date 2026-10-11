@@ -21,11 +21,15 @@ export interface Props {
   /** Group index rows by year (journal index). */
   groupByYear?: boolean;
   eager?: boolean;
+  /**
+   * Every published entry, when `posts` is only some of them (a topic page),
+   * so entries keep the number they have in the whole journal.
+   */
+  allPosts?: Post[];
 }
 
-const { posts, maxRows, headingLevel = 'h3', groupByYear = false, eager = false } = Astro.props;
-const total = posts.length;
-const numberOf = (i: number) => total - i;
+const { posts, maxRows, headingLevel = 'h3', groupByYear = false, eager = false, allPosts = posts } = Astro.props;
+const numberOf = (i: number) => allPosts.length - allPosts.findIndex((post) => post.id === posts[i].id);
 
 const [feature, ...others] = posts;
 const cards = others.slice(0, 2);
