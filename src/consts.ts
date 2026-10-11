@@ -13,6 +13,19 @@ export const SITE = {
   locale: 'en_US',
 } as const;
 
+/**
+ * Umami analytics (self-hosted). The scripts are only added to production
+ * builds, and only while `websiteId` is set; `domains` keeps local previews out
+ * of the stats. The recorder (session replay) takes its sampling and masking
+ * settings from the Umami instance, and needs the tracker loaded first.
+ */
+export const UMAMI = {
+  src: 'https://analytics.brandodev.it/script.js',
+  recorderSrc: 'https://analytics.brandodev.it/recorder.js',
+  websiteId: '4f12561f-5384-437e-a6cc-451a9aed37f0',
+  domains: 'velade.org',
+} as const;
+
 const REPO = 'https://github.com/vela-desktop/vela';
 
 export const LINKS = {

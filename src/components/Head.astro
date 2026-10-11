@@ -1,6 +1,6 @@
 ---
 import { Font } from 'astro:assets';
-import { SITE } from '../consts';
+import { SITE, UMAMI } from '../consts';
 
 export interface Props {
   title?: string;
@@ -63,3 +63,9 @@ const imageUrl = new URL(image, Astro.site);
 <Font cssVariable="--font-family-mono" />
 
 <script is:inline>document.documentElement.classList.add('js');</script>
+{import.meta.env.PROD && UMAMI.websiteId && (
+  <>
+    <script is:inline defer src={UMAMI.src} data-website-id={UMAMI.websiteId} data-domains={UMAMI.domains}></script>
+    <script is:inline defer src={UMAMI.recorderSrc} data-website-id={UMAMI.websiteId}></script>
+  </>
+)}
