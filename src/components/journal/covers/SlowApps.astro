@@ -1,0 +1,42 @@
+---
+// Cover of "A slow app can't freeze your desktop": the 60 refreshes of one
+// second at 60 Hz while an app's GPU is 150 ms late on every frame, and how
+// many of them presented a frame, before and now (8 and 59, explicit sync,
+// from the entry's table). Counts, not a timeline: presented refreshes are
+// drawn first.
+import './covers.css';
+
+const slots = 60;
+const rows = [
+  { label: 'Before', presented: 8, y: 170, teal: false },
+  { label: 'Now', presented: 59, y: 300, teal: true },
+];
+const x0 = 60;
+const step = 9.5;
+---
+
+<svg class="cd" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  <text class="cd-label" x={x0} y="112">Frames shown in 1 s · 60 Hz · one app 150 ms late</text>
+  {
+    rows.map((row) => (
+      <g>
+        <text class:list={['cd-label', row.teal ? 'cd-label--teal' : 'cd-label--strong']} x={x0} y={row.y - 14}>
+          {row.label}
+        </text>
+        {Array.from({ length: slots }, (_, i) => (
+          <rect
+            class={i < row.presented ? (row.teal ? 'cd-fill-teal' : 'cd-fill-bright') : 'cd-cell-empty'}
+            x={x0 + i * step}
+            y={row.y}
+            width={step - 3}
+            height="44"
+            rx="1.5"
+          />
+        ))}
+        <text class:list={['cd-value', { 'cd-value--teal': row.teal }]} x={x0 + slots * step + 22} y={row.y + 38}>
+          {row.presented}
+        </text>
+      </g>
+    ))
+  }
+</svg>

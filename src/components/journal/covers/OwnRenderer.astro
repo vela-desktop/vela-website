@@ -1,0 +1,61 @@
+---
+// Cover of "Why Vela has its own renderer": what Vela took over from wlroots
+// (the scene, the drawing, the timing and the policy, between an app's frame
+// and the pixel) and what wlroots still does underneath, as the entry lists.
+import './covers.css';
+
+const parts = ['Scene', 'Drawing', 'Timing', 'Policy'];
+const chip = { x: 178, y: 186, width: 104, gap: 10, height: 60 };
+---
+
+<svg class="cd" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  <rect class="cd-box" x="28" y="186" width="104" height="60" rx="8" />
+  <text class="cd-label cd-label--strong cd-or" x="80" y="222" text-anchor="middle">App</text>
+
+  <rect class="cd-box cd-box--teal" x="160" y="122" width="480" height="168" rx="10" />
+  <text class="cd-label cd-label--teal cd-or" x="178" y="160">Vela</text>
+  <text class="cd-label cd-or-small" x="622" y="160" text-anchor="end">Vulkan 1.4</text>
+  {
+    parts.map((part, i) => (
+      <g>
+        <rect class="cd-box" x={chip.x + i * (chip.width + chip.gap)} y={chip.y} width={chip.width} height={chip.height} rx="6" />
+        <text
+          class="cd-label cd-label--strong cd-or-small"
+          x={chip.x + i * (chip.width + chip.gap) + chip.width / 2}
+          y={chip.y + 36}
+          text-anchor="middle"
+        >
+          {part}
+        </text>
+      </g>
+    ))
+  }
+
+  <rect class="cd-box" x="668" y="186" width="104" height="60" rx="8" />
+  <text class="cd-label cd-label--strong cd-or" x="720" y="222" text-anchor="middle">Pixel</text>
+
+  <path class="cd-line cd-line--bright" d="M 134 216 H 158" marker-end="url(#or-arrow)" />
+  <path class="cd-line cd-line--bright" d="M 642 216 H 666" marker-end="url(#or-arrow)" />
+
+  {[240, 400, 560].map((x) => <line class="cd-line" x1={x} y1="292" x2={x} y2="330" stroke-dasharray="4 5" />)}
+  <rect class="cd-box" x="160" y="330" width="480" height="64" rx="10" />
+  <text class="cd-label cd-label--strong cd-or" x="178" y="369">wlroots</text>
+  <text class="cd-label cd-or-small" x="622" y="368" text-anchor="end">Hardware · input · protocols</text>
+
+  <defs>
+    <marker id="or-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path class="cd-line cd-line--bright" d="M 0 0 L 10 5 L 0 10" />
+    </marker>
+  </defs>
+</svg>
+
+<style>
+  .cd-or {
+    font-size: 20px;
+  }
+
+  .cd-or-small {
+    font-size: 16px;
+    letter-spacing: 0.06em;
+  }
+</style>

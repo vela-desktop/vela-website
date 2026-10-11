@@ -1,0 +1,84 @@
+/*
+ * Shared look of the journal's diagram covers (FrameClock, SlowApps,
+ * OwnRenderer): the same lines, labels and teal as the homepage diagrams.
+ * Each SVG uses a 800×500 viewBox and keeps its drawing clear of the corners,
+ * where PostCover puts the entry number and the tag.
+ */
+.cd {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(70% 60% at 70% 20%, rgb(70 214 224 / 0.12), transparent 70%),
+    linear-gradient(160deg, var(--ink-3), var(--navy) 55%, var(--ink-1));
+  font-family: var(--font-mono);
+}
+
+.cd-label {
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: var(--text-faint);
+}
+
+.cd-label--strong {
+  fill: var(--text);
+}
+
+.cd-label--teal {
+  fill: var(--teal);
+}
+
+.cd-value {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  fill: var(--text);
+}
+
+.cd-value--teal {
+  fill: var(--teal);
+}
+
+.cd-line {
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.cd-line--bright {
+  stroke: var(--line-bright);
+}
+
+.cd-line--teal {
+  stroke: var(--teal);
+}
+
+.cd-box {
+  fill: rgb(12 26 43 / 0.7);
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+
+.cd-box--teal {
+  fill: rgb(70 214 224 / 0.08);
+  stroke: var(--teal);
+}
+
+.cd-fill-teal {
+  fill: var(--teal);
+}
+
+.cd-fill-dim {
+  fill: rgb(170 205 255 / 0.1);
+}
+
+.cd-fill-bright {
+  fill: var(--text-faint);
+}
+
+.cd-cell-empty {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}

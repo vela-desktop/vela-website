@@ -2,6 +2,7 @@
 import { Picture } from 'astro:assets';
 import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
 import { seed, type Post } from '../../lib/posts';
+import { ENTRY_COVERS } from './covers';
 
 export interface Props {
   post?: Post;
@@ -14,8 +15,10 @@ export interface Props {
 
 const { post, kicker, sizes = '(max-width: 64rem) 94vw, 60vw', eager = false, class: className } = Astro.props;
 const cover = post?.data.cover;
+const drawn = !cover && post ? ENTRY_COVERS[post.id] : undefined;
 
-// Entries without a cover get a composition cut from Vela's wallpaper. The
+// Entries without a cover use the one drawn for them (covers/index.ts), or
+// else a composition cut from Vela's wallpaper. The
 // crop, scale and hue are derived from the entry's id: stable between builds,
 // different between entries. The hue stays within ±18°, the way Vela's own
 // wallpaper set varies one design across colors.
@@ -53,8 +56,12 @@ const firstTag = post?.data.tags[0];
         fetchpriority={eager ? 'high' : undefined}
       />
     ) : (
-      <div class="cover__art" style={style} aria-hidden="true">
-        <img src={wallpaper} alt="" width="1920" height="1073" loading={eager ? 'eager' : 'lazy'} decoding="async" />
+      <div class:list={['cover__art', { 'cover__art--drawn': drawn }]} style={drawn ? undefined : style} aria-hidden="true">
+        {drawn ? (
+          <drawn.component {...drawn.props} {...(drawn.image ? { sizes, eager } : {})} />
+        ) : (
+          <img src={wallpaper} alt="" width="1920" height="1073" loading={eager ? 'eager' : 'lazy'} decoding="async" />
+        )}
         <span class="cover__meta">
           <span>Vela Journal</span>
           {kicker && <span>{kicker}</span>}
@@ -92,7 +99,7 @@ const firstTag = post?.data.tags[0];
     inset: 0;
   }
 
-  .cover__art img {
+  .cover__art:not(.cover__art--drawn) img {
     transform-origin: var(--cover-x) var(--cover-y);
     transform: scale(var(--cover-scale)) scaleX(var(--cover-flip));
     filter: hue-rotate(var(--cover-hue)) saturate(1.1);
@@ -105,6 +112,11 @@ const firstTag = post?.data.tags[0];
     background:
       linear-gradient(180deg, rgb(2 6 12 / 0.15), rgb(2 6 12 / 0.55)),
       repeating-linear-gradient(90deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px calc(100% / 12));
+  }
+
+  /* Drawn covers only need the corners darkened, for the number and tag. */
+  .cover__art--drawn::after {
+    background: linear-gradient(180deg, rgb(2 6 12 / 0.45), transparent 20%, transparent 80%, rgb(2 6 12 / 0.45));
   }
 
   .cover__meta,
@@ -142,8 +154,8 @@ const firstTag = post?.data.tags[0];
     transform: scale(1.035);
   }
 
-  :global(a:hover) .cover__art img,
-  :global(a:focus-visible) .cover__art img {
+  :global(a:hover) .cover__art:not(.cover__art--drawn) img,
+  :global(a:focus-visible) .cover__art:not(.cover__art--drawn) img {
     transform: scale(calc(var(--cover-scale) * 1.04)) scaleX(var(--cover-flip));
   }
 
