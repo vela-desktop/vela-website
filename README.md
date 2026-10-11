@@ -31,7 +31,7 @@ Front matter:
 ---
 title: "How the frame clock learns latency"     # required
 description: "One or two sentences for lists, feeds and previews."   # required
-pubDate: 2026-10-20                              # required
+pubDate: 2026-10-20T18:30:00+02:00               # required; the time orders entries published the same day
 updatedDate: 2026-10-24                          # optional
 draft: true                                      # optional; drafts never reach production
 cover: ./cover.webp                              # optional, relative to the entry
