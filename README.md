@@ -42,7 +42,8 @@ tags: ["Renderer", "Wayland"]                    # optional
 
 - Drafts are visible in `npm run dev` with a *Draft* badge. Production builds
   leave them out of pages, the journal index, the RSS feed and the sitemap.
-- Entries without a cover get a generated one cut from Vela's wallpaper.
+- Entries without a cover get a generated one cut from Vela's wallpaper, and a
+  matching social preview image with the title (`src/lib/og.ts`).
 - Use `.mdx` when an entry needs components. `src/components/mdx/` provides
   `Figure` (optimized image with caption; `width="content" | "wide" | "full"`) and
   `Aside` (a set-apart note).
