@@ -18,13 +18,13 @@ Umami counts visits without cookies and without identifying you. For each page v
 
 Your IP address itself is not stored. To count unique visitors, Umami combines it with your browser and a secret value that changes every month, then keeps only a hash of the result. It can't be traced back to you, it can't follow you to other sites, and a new month starts from scratch.
 
+Umami is [open source](https://github.com/umami-software/umami) under the MIT license: anyone can read exactly what it collects. Our instance runs on a server we manage ourselves, and the data stays there.
+
 ## Replays and heatmaps
 
 To see where the site is confusing, Umami also records a small sample of visits, about one in seven, as a replay: how the page was laid out, where you scrolled, moved the mouse and clicked. A replay stops after five minutes at most. The same sample feeds heatmaps, which show where people click on each page, added up across all visits.
 
 A replay contains the page as you saw it, which is the same public text everyone sees. Anything typed into a field is always masked before it leaves your browser, though the site has no forms and no accounts, so there is nothing personal to type anyway. Replays are linked only to the anonymous session described above, never to a name, and are never shared with anyone.
-
-Umami is [open source](https://github.com/umami-software/umami) under the MIT license: anyone can read exactly what it collects. Our instance runs on a server we manage ourselves, and the data stays there.
 
 ## Server logs
 
