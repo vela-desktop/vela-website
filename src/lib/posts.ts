@@ -18,6 +18,11 @@ export function postUrl(post: Post): string {
   return `/blog/${post.id}/`;
 }
 
+/** The generated social preview image of an entry (src/pages/og/blog/). */
+export function ogImageUrl(post: Post): string {
+  return `/og/blog/${post.id}.png`;
+}
+
 const dateFormat = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'long',

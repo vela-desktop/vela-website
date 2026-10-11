@@ -5,7 +5,7 @@ import { SITE, UMAMI } from '../consts';
 export interface Props {
   title?: string;
   description?: string;
-  /** Absolute or root-relative URL of the social preview image. */
+  /** Absolute or root-relative URL of the social preview image, 1200×630. */
   image?: string;
   imageAlt?: string;
   type?: 'website' | 'article';
@@ -53,6 +53,8 @@ const imageUrl = new URL(image, Astro.site);
 <meta property="og:url" content={canonical} />
 <meta property="og:locale" content={SITE.locale} />
 <meta property="og:image" content={imageUrl} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content={imageAlt} />
 {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
 {modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}

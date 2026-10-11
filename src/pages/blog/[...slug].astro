@@ -4,7 +4,7 @@ import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import PostMeta from '../../components/journal/PostMeta.astro';
 import SailMark from '../../components/journal/SailMark.astro';
-import { formatDate, getPosts, postUrl, type Post } from '../../lib/posts';
+import { formatDate, getPosts, ogImageUrl, postUrl, type Post } from '../../lib/posts';
 import { LINKS } from '../../consts';
 import '../../styles/prose.css';
 
@@ -28,7 +28,7 @@ const { title, description, pubDate, updatedDate, cover, coverAlt, tags } = post
 
 const ogImage = cover
   ? (await getImage({ src: cover, width: 1200, height: 630, fit: 'cover', format: 'jpg' })).src
-  : undefined;
+  : ogImageUrl(post);
 ---
 
 <Base
@@ -36,7 +36,7 @@ const ogImage = cover
   description={description}
   type="article"
   image={ogImage}
-  imageAlt={cover ? coverAlt : undefined}
+  imageAlt={cover ? coverAlt : `${title} — Vela Journal`}
   publishedTime={pubDate}
   modifiedTime={updatedDate}
   noindex={post.data.draft}
