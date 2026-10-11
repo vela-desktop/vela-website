@@ -10,9 +10,11 @@
 //   label: "Get started"        # optional, the small label above the title
 //   updated: 2026-10-11         # optional, shown under the header
 //   noindex: true               # optional
+//   schema: faq                 # optional: publish the page's h3 questions as a FAQPage
 //   ---
 import Base from './Base.astro';
 import { formatDate } from '../lib/posts';
+import { faqSchema } from '../lib/schema';
 import '../styles/prose.css';
 
 interface Props {
@@ -22,14 +24,20 @@ interface Props {
     label?: string;
     updated?: string | Date;
     noindex?: boolean;
+    schema?: 'faq';
   };
 }
 
-const { title, description, label, updated, noindex = false } = Astro.props.frontmatter;
+const { title, description, label, updated, noindex = false, schema } = Astro.props.frontmatter;
 const updatedDate = updated ? new Date(updated) : undefined;
+
+// A FAQ is read from the rendered body, so the questions and answers in the
+// structured data are always the ones on the page.
+const body = schema === 'faq' ? await Astro.slots.render('default') : undefined;
+const jsonLd = body ? [faqSchema(body)] : [];
 ---
 
-<Base title={title} description={description} noindex={noindex}>
+<Base title={title} description={description} noindex={noindex} jsonLd={jsonLd}>
   <article class="page">
     <header class="page__header">
       {label && <p class="label label--accent">{label}</p>}
@@ -45,7 +53,7 @@ const updatedDate = updated ? new Date(updated) : undefined;
     </header>
 
     <div class="prose page__body">
-      <slot />
+      {body ? <Fragment set:html={body} /> : <slot />}
     </div>
   </article>
 </Base>

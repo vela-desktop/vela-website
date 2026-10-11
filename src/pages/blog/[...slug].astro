@@ -6,6 +6,7 @@ import PostMeta from '../../components/journal/PostMeta.astro';
 import SailMark from '../../components/journal/SailMark.astro';
 import { formatDate, getPosts, ogImageUrl, postUrl, type Post } from '../../lib/posts';
 import { LINKS } from '../../consts';
+import { articleSchema } from '../../lib/schema';
 import '../../styles/prose.css';
 
 export async function getStaticPaths() {
@@ -40,6 +41,7 @@ const ogImage = cover
   publishedTime={pubDate}
   modifiedTime={updatedDate}
   noindex={post.data.draft}
+  jsonLd={[articleSchema(post, ogImage)]}
 >
   <article class="article">
     <header class="article__header">

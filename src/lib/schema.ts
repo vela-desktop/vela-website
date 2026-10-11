@@ -1,0 +1,101 @@
+// Structured data (schema.org, as JSON-LD) for search engines and other
+// readers of the page. Pages pass these objects to <Base jsonLd={…}>.
+import { LINKS, SITE } from '../consts';
+import { ogImageUrl, postUrl, type Post } from './posts';
+
+type Thing = Record<string, unknown>;
+
+const absolute = (path: string) => new URL(path, SITE.url).href;
+
+/** The project, which publishes the site and the journal. */
+const vela: Thing = {
+  '@type': 'Organization',
+  name: SITE.name,
+  url: absolute('/'),
+  logo: absolute('/brand/vela-icon-512.png'),
+  sameAs: [LINKS.repo],
+};
+
+export function websiteSchema(): Thing {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE.name,
+    url: absolute('/'),
+    description: SITE.description,
+    inLanguage: 'en',
+    publisher: vela,
+  };
+}
+
+export function softwareSchema(): Thing {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: SITE.name,
+    description: SITE.description,
+    url: absolute('/'),
+    applicationCategory: 'DesktopEnhancementApplication',
+    operatingSystem: 'Linux',
+    license: LINKS.license,
+    downloadUrl: absolute(LINKS.install),
+    screenshot: absolute('/og/vela.png'),
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+    author: vela,
+  };
+}
+
+export function articleSchema(post: Post, image?: string): Thing {
+  const { title, description, pubDate, updatedDate, tags } = post.data;
+  const url = absolute(postUrl(post));
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    description,
+    url,
+    mainEntityOfPage: url,
+    image: absolute(image ?? ogImageUrl(post)),
+    datePublished: pubDate.toISOString(),
+    dateModified: (updatedDate ?? pubDate).toISOString(),
+    inLanguage: 'en',
+    keywords: tags.length > 0 ? tags.join(', ') : undefined,
+    author: vela,
+    publisher: vela,
+    isPartOf: { '@type': 'Blog', name: 'Vela Journal', url: absolute('/blog/') },
+  };
+}
+
+const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+
+/** Plain text from a fragment of rendered HTML. */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<\/(p|li|pre)>/g, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&(#x[0-9a-f]+|#\d+|\w+);/gi, (match, entity: string) => {
+      if (entity[0] !== '#') return ENTITIES[entity.toLowerCase()] ?? match;
+      const code = entity[1] === 'x' || entity[1] === 'X' ? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
+      return String.fromCodePoint(code);
+    })
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\s*\n\s*/g, '\n')
+    .trim();
+}
+
+/**
+ * A FAQPage built from a rendered page where every question is an <h3> and
+ * its answer is everything up to the next heading. <h2>s only group questions.
+ */
+export function faqSchema(html: string): Thing {
+  const questions: Thing[] = [];
+  const pattern = /<h3[^>]*>([\s\S]*?)<\/h3>([\s\S]*?)(?=<h[23][\s>]|$)/g;
+  for (const [, heading, answer] of html.matchAll(pattern)) {
+    const name = htmlToText(heading);
+    const text = htmlToText(answer);
+    if (name && text) {
+      questions.push({ '@type': 'Question', name, acceptedAnswer: { '@type': 'Answer', text } });
+    }
+  }
+  return { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: questions };
+}

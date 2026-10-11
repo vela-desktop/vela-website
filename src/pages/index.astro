@@ -5,9 +5,10 @@ import Desktop from '../components/home/Desktop.astro';
 import Philosophy from '../components/home/Philosophy.astro';
 import Journal from '../components/home/Journal.astro';
 import OpenSource from '../components/home/OpenSource.astro';
+import { softwareSchema, websiteSchema } from '../lib/schema';
 ---
 
-<Base>
+<Base jsonLd={[websiteSchema(), softwareSchema()]}>
   <Hero />
   <Desktop />
   <Philosophy />
