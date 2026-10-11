@@ -1,7 +1,7 @@
 ---
 import { Picture } from 'astro:assets';
 import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
-import { seed, type Post } from '../../lib/posts';
+import { OG_COVER_WIDTHS, ogCoverUrl, seed, type Post } from '../../lib/posts';
 
 export interface Props {
   post?: Post;
@@ -15,7 +15,12 @@ export interface Props {
 const { post, kicker, sizes = '(max-width: 64rem) 94vw, 60vw', eager = false, class: className } = Astro.props;
 const cover = post?.data.cover;
 
-// Entries without a cover get a composition cut from Vela's wallpaper. The
+// Entries without a cover show their social preview image (src/lib/og.ts):
+// the title over a crop of Vela's wallpaper, at that image's 1200×630 ratio so
+// no text is cut. The CSS-only crop below is left for the empty journal,
+// which has no entry to draw an image for.
+//
+// That crop is a composition cut from Vela's wallpaper. The
 // crop, scale and hue are derived from the entry's id: stable between builds,
 // different between entries. The hue stays within ±18°, the way Vela's own
 // wallpaper set varies one design across colors.
@@ -39,9 +44,21 @@ const style = [
 const firstTag = post?.data.tags[0];
 ---
 
-<div class:list={['cover', { 'cover--generated': !cover }, className]}>
+<div class:list={['cover', { 'cover--generated': !cover, 'cover--preview': post && !cover }, className]}>
   {
-    cover ? (
+    post && !cover ? (
+      <img
+        src={ogCoverUrl(post, 1200)}
+        srcset={OG_COVER_WIDTHS.map((width) => `${ogCoverUrl(post, width)} ${width}w`).join(', ')}
+        sizes={sizes}
+        alt=""
+        width="1200"
+        height="630"
+        loading={eager ? 'eager' : 'lazy'}
+        fetchpriority={eager ? 'high' : undefined}
+        decoding="async"
+      />
+    ) : cover ? (
       <Picture
         src={cover}
         formats={['avif', 'webp']}
@@ -73,6 +90,11 @@ const firstTag = post?.data.tags[0];
     background: var(--navy);
     aspect-ratio: var(--cover-ratio, 16 / 10);
     box-shadow: 0 0 0 1px var(--line);
+  }
+
+  /* The preview image carries the title: never crop it. */
+  .cover--preview {
+    aspect-ratio: 1200 / 630;
   }
 
   .cover :global(picture) {
