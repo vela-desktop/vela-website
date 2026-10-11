@@ -15,6 +15,11 @@ npm run build        # type-check and build to dist/ (drafts excluded)
 npm run preview      # serve dist/ locally
 ```
 
+The *What's new* page and the latest alpha build on *Install* are read from the
+GitHub API at build time (`src/lib/vela.ts`). Without network access the build
+still succeeds and those parts point to GitHub instead; set `GITHUB_TOKEN` to
+raise the API rate limit.
+
 ## Writing for the journal
 
 Entries live in `src/content/blog/`. Either a single file, or a folder with the
@@ -60,7 +65,8 @@ src/consts.ts           site metadata, links, roadmap list
 src/styles/             tokens.css (design tokens), global.css, prose.css
 src/components/home/    the five homepage chapters
 src/components/journal/ journal layouts: feature, card, row, cover, empty state
-src/pages/              routes: /, /blog/, /blog/<entry>/, /rss.xml, /robots.txt, 404
+src/pages/              routes: /, /blog/, /blog/<entry>/, /blog/topics/<tag>/, /changes/,
+                        /install/, /faq/, /privacy/, /rss.xml, /robots.txt, 404
 src/assets/             screenshots, brand artwork, fonts
 deploy/apache/          production Apache virtual host
 deploy/nginx/           equivalent Nginx configuration (alternative)

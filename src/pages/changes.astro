@@ -1,0 +1,109 @@
+---
+// What's new: the user-facing changes on Vela's main branch, grouped by day,
+// generated at build time from the commit history (src/lib/vela.ts).
+import Page from '../layouts/Page.astro';
+import LatestBuild from '../components/LatestBuild.astro';
+import { recentChanges, type Change } from '../lib/vela';
+import { formatDate } from '../lib/posts';
+import { LINKS } from '../consts';
+
+const changes = await recentChanges();
+const days = Object.entries(
+  changes.reduce<Record<string, Change[]>>((acc, change) => {
+    (acc[change.date.toISOString().slice(0, 10)] ??= []).push(change);
+    return acc;
+  }, {}),
+);
+---
+
+<Page
+  frontmatter={{
+    title: 'What’s new',
+    description: 'The latest changes to Vela, day by day, straight from the main branch.',
+    label: 'Changes',
+  }}
+>
+  <p>
+    Vela is in alpha, and changes every day. This page lists what changed on the main branch,
+    newest first. Every change on main gets its own prebuilt alpha package, which{' '}
+    <code>vela-update</code> installs.
+  </p>
+
+  <LatestBuild more="install" />
+
+  {
+    days.length > 0 ? (
+      days.map(([day, items]) => (
+        <section>
+          <h2>
+            <time datetime={day}>{formatDate(new Date(day))}</time>
+          </h2>
+          <ul class="changes" role="list">
+            {items.map((change) => (
+              <li>
+                <span class:list={['changes__kind', `changes__kind--${change.kind.toLowerCase()}`]}>
+                  {change.kind}
+                </span>
+                <a href={change.url} rel="noopener">{change.text}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    ) : (
+      <p>
+        The list of changes couldn’t be loaded this time. The full history is in the{' '}
+        <a href={LINKS.commits} rel="noopener">repository on GitHub</a>.
+      </p>
+    )
+  }
+
+  <p class="colophon">
+    Generated from the <a href={LINKS.commits} rel="noopener">commit history</a> when the site
+    is built. Changes to tests, documentation and build tooling are left out. For what’s coming
+    next, see the <a href={LINKS.roadmap} rel="noopener">roadmap</a>.
+  </p>
+</Page>
+
+<style>
+  .changes {
+    padding: 0;
+    list-style: none;
+  }
+
+  .changes li {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 1rem;
+    align-items: baseline;
+  }
+
+  .changes__kind {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .changes__kind--new {
+    color: var(--teal);
+  }
+
+  .changes__kind--security {
+    color: var(--coral);
+  }
+
+  .colophon {
+    margin-top: 3em;
+    font-size: 0.86em;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 40rem) {
+    .changes li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.1rem;
+    }
+  }
+</style>

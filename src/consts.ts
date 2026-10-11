@@ -44,6 +44,7 @@ export const LINKS = {
   website: 'https://github.com/vela-desktop/vela-website',
   rss: '/rss.xml',
   faq: '/faq/',
+  changes: '/changes/',
   privacy: '/privacy/',
 } as const;
 

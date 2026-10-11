@@ -6,6 +6,7 @@ label: "Get started"
 ---
 
 import Aside from '../components/mdx/Aside.astro';
+import LatestBuild from '../components/LatestBuild.astro';
 
 Vela is alpha software. You can already use it every day, but it's still changing quickly, and it hasn't been tested on every GPU and driver. Read this page before installing. It takes five minutes, and it can save you an evening.
 
@@ -47,6 +48,8 @@ sh vela/packaging/arch/vela-update
 ```
 
 `vela-update` handles the first installation too. It looks for a prebuilt alpha package matching the latest commit on `main`, checks its SHA-256 checksum and installs it with pacman. If there isn't one, it builds the package on your machine. You don't need a GitHub account.
+
+<LatestBuild more="changes" />
 
 From then on, run `vela-update` whenever you want the latest version:
 

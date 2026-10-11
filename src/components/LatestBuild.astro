@@ -1,0 +1,89 @@
+---
+// The newest prebuilt alpha package (src/lib/vela.ts), on the Install and
+// What's new pages. Renders nothing when GitHub couldn't be reached.
+import { latestAlphaBuild } from '../lib/vela';
+import { formatDate } from '../lib/posts';
+
+export interface Props {
+  /** Link to the What's new page (on Install) or to the install steps. */
+  more: 'changes' | 'install';
+}
+
+const { more } = Astro.props;
+const build = await latestAlphaBuild();
+const megabytes = build && (build.size / 1_000_000).toFixed(1);
+---
+
+{
+  build && (
+    <aside class="build" aria-label="Latest alpha build">
+      <p class="build__label label label--accent">Latest alpha build</p>
+      <p class="build__version">{build.version}</p>
+      <p class="build__meta">
+        <time datetime={build.published.toISOString()}>{formatDate(build.published)}</time>
+        <span aria-hidden="true">·</span>
+        <span>Arch Linux package, {megabytes} MB</span>
+        <span aria-hidden="true">·</span>
+        <a href={build.url} rel="noopener">Release on GitHub</a>
+      </p>
+      <p class="build__more">
+        {more === 'changes' ? (
+          <a href="/changes/">What’s new on main</a>
+        ) : (
+          <a href="/install/#arch-linux-cachyos-endeavouros">Install it with vela-update</a>
+        )}
+      </p>
+    </aside>
+  )
+}
+
+<style>
+  .build {
+    margin-block: 1.6em;
+    padding: 1.1rem 1.35rem;
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--teal);
+    border-radius: 0 var(--radius-m) var(--radius-m) 0;
+    background: rgb(70 214 224 / 0.04);
+    font-family: var(--font-body);
+    font-size: 0.86em;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  .build p {
+    margin: 0;
+  }
+
+  .build__version {
+    margin-top: 0.35rem !important;
+    font-family: var(--font-mono);
+    font-size: 1.15em;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+
+  .build__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--text-faint);
+  }
+
+  @media (max-width: 40rem) {
+    .build__meta {
+      flex-direction: column;
+    }
+
+    .build__meta [aria-hidden] {
+      display: none;
+    }
+  }
+
+  .build__more {
+    margin-top: 0.6rem !important;
+    font-weight: 500;
+  }
+</style>

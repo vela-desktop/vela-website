@@ -141,7 +141,9 @@ When the repository is checked out on the web server itself, use
 
 The VM can publish `main` by itself. A systemd timer checks GitHub every two
 minutes; when `main` has a new commit it builds that commit in a dedicated clone
-and publishes it with `scripts/deploy.sh`. A failed build leaves the live site
+and publishes it with `scripts/deploy.sh`. It also rebuilds when the Vela
+repository's `main` or its alpha releases change, so the *What's new* page and
+the latest build on *Install* stay current. A failed build leaves the live site
 untouched and is retried on the next run. It runs as an unprivileged `velade`
 account and needs no inbound connection or GitHub credentials (the repository is
 public).
