@@ -33,7 +33,7 @@ export const LINKS = {
   readme: `${REPO}#readme`,
   install: '/install/',
   build: `${REPO}#build-from-source`,
-  roadmap: `${REPO}#roadmap`,
+  roadmap: `${REPO}/blob/main/docs/roadmap.md`,
   contributing: `${REPO}#contributing`,
   issues: `${REPO}/issues`,
   commits: `${REPO}/commits/main`,
@@ -54,8 +54,9 @@ export const NAV = [
 ] as const;
 
 /**
- * The "Next" list from the README roadmap. Shown on the homepage while the
- * journal has no entries. Update it when the README changes.
+ * The "Next" list from the roadmap (docs/roadmap.md in the Vela repository).
+ * Shown on the homepage while the journal has no entries. Update it when the
+ * roadmap changes.
  */
 export const ROADMAP_NEXT = [
   'Input methods and an emoji panel',
