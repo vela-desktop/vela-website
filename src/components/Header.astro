@@ -18,7 +18,7 @@ const isJournal = path.startsWith('/blog');
       <ul role="list">
         {
           NAV.map((item) => {
-            const current = item.href === '/blog/' && isJournal;
+            const current = item.href === '/blog/' ? isJournal : item.href === path;
             return (
               <li class:list={{ 'nav__item--secondary': item.href !== '/blog/' }}>
                 <a href={item.href} aria-current={current ? 'page' : undefined}>

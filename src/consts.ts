@@ -31,7 +31,7 @@ const REPO = 'https://github.com/vela-desktop/vela';
 export const LINKS = {
   repo: REPO,
   readme: `${REPO}#readme`,
-  install: `${REPO}#install`,
+  install: '/install/',
   build: `${REPO}#build-from-source`,
   roadmap: `${REPO}#roadmap`,
   contributing: `${REPO}#contributing`,
@@ -42,11 +42,14 @@ export const LINKS = {
   license: `${REPO}/blob/main/LICENSE`,
   website: 'https://github.com/vela-desktop/vela-website',
   rss: '/rss.xml',
+  faq: '/faq/',
+  privacy: '/privacy/',
 } as const;
 
 export const NAV = [
   { label: 'Desktop', href: '/#desktop' },
   { label: 'Philosophy', href: '/#philosophy' },
+  { label: 'Install', href: '/install/' },
   { label: 'Journal', href: '/blog/' },
 ] as const;
 

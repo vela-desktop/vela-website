@@ -1,0 +1,100 @@
+---
+layout: ../layouts/Page.astro
+title: "Questions and answers"
+description: "What Vela is, what it runs on, and how to try it, in short answers."
+label: "FAQ"
+---
+
+Short answers to the questions that come up most. Each one links to where the full story lives.
+
+## About Vela
+
+### What is Vela?
+
+A desktop environment for Linux: the taskbar, Start menu, windows, notifications, file manager and settings you see and use every day. Vela has its own Wayland compositor and Vulkan renderer, a Qt Quick shell, and a file manager and settings app built to match, all designed as one desktop.
+
+### Why build a new desktop instead of improving an existing one?
+
+Because much of what makes a desktop feel modern happens underneath the theme: when a frame is drawn, how sharp a window is at 125%, whether an animation keeps up with your monitor. Getting those right meant owning the whole pipeline, from the moment an app sends a frame to the moment it lights up on the screen. [Why Vela?](/blog/why-vela/) and [Why Vela has its own renderer](/blog/own-renderer/) tell the longer story.
+
+### Is it based on KDE Plasma?
+
+No. The compositor, the heart of any desktop, is Vela's own, and so are the renderer, the shell, Files and Settings. Building a whole desktop environment is a huge undertaking, so for now Vela borrows a few smaller pieces from KDE to lighten the load: portals, the KDE wallet, icon themes and color schemes. That's also why Qt and KDE apps look and behave as they do in Plasma, and why Chrome, Brave and VS Code keep their saved logins. The goal is for Vela to be fully independent.
+
+### Is it ready for daily use?
+
+I use it every day. It's still alpha software, though: it changes quickly, and it hasn't been tested on every GPU and driver. If you try it, keep another desktop or a TTY available.
+
+### Is it free?
+
+Yes. Vela is free software under the [GPL‑3.0‑or‑later](https://github.com/vela-desktop/vela/blob/main/LICENSE) license, and developed in the open on [GitHub](https://github.com/vela-desktop/vela).
+
+## Hardware and compatibility
+
+### Which distributions are supported?
+
+Today, Arch Linux, CachyOS and EndeavourOS, with a native package and an updater, `vela-update`. Other distributions will be supported in the future. In the meantime, you can build and install Vela on any distribution that ships wlroots 0.20, although it isn't officially supported there yet. The [install page](/install/) covers both.
+
+### Which GPUs does it work with?
+
+Any GPU with a Vulkan 1.4 driver: AMD or Intel with Mesa 25.0 or newer, NVIDIA with the proprietary driver 570 or newer, or NVK. Vela is developed on an AMD Radeon RX 9070 XT, and that's where it's tested the most. The [hardware coverage](https://github.com/vela-desktop/vela/blob/main/docs/hardware.md) page says exactly what has been verified on the others.
+
+### Does it work with NVIDIA?
+
+Yes, with the proprietary driver 570 or newer. Vela has NVIDIA-specific handling and gets reports from testers, but NVIDIA has had less testing than AMD so far, especially for screen sharing and suspend. Reports are very welcome.
+
+### Does it run on X11?
+
+No. Vela is a Wayland desktop, a choice it shares with every modern desktop and compositor. X11 apps and games still work through Xwayland, which starts on its own when an app needs it.
+
+### Can I game on it?
+
+Yes. Fullscreen games can go straight to the display without passing through the compositor (direct scanout), with variable refresh rate (FreeSync and G‑Sync) and tearing support where the game asks for it. Steam and older games run through Xwayland.
+
+### Does it support fractional scaling and multiple monitors?
+
+Yes, and fractional scaling is one of the things Vela was designed around. When an app renders at the screen's scale, its pixels reach the display one to one, even at 125% or 175%, and an automated test checks it bit for bit. Each monitor can have its own scale and refresh rate, and monitors can be plugged in and out while Vela runs.
+
+### Will my apps look right?
+
+Qt and KDE apps follow Vela's light and dark modes and accent colors, and so do GTK apps. Apps that draw their own title bar, like Chromium with tabs on top, keep it; the others get Vela's.
+
+## Using Vela
+
+### Can I try it without replacing my desktop?
+
+Yes. Vela can run in a window inside your current Wayland desktop, without installing anything. And installing it doesn't replace anything either: it adds a session to your login screen, next to the ones you already have. See [Install](/install/#try-it-without-logging-out).
+
+### Can I customize it?
+
+Some things already: light and dark modes, wallpaper, accent colors, and the taskbar's alignment. The priority is good defaults first, but customization will be part of Vela, including something like KDE's themes. [On customization](/blog/about-customization/) explains the plan.
+
+### Is there a tiling mode?
+
+Not today. Vela has snap layouts, Snap Assist and virtual desktops, but no tiling window manager. If you'd like to build one, [open an issue](https://github.com/vela-desktop/vela/issues) and let's talk.
+
+### Which languages does it speak?
+
+English and Italian, switched live in *Settings → Time & language*. More languages are on the [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md).
+
+### What happens if it crashes?
+
+The compositor restarts on its own and your Qt and KDE apps reconnect to it. If the screen was locked, Vela comes back locked. If only the shell crashes, your windows stay open while it restarts.
+
+### How do I update it?
+
+On Arch-based distributions, run `vela-update`. It installs a prebuilt package when one is available, and builds one otherwise. The last three versions stay cached, so you can go back if an update causes trouble.
+
+## Getting involved
+
+### I found a bug. What should I do?
+
+Run `vela-report`. It collects the diagnostics you choose, lets you review every file, and uploads nothing. Then [open an issue](https://github.com/vela-desktop/vela/issues) and attach the ZIP it made.
+
+### How can I contribute?
+
+Testing on your hardware and reporting what you find is already a big help. For code, read the [contribution guide](https://github.com/vela-desktop/vela/blob/main/CONTRIBUTING.md), and open an issue before larger changes. Ideas are welcome too.
+
+### What's coming next?
+
+See the [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md), and follow the work as it happens in the [journal](/blog/).

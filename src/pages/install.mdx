@@ -1,0 +1,112 @@
+---
+layout: ../layouts/Page.astro
+title: "Install Vela"
+description: "Try Vela in a window on your current desktop, or install it and pick it at the login screen."
+label: "Get started"
+---
+
+import Aside from '../components/mdx/Aside.astro';
+
+Vela is alpha software. You can already use it every day, but it's still changing quickly, and it hasn't been tested on every GPU and driver. Read this page before installing. It takes five minutes, and it can save you an evening.
+
+<Aside title="Before you start" tone="caution">
+  Keep a working desktop session, or at least a TTY, that you can fall back to. Installing Vela doesn't replace your current desktop: it adds a new session to the login screen, next to the ones you already have.
+</Aside>
+
+## What you need
+
+- **A GPU with Vulkan 1.4.** AMD or Intel with Mesa 25.0 or newer, or NVIDIA with the proprietary driver 570 or newer, or NVK.
+- **A login screen that lists Wayland sessions**, such as SDDM or Plasma Login.
+- **The usual Linux services** for the features that need them: NetworkManager for Wi‑Fi, BlueZ for Bluetooth, PipeWire for audio, UDisks2 for drives, xdg-desktop-portal for screen sharing, and Xwayland for X11 apps and games.
+
+Vela is developed and tested daily on an AMD Radeon RX 9070 XT with Mesa/RADV. NVIDIA, Intel, NVK, virtual machines and hybrid-GPU laptops are supported paths, but have had less testing. The [hardware coverage](https://github.com/vela-desktop/vela/blob/main/docs/hardware.md) page lists exactly what has been verified and where.
+
+## Try it without logging out
+
+The safest first look: build Vela and run it in a window inside your current Wayland desktop, like a virtual monitor. Nothing is installed.
+
+```sh
+git clone https://github.com/vela-desktop/vela.git
+cd vela
+cmake -B build -G Ninja
+cmake --build build
+sh scripts/run-nested.sh
+```
+
+You'll need the build dependencies listed under [Other distributions](#other-distributions) below. Your host desktop keeps the Super key, so in nested mode many shortcuts also work with Alt; the [shortcut reference](https://github.com/vela-desktop/vela/blob/main/docs/shortcuts.md) lists them.
+
+A nested session is great for exploring, but it can't tell you whether Vela works with your monitor and driver directly. For that, you need a real session.
+
+## Arch Linux, CachyOS, EndeavourOS
+
+Vela installs as a native `vela-git` package. Install `git`, `curl` and `base-devel`, then run:
+
+```sh
+git clone https://github.com/vela-desktop/vela.git
+sh vela/packaging/arch/vela-update
+```
+
+`vela-update` handles the first installation too. It looks for a prebuilt alpha package matching the latest commit on `main`, checks its SHA-256 checksum and installs it with pacman. If there isn't one, it builds the package on your machine. You don't need a GitHub account.
+
+From then on, run `vela-update` whenever you want the latest version:
+
+```sh
+vela-update            # update if something new is available
+vela-update --check    # only check, and list the changes
+vela-update --build    # always build locally
+```
+
+The last three packages stay in `~/.cache/vela-update/packages/`. If an update goes wrong, reinstall the previous one:
+
+```sh
+sudo pacman -U ~/.cache/vela-update/packages/vela-git-<version>.pkg.tar.zst
+```
+
+## Other distributions
+
+Other distributions will be supported in the future. Until then, you can build Vela from source on any distribution that ships wlroots 0.20, although it isn't officially supported there yet. You need CMake 3.22 or newer, Ninja, a C17 and C++20 compiler, wlroots 0.20, Qt 6.7 or newer, LayerShellQt, Vulkan headers and loader, `glslc`, GBM, libdrm, FreeType, HarfBuzz, Fontconfig and PAM.
+
+On **Fedora**:
+
+```sh
+sudo dnf install git cmake ninja-build gcc gcc-c++ pkgconf-pkg-config \
+    wlroots-devel wayland-devel wayland-protocols-devel libxkbcommon-devel \
+    pixman-devel libinput-devel libdrm-devel mesa-libgbm-devel \
+    qt6-qtbase-devel qt6-qtbase-private-devel qt6-qtdeclarative-devel \
+    qt6-qttools-devel qt6-qtsvg-devel qt6-qtwayland-devel layer-shell-qt-devel \
+    vulkan-headers vulkan-loader-devel glslc freetype-devel harfbuzz-devel \
+    fontconfig-devel pam-devel polkit-devel librsvg2-devel cairo-devel \
+    zlib-devel gtest-devel python3 python3-numpy python3-pillow
+```
+
+The README has the package list for [openSUSE Tumbleweed](https://github.com/vela-desktop/vela#build-from-source) as well. That one is experimental: it isn't checked by CI yet.
+
+Then build and install:
+
+```sh
+git clone https://github.com/vela-desktop/vela.git
+cd vela
+cmake -B build -G Ninja
+cmake --build build
+sudo cmake --install build
+```
+
+This installs into `/usr/local`. If Vela doesn't appear on the login screen, your display manager may not look there:
+
+```sh
+sudo ln -s /usr/local/share/wayland-sessions/vela.desktop /usr/share/wayland-sessions/
+```
+
+## First login
+
+Log out, pick **Vela** on the login screen, and log in. A few things to know:
+
+- **Super** opens Start, **Super+Tab** opens Task View, **Super+arrows** snap windows, and **Super+A**, **Super+N** and **Super+V** open quick settings, notifications and clipboard history.
+- The interface speaks **English and Italian**. Switch it in *Settings → Time & language*. It changes right away.
+- If the compositor crashes, it restarts on its own and your apps reconnect. If the screen was locked, it comes back locked.
+
+## If something goes wrong
+
+Run `vela-report`. It builds a ZIP with your description and the diagnostics you choose to include, shows you every file before exporting, and uploads nothing. Then [open an issue](https://github.com/vela-desktop/vela/issues) and attach it. From a TTY or over SSH, use `vela-report --cli`.
+
+Every report helps, especially from hardware other than the development machine.

@@ -50,9 +50,8 @@ const repoDisplay = LINKS.repo.replace('https://', '');
           build from source.
         </p>
         <pre class="terminal" aria-label="Install commands for Arch-based distributions"><code><span class="terminal__prompt">$</span> {cloneCommand}
-<span class="terminal__prompt">$</span> cd vela/packaging/arch
-<span class="terminal__prompt">$</span> VELA_GIT_URL=file://$PWD/../.. makepkg -si</code></pre>
-        <a class="link" href={LINKS.install} rel="noopener">Installation guide <span class="arrow arrow--ne" aria-hidden="true">↗</span></a>
+<span class="terminal__prompt">$</span> sh vela/packaging/arch/vela-update</code></pre>
+        <a class="link" href={LINKS.install}>Installation guide <span class="arrow" aria-hidden="true">→</span></a>
       </li>
 
       <li class="path" data-reveal style="--reveal-delay: 90ms">
@@ -269,6 +268,10 @@ const repoDisplay = LINKS.repo.replace('https://', '');
     font-size: 0.8125rem;
     line-height: 1.75;
     color: var(--text);
+  }
+
+  .terminal code {
+    white-space: inherit;
   }
 
   .terminal__prompt {

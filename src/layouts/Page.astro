@@ -1,0 +1,101 @@
+---
+// Layout for standalone text pages written in Markdown or MDX under
+// src/pages/ (Install, FAQ, Privacy): a centered header and the journal's
+// prose styles, so the pages read like the rest of the site.
+//
+//   ---
+//   layout: ../layouts/Page.astro
+//   title: "Install Vela"
+//   description: "One or two sentences for search results and previews."
+//   label: "Get started"        # optional, the small label above the title
+//   updated: 2026-10-11         # optional, shown under the header
+//   noindex: true               # optional
+//   ---
+import Base from './Base.astro';
+import { formatDate } from '../lib/posts';
+import '../styles/prose.css';
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description: string;
+    label?: string;
+    updated?: string | Date;
+    noindex?: boolean;
+  };
+}
+
+const { title, description, label, updated, noindex = false } = Astro.props.frontmatter;
+const updatedDate = updated ? new Date(updated) : undefined;
+---
+
+<Base title={title} description={description} noindex={noindex}>
+  <article class="page">
+    <header class="page__header">
+      {label && <p class="label label--accent">{label}</p>}
+      <h1 class="page__title">{title}</h1>
+      <p class="page__dek">{description}</p>
+      {
+        updatedDate && (
+          <p class="page__updated">
+            Last updated <time datetime={updatedDate.toISOString()}>{formatDate(updatedDate)}</time>
+          </p>
+        )
+      }
+    </header>
+
+    <div class="prose page__body">
+      <slot />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .page {
+    padding-top: calc(var(--header-height) + var(--space-2xl));
+    padding-bottom: var(--space-section);
+    background:
+      radial-gradient(50rem 26rem at 50% 0%, rgb(77 163 255 / 0.07), transparent 70%),
+      var(--paper);
+  }
+
+  .page__header {
+    width: min(100% - 2 * var(--gutter), 56rem);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .page__title {
+    margin-top: var(--space-m);
+    font-family: var(--font-serif);
+    font-size: var(--step-5);
+    font-weight: 420;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+  }
+
+  .page__dek {
+    max-width: 40rem;
+    margin: var(--space-m) auto 0;
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    font-style: italic;
+    font-weight: 350;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  .page__updated {
+    margin-top: var(--space-l);
+    padding-block: 0.9rem;
+    border-block: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+  }
+
+  .page__body {
+    margin-top: var(--space-2xl);
+  }
+</style>
