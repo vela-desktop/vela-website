@@ -21,12 +21,20 @@ const cover = post?.data.cover;
 // wallpaper set varies one design across colors.
 const n = seed(post?.id ?? 'journal');
 const pick = (shift: number, range: number) => ((n >>> shift) % 1000) / 1000 * range;
+const originX = 20 + pick(0, 60);
+const scale = Number((1.15 + pick(10, 0.9)).toFixed(2));
+const flip = (n & 1) === 0 ? 1 : -1;
+// Mirroring around the zoom origin would pull one edge of the image inside the
+// frame. Moving the origin to (x + s·(100 − x)) / (1 + s) gives the same result
+// as mirroring around the center and then zooming in on x, so the image always
+// fills the frame.
+const transformX = flip === 1 ? originX : (originX + scale * (100 - originX)) / (1 + scale);
 const style = [
-  `--cover-x: ${Math.round(20 + pick(0, 60))}%`,
+  `--cover-x: ${transformX.toFixed(1)}%`,
   `--cover-y: ${Math.round(10 + pick(5, 50))}%`,
-  `--cover-scale: ${(1.15 + pick(10, 0.9)).toFixed(2)}`,
+  `--cover-scale: ${scale}`,
   `--cover-hue: ${Math.round(-18 + pick(15, 36))}deg`,
-  `--cover-flip: ${(n & 1) === 0 ? 1 : -1}`,
+  `--cover-flip: ${flip}`,
 ].join('; ');
 const firstTag = post?.data.tags[0];
 ---
