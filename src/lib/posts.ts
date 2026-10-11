@@ -29,13 +29,6 @@ export function ogImageUrl(post: Post): string {
   return `/og/blog/${post.id}.png`;
 }
 
-/** Widths of the WebP copies of that image, used as covers on the site. */
-export const OG_COVER_WIDTHS = [600, 1200] as const;
-
-export function ogCoverUrl(post: Post, width: (typeof OG_COVER_WIDTHS)[number]): string {
-  return `/og/blog/${post.id}-${width}.webp`;
-}
-
 const dateFormat = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'long',

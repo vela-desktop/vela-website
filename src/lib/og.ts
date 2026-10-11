@@ -160,25 +160,11 @@ async function overlay(post: Post): Promise<string> {
   return satori(tree as Parameters<typeof satori>[0], { width: WIDTH, height: HEIGHT, fonts: await fontsPromise });
 }
 
-const rendered = new Map<string, Promise<Buffer>>();
-
 /** The social preview image for one journal entry, as PNG. */
-export function renderOgImage(post: Post): Promise<Buffer> {
-  if (!rendered.has(post.id)) {
-    rendered.set(
-      post.id,
-      Promise.all([background(post.id), overlay(post)]).then(([base, text]) =>
-        sharp(base)
-          .composite([{ input: Buffer.from(text) }])
-          .png({ compressionLevel: 9, palette: false })
-          .toBuffer(),
-      ),
-    );
-  }
-  return rendered.get(post.id)!;
-}
-
-/** The same image as a WebP `width` pixels wide, the cover of the entry on the site. */
-export async function renderOgCover(post: Post, width: number): Promise<Buffer> {
-  return sharp(await renderOgImage(post)).resize({ width }).webp({ quality: 82 }).toBuffer();
+export async function renderOgImage(post: Post): Promise<Buffer> {
+  const [base, text] = await Promise.all([background(post.id), overlay(post)]);
+  return sharp(base)
+    .composite([{ input: Buffer.from(text) }])
+    .png({ compressionLevel: 9, palette: false })
+    .toBuffer();
 }
