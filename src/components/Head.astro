@@ -3,7 +3,10 @@ import { Font } from 'astro:assets';
 import { SITE, UMAMI } from '../consts';
 
 export interface Props {
+  /** The page's own title; the <title> adds SITE.titleSuffix to it. */
   title?: string;
+  /** The whole <title>, for search results, used as written. Social previews keep `title`. */
+  seoTitle?: string;
   description?: string;
   /** Absolute or root-relative URL of the social preview image, 1200×630. */
   image?: string;
@@ -12,12 +15,15 @@ export interface Props {
   publishedTime?: Date;
   modifiedTime?: Date;
   noindex?: boolean;
+  /** Who wrote the page, for <meta name="author">. */
+  author?: string;
   /** schema.org objects, rendered as JSON-LD (see src/lib/schema.ts). */
   jsonLd?: Record<string, unknown>[];
 }
 
 const {
   title,
+  seoTitle,
   description = SITE.description,
   image = '/og/vela.png',
   imageAlt = 'The Vela desktop with the Start menu open over the file manager',
@@ -25,10 +31,11 @@ const {
   publishedTime,
   modifiedTime,
   noindex = false,
+  author,
   jsonLd = [],
 } = Astro.props;
 
-const fullTitle = title ? `${title} — ${SITE.name}` : SITE.title;
+const fullTitle = seoTitle ?? (title ? `${title} — ${SITE.titleSuffix}` : SITE.title);
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const imageUrl = new URL(image, Astro.site);
 // "<" escaped so the data can never close the <script> element early.
@@ -39,6 +46,7 @@ const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
+{author && <meta name="author" content={author} />}
 {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
 
 <meta name="theme-color" content="#050b15" />

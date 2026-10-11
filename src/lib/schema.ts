@@ -1,6 +1,6 @@
 // Structured data (schema.org, as JSON-LD) for search engines and other
 // readers of the page. Pages pass these objects to <Base jsonLd={…}>.
-import { LINKS, SITE } from '../consts';
+import { AUTHOR, LINKS, SITE } from '../consts';
 import { ogImageUrl, postUrl, type Post } from './posts';
 
 type Thing = Record<string, unknown>;
@@ -16,6 +16,13 @@ const vela: Thing = {
   sameAs: [LINKS.repo],
 };
 
+/** The author of the journal. */
+const author: Thing = {
+  '@type': 'Person',
+  name: AUTHOR.name,
+  url: AUTHOR.url,
+};
+
 export function websiteSchema(): Thing {
   return {
     '@context': 'https://schema.org',
@@ -28,7 +35,8 @@ export function websiteSchema(): Thing {
   };
 }
 
-export function softwareSchema(): Thing {
+/** `version` is the latest alpha package, when the build could read it. */
+export function softwareSchema(version?: string): Thing {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -39,6 +47,8 @@ export function softwareSchema(): Thing {
     operatingSystem: 'Linux',
     license: LINKS.license,
     downloadUrl: absolute(LINKS.install),
+    softwareVersion: version,
+    releaseNotes: absolute(LINKS.changes),
     screenshot: absolute('/og/vela.png'),
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
     author: vela,
@@ -60,9 +70,23 @@ export function articleSchema(post: Post, image?: string): Thing {
     dateModified: (updatedDate ?? pubDate).toISOString(),
     inLanguage: 'en',
     keywords: tags.length > 0 ? tags.join(', ') : undefined,
-    author: vela,
+    author,
     publisher: vela,
     isPartOf: { '@type': 'Blog', name: 'Vela Journal', url: absolute('/blog/') },
+  };
+}
+
+/** The trail from the homepage to a page, as [name, path] pairs, the page last. */
+export function breadcrumbSchema(trail: [name: string, path: string][]): Thing {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map(([name, path], i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name,
+      item: absolute(path),
+    })),
   };
 }
 

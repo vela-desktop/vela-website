@@ -2,7 +2,8 @@
 import { slug } from 'github-slugger';
 import Base from '../../../layouts/Base.astro';
 import JournalLayout from '../../../components/journal/JournalLayout.astro';
-import { getPosts, type Post } from '../../../lib/posts';
+import { getPosts, topicUrl, type Post } from '../../../lib/posts';
+import { breadcrumbSchema } from '../../../lib/schema';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
@@ -25,7 +26,14 @@ const count = `${posts.length} ${posts.length === 1 ? 'entry' : 'entries'}`;
 
 <Base
   title={`${tag} — Journal`}
-  description={`Entries of the Vela development journal about ${tag.toLowerCase()}.`}
+  description={`${count} from the Vela development journal tagged “${tag}”: long-form notes on building a modern Linux desktop, newest first.`}
+  jsonLd={[
+    breadcrumbSchema([
+      ['Vela', '/'],
+      ['Journal', '/blog/'],
+      [tag, topicUrl(tag)],
+    ]),
+  ]}
 >
   <div class="topic-page">
     <header class="topic container--wide">

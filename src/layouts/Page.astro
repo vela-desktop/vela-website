@@ -6,6 +6,7 @@
 //   ---
 //   layout: ../layouts/Page.astro
 //   title: "Install Vela"
+//   seoTitle: "Install Vela, a modern Linux desktop environment"   # optional: the whole <title>
 //   description: "One or two sentences for search results and previews."
 //   label: "Get started"        # optional, the small label above the title
 //   updated: 2026-10-11         # optional, shown under the header
@@ -20,6 +21,7 @@ import '../styles/prose.css';
 interface Props {
   frontmatter: {
     title: string;
+    seoTitle?: string;
     description: string;
     label?: string;
     updated?: string | Date;
@@ -28,7 +30,7 @@ interface Props {
   };
 }
 
-const { title, description, label, updated, noindex = false, schema } = Astro.props.frontmatter;
+const { title, seoTitle, description, label, updated, noindex = false, schema } = Astro.props.frontmatter;
 const updatedDate = updated ? new Date(updated) : undefined;
 
 // A FAQ is read from the rendered body, so the questions and answers in the
@@ -37,7 +39,7 @@ const body = schema === 'faq' ? await Astro.slots.render('default') : undefined;
 const jsonLd = body ? [faqSchema(body)] : [];
 ---
 
-<Base title={title} description={description} noindex={noindex} jsonLd={jsonLd}>
+<Base title={title} seoTitle={seoTitle} description={description} noindex={noindex} jsonLd={jsonLd}>
   <article class="page">
     <header class="page__header">
       {label && <p class="label label--accent">{label}</p>}

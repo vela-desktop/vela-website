@@ -5,8 +5,10 @@ import sitemap from '@astrojs/sitemap';
 import { satteri } from '@astrojs/markdown-satteri';
 import { headingAnchors, tableWrap } from './src/lib/markdown-plugins.mjs';
 import { UMAMI } from './src/consts.ts';
+import { lastModified } from './src/lib/lastmod.mjs';
 
 const analytics = new URL(UMAMI.src).origin;
+const lastmod = lastModified();
 
 export default defineConfig({
   site: 'https://velade.org',
@@ -58,7 +60,13 @@ export default defineConfig({
   ],
   integrations: [
     mdx(),
-    sitemap({ filter: (page) => !page.endsWith('/404/') }),
+    sitemap({
+      filter: (page) => !page.endsWith('/404/'),
+      serialize(item) {
+        const date = lastmod.get(new URL(item.url).pathname);
+        return date ? { ...item, lastmod: date.toISOString() } : item;
+      },
+    }),
   ],
   markdown: {
     processor: satteri({ hastPlugins: [headingAnchors, tableWrap] }),

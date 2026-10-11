@@ -5,8 +5,8 @@ import Base from '../../layouts/Base.astro';
 import PostMeta from '../../components/journal/PostMeta.astro';
 import SailMark from '../../components/journal/SailMark.astro';
 import { formatDate, getPosts, ogImageUrl, postUrl, topicUrl, type Post } from '../../lib/posts';
-import { LINKS } from '../../consts';
-import { articleSchema } from '../../lib/schema';
+import { AUTHOR, LINKS } from '../../consts';
+import { articleSchema, breadcrumbSchema } from '../../lib/schema';
 import '../../styles/prose.css';
 
 export async function getStaticPaths() {
@@ -25,7 +25,7 @@ interface Props {
 
 const { post, newer, older } = Astro.props;
 const { Content } = await render(post);
-const { title, description, pubDate, updatedDate, cover, coverAlt, tags } = post.data;
+const { title, seoTitle, description, pubDate, updatedDate, cover, coverAlt, tags } = post.data;
 
 const ogImage = cover
   ? (await getImage({ src: cover, width: 1200, height: 630, fit: 'cover', format: 'jpg' })).src
@@ -34,14 +34,23 @@ const ogImage = cover
 
 <Base
   title={title}
+  seoTitle={seoTitle}
   description={description}
+  author={AUTHOR.name}
   type="article"
   image={ogImage}
   imageAlt={cover ? coverAlt : `${title} — Vela Journal`}
   publishedTime={pubDate}
   modifiedTime={updatedDate}
   noindex={post.data.draft}
-  jsonLd={[articleSchema(post, ogImage)]}
+  jsonLd={[
+    articleSchema(post, ogImage),
+    breadcrumbSchema([
+      ['Vela', '/'],
+      ['Journal', '/blog/'],
+      [title, postUrl(post)],
+    ]),
+  ]}
 >
   <article class="article">
     <header class="article__header">
@@ -61,6 +70,7 @@ const ogImage = cover
       <p class="article__dek">{description}</p>
 
       <div class="article__byline">
+        <p class="article__author">By <a href={AUTHOR.url} rel="author noopener">{AUTHOR.name}</a></p>
         <PostMeta post={post} />
         {
           updatedDate && (
@@ -239,11 +249,20 @@ const ogImage = cover
     justify-content: center;
   }
 
+  .article__author,
   .article__updated {
     font-family: var(--font-mono);
     font-size: var(--step--2);
     letter-spacing: 0.04em;
     color: var(--text-faint);
+  }
+
+  .article__author a {
+    color: var(--text-muted);
+  }
+
+  .article__author a:hover {
+    color: var(--text);
   }
 
   .article__cover {

@@ -5,8 +5,11 @@ export const SITE = {
   name: 'Vela',
   url: 'https://velade.org',
   title: 'Vela — A modern, fluid and sharp Linux desktop',
+  /** Ends every other page's <title>: "Install Vela" can't say what Vela is. */
+  titleSuffix: 'Vela, Linux desktop',
+  // Search results cut descriptions at about 155 characters.
   description:
-    'Vela is an independent Linux desktop environment with its own Wayland compositor and Vulkan renderer, a Qt Quick shell, and a file manager and settings app built to match.',
+    'Vela is an independent Linux desktop environment with its own Wayland compositor and Vulkan renderer, a Qt Quick shell, and its own Files and Settings.',
   tagline: 'A modern, fluid and sharp Linux desktop built for today’s hardware.',
   status: 'Alpha',
   license: 'GPL-3.0-or-later',
@@ -25,6 +28,12 @@ export const UMAMI = {
   recorderSrc: 'https://analytics.brandodev.it/recorder.js',
   websiteId: '4f12561f-5384-437e-a6cc-451a9aed37f0',
   domains: 'velade.org',
+} as const;
+
+/** The person who builds Vela and writes the journal, credited on every entry. */
+export const AUTHOR = {
+  name: 'Brando Giuffrida',
+  url: 'https://github.com/BrandoDev',
 } as const;
 
 const REPO = 'https://github.com/vela-desktop/vela';

@@ -6,9 +6,12 @@ import Philosophy from '../components/home/Philosophy.astro';
 import Journal from '../components/home/Journal.astro';
 import OpenSource from '../components/home/OpenSource.astro';
 import { softwareSchema, websiteSchema } from '../lib/schema';
+import { latestAlphaBuild } from '../lib/vela';
+
+const build = await latestAlphaBuild();
 ---
 
-<Base jsonLd={[websiteSchema(), softwareSchema()]}>
+<Base jsonLd={[websiteSchema(), softwareSchema(build?.version)]}>
   <Hero />
   <Desktop />
   <Philosophy />

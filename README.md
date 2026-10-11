@@ -35,7 +35,8 @@ Front matter:
 ```yaml
 ---
 title: "How the frame clock learns latency"     # required
-description: "One or two sentences for lists, feeds and previews."   # required
+seoTitle: "How Vela's frame clock learns latency"  # optional; the whole <title> in search results
+description: "One or two sentences for lists, feeds and previews."   # required; under ~155 characters
 pubDate: 2026-10-20T18:30:00+02:00               # required; the time orders entries published the same day
 updatedDate: 2026-10-24                          # optional
 draft: true                                      # optional; drafts never reach production
@@ -45,6 +46,10 @@ tags: ["Renderer", "Wayland"]                    # optional
 ---
 ```
 
+- Search results show the page title as `<title> — Vela, Linux desktop`. When
+  that still doesn't say what the entry is about ("On customization"), set
+  `seoTitle` to a complete title instead, with the words people search for.
+  Social previews keep `title`.
 - Drafts are visible in `npm run dev` with a *Draft* badge. Production builds
   leave them out of pages, the journal index, the RSS feed and the sitemap.
 - Entries without a cover get a generated one cut from Vela's wallpaper, and a
