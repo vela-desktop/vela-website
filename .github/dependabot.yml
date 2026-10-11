@@ -1,0 +1,14 @@
+version: 2
+
+# Keeps the pinned actions in .github/workflows current, as in the Vela repository.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:30"
+      timezone: Europe/Rome
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7

@@ -68,6 +68,7 @@ src/components/journal/ journal layouts: feature, card, row, cover, empty state
 src/pages/              routes: /, /blog/, /blog/<entry>/, /blog/topics/<tag>/, /changes/,
                         /install/, /faq/, /privacy/, /rss.xml, /robots.txt, 404
 src/assets/             screenshots, brand artwork, fonts
+.github/workflows/      CI: type-check, build, link check, Lighthouse (lighthouserc.json)
 deploy/apache/          production Apache virtual host
 deploy/nginx/           equivalent Nginx configuration (alternative)
 scripts/deploy.sh       build and publish a release

@@ -1,0 +1,59 @@
+name: Check
+
+# Type-checks and builds the site, then checks the built pages: links (internal
+# on every run, external once a week, since other sites come and go) and
+# Lighthouse, whose accessibility audits are axe-core's. Deploys don't depend
+# on this workflow (see docs/deployment.md); it catches mistakes before or
+# right after they reach main.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '30 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Raises the GitHub API limit for src/lib/vela.ts and the link checker.
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check and build
+        run: npm run build
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: >-
+            --root-dir ${{ github.workspace }}/dist
+            --index-files index.html
+            --include-fragments
+            --exclude '^https://velade\.org/'
+            ${{ github.event_name != 'schedule' && '--offline' || '' }}
+            --no-progress
+            'dist/**/*.html'
+
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.15.1 autorun

@@ -39,8 +39,7 @@ const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
-<link rel="canonical" href={canonical} />
-{noindex && <meta name="robots" content="noindex" />}
+{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
 
 <meta name="theme-color" content="#050b15" />
 <meta name="color-scheme" content="dark" />
