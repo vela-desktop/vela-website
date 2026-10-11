@@ -4,6 +4,9 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { satteri } from '@astrojs/markdown-satteri';
 import { headingAnchors, tableWrap } from './src/lib/markdown-plugins.mjs';
+import { UMAMI } from './src/consts.ts';
+
+const analytics = new URL(UMAMI.src).origin;
 
 export default defineConfig({
   site: 'https://velade.org',
@@ -64,6 +67,29 @@ export default defineConfig({
       // so code blocks follow the site's tokens.
       theme: 'css-variables',
       wrap: false,
+    },
+  },
+  // Content Security Policy, emitted as a <meta> tag on every page. Astro hashes
+  // the inline <script> and <style> elements it renders, so they keep working
+  // without 'unsafe-inline'; style="" attributes are allowed, since components
+  // pass CSS custom properties through them. The only other origin is Umami
+  // (src/consts.ts): its tracker, the replay recorder's worker, and the endpoint
+  // both send to. Header-only directives (frame-ancestors) are set in Apache.
+  security: {
+    csp: {
+      scriptDirective: { resources: ["'self'", analytics] },
+      styleDirective: {
+        resources: ["'self'", { resource: "'unsafe-inline'", kind: 'attribute' }],
+      },
+      directives: [
+        "default-src 'self'",
+        "img-src 'self' data:",
+        `connect-src 'self' ${analytics}`,
+        "worker-src 'self' blob:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'none'",
+      ],
     },
   },
   devToolbar: { enabled: false },

@@ -72,8 +72,21 @@ const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 
 <script is:inline>document.documentElement.classList.add('js');</script>
 {import.meta.env.PROD && UMAMI.websiteId && (
-  <>
-    <script is:inline defer src={UMAMI.src} data-website-id={UMAMI.websiteId} data-domains={UMAMI.domains}></script>
-    <script is:inline defer src={UMAMI.recorderSrc} data-website-id={UMAMI.websiteId}></script>
-  </>
+  <script is:inline define:vars={{ umami: UMAMI }}>
+    // Visitors who ask not to be tracked, with Do Not Track or Global Privacy
+    // Control, get neither the tracker nor the recorder. Both are inserted with
+    // async = false so they still run in order: the recorder needs the tracker.
+    if (navigator.doNotTrack !== '1' && window.doNotTrack !== '1' && !navigator.globalPrivacyControl) {
+      for (const [src, attributes] of [
+        [umami.src, { 'data-website-id': umami.websiteId, 'data-domains': umami.domains }],
+        [umami.recorderSrc, { 'data-website-id': umami.websiteId }],
+      ]) {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = false;
+        for (const [name, value] of Object.entries(attributes)) script.setAttribute(name, value);
+        document.head.append(script);
+      }
+    }
+  </script>
 )}

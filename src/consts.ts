@@ -15,8 +15,9 @@ export const SITE = {
 
 /**
  * Umami analytics (self-hosted). The scripts are only added to production
- * builds, and only while `websiteId` is set; `domains` keeps local previews out
- * of the stats. The recorder (session replay) takes its sampling and masking
+ * builds, only while `websiteId` is set, and never for visitors with Do Not
+ * Track or Global Privacy Control on (src/components/Head.astro); `domains`
+ * keeps local previews out of the stats. The recorder (session replay) takes its sampling and masking
  * settings from the Umami instance, and needs the tracker loaded first.
  */
 export const UMAMI = {
