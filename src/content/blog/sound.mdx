@@ -1,0 +1,111 @@
+---
+title: "Sound, without the command line"
+seoTitle: "Sound in Vela: one native backend on PipeWire and WirePlumber"
+description: "Vela's sound used to ask command-line tools what was going on. Now it's one native library on PipeWire and WirePlumber, with music played at its own sample rate and a microphone indicator you can trust."
+pubDate: 2026-10-13T12:00:00+02:00
+draft: false
+tags: ["Audio"]
+---
+
+import Aside from '../../components/mdx/Aside.astro';
+
+Until a few days ago, sound in Vela worked. You could change the volume, pick an output, set each app's volume from the taskbar.
+
+But underneath, it was **asking**.
+
+Every time the shell or Settings needed to know something about sound, it started a program and read its answer: `wpctl`, `pactl`, `pw-dump`, `pw-metadata`. There were three separate backends, each with its own queues, caches and timers to keep up with what had changed. One read could wait up to **1.5 seconds** for two of those programs to answer.
+
+That's a lot of machinery to keep a volume slider honest.
+
+## One library, on PipeWire
+
+Now there is one backend: `vela-audio`, a native library that the shell and Settings both use. It talks to PipeWire through libwireplumber, the same library `wpctl` is built on. No program is started to read or change anything. Changes arrive as events, in order, as soon as they happen.
+
+Everything that touches sound goes through it: the volume keys and their indicator, the quick settings mixer, the wheel on a taskbar button, every Sound page in Settings. Same model, same code. They can't disagree.
+
+There is no Vela audio daemon. PipeWire already is the shared service; another layer on top would just be one more thing to keep in sync.
+
+## WirePlumber decides, Vela asks
+
+Linux audio today has two parts. **PipeWire** is the engine: it moves the audio, and deliberately makes no decisions. **WirePlumber** is the session manager: it picks the default output, sends each app to the right one, and remembers volumes and profiles.
+
+Vela never keeps its own copy of any of that. It shows what WirePlumber says and asks it for changes, following the same conventions `wpctl` does. So what you change in Vela is what WirePlumber restores at your next login, and what pavucontrol or any other tool sees.
+
+The trade-off: PulseAudio without PipeWire is not supported. Apps that still speak PulseAudio keep working through `pipewire-pulse`; Vela itself doesn't need it.
+
+## Three pages in Settings
+
+Settings has three pages for sound:
+
+- **Sound**: the output and the input, their volume, and the input level, the bar that moves when you speak.
+- **Device properties**: the profile (on a Bluetooth headset that's also the codec: SBC, SBC XQ, LDAC, whatever it offers), turning a device off, balance, a test sound, its name and its format.
+- **Volume mixer**: every app with its volume, level, output and input, and a button to reset them all.
+
+The quick settings mixer got level bars too, and an app that records can now pick its input there.
+
+Some details I care about:
+
+- **The test sound** is synthesized in code: two soft tones, first on the left channel, then on the right, so you can check balance and wiring. Nothing is made up for the other channels.
+- **Balance** works like PulseAudio's: changing the volume keeps it, even through silence. A double click puts it back in the middle.
+- **The volume stops at 100%.** Settings used to go up to 150%.
+
+What's not there: spatial sound and "audio enhancements", which have no common base on Linux, and echo cancellation and noise suppression. Lowering other sounds during a call is a long-term goal.
+
+## Your music, at its own rate
+
+PipeWire mixes everything on a device at **one** sample rate. By default only 48 kHz is allowed, so a song at 44.1 kHz, which is most of them, is converted.
+
+In Vela the sample rate is **Automatic** by default. Every standard rate from 44.1 to 192 kHz is allowed, and when a device is idle and something starts playing, the mix takes its rate. A 44.1 kHz song plays at 44.1 kHz.
+
+Most of what plays (browsers, games, calls) is 48 kHz anyway, so most of the time nothing changes. The difference is in your music.
+
+PipeWire doesn't allow more rates by default "because of various kernel and Bluetooth issues", and that's fair: some devices don't like switching. An HDMI receiver can go silent for a second at every switch. Vela's answer is a setting **on that device**, like "Always 48000 Hz", so the others keep the quality. Lower quality for everyone is never the fix. If you'd rather have everything at one rate, Sound › Advanced can still fix it for the whole system.
+
+A device's properties also show, live, what it runs at ("44100 Hz, 24 bit") and which apps are being converted to it.
+
+<Aside title="Not a bit-perfect promise">
+  Playing music at its own rate avoids converting it. Strict bit-perfect playback also needs the volume at 100%, or done in hardware, and Vela doesn't promise it.
+</Aside>
+
+Vela writes these choices only in its own two files, `90-vela.conf` for PipeWire and for WirePlumber. Your own rules keep working, and if someone already configured the allowed rates, Vela leaves them alone.
+
+## A microphone indicator you can trust
+
+When an app records from your microphone, a microphone icon appears in the tray. Its tooltip says who ("Firefox is using your microphone"), and a click opens Settings › Sound.
+
+An app counts when one of its recording streams is **running and actually linked to a microphone**, or to a virtual source made from one, like a noise filter. A screen recorder capturing your desktop audio doesn't count: that's not your voice.
+
+Two decisions made it honest:
+
+- **It counts Vela too.** While Settings' Sound page shows your input level, the tray says "Settings is using your microphone". Because it is. An indicator that hides someone, even us, can't be trusted.
+- **It doesn't believe what apps say about themselves.** Some of the properties that would mark a stream as harmless are set by the app itself. Vela looks at the links PipeWire actually made instead. A false alarm is better than a missed one.
+
+An app that stops stays listed for about a second, so the icon doesn't blink when you pause; one that starts shows up at once.
+
+It's also honest about its limits: it follows what PipeWire sees. It isn't a permission system, and it can't see something that records without going through PipeWire.
+
+## Tested against a real PipeWire
+
+The old tests ran against fake versions of `pactl` and `pw-metadata`. The new ones start a **real PipeWire and WirePlumber** in a private directory, with fake devices: speakers, headphones, a 5.1 system, a mono microphone, a sound card with profiles. A fake app plays a sine wave of known amplitude. None of it can reach your own audio.
+
+So the tests can check what you'd hear. A level meter has to match the known amplitude. The test sound is recorded from its output, left channel first, then right, while another output has to stay silent.
+
+The fixture taught me something on its first day: WirePlumber saves its state about **a second after** a change, and not when it exits. Restart it sooner, and your last change is gone. So Vela never restarts it until 1.5 s after its own last change, and a test makes sure.
+
+## What only real hardware could show
+
+Fake devices aren't sound cards. So I tested on my desk: a FiiO K11 DAC, a Bluetooth headset, and headphones plugged into the 3.5 mm jack of my monitor, with the sound going through DisplayPort. Some things only showed up there.
+
+- **The knob that stopped.** I turned the volume knob on my keyboard, and it stopped after one or two steps. A real sound card moves its volume in dB steps, so the value PipeWire reports back isn't exactly the one Vela asked for, and the next step landed on the same value again. The Bluetooth headset never had the problem: its values come back exact. Now a value close enough to a step counts as on it.
+- **The chime without a start.** An output that's waking up, like a USB DAC unmuting or switching rate, loses its first moments. The test sound now begins with a quarter of a second of silence.
+- **The device that wouldn't start.** PipeWire can change a running device's rates and format on the fly. On the DAC, the device then failed to start. So changing them restarts WirePlumber instead, and the page tells you beforehand that **sound stops for about a second**. Renaming a device restarts nothing.
+
+## What's still left
+
+Plenty of hardware hasn't been through Vela yet: HDMI audio, other Bluetooth headsets and their codecs, call mode, the microphone LED on laptops, the microphone icon with Discord and OBS. The list is [in the hardware notes](https://github.com/vela-desktop/vela/blob/main/docs/hardware.md#sound). If your device does something strange, [tell me](https://github.com/vela-desktop/vela/issues).
+
+## What you notice
+
+Mostly, that sound behaves. The slider stays where you leave it. The volume knob keeps turning. Your music plays at the rate it was made. And when something is listening, you know who.
+
+The whole design, with every decision and every test, is in [Vela's audio documentation](https://github.com/vela-desktop/vela/blob/main/docs/audio.md).

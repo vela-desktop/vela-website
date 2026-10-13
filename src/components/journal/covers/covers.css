@@ -1,5 +1,5 @@
 /*
- * Shared look of the journal's diagram covers (FrameClock, SlowApps,
+ * Shared look of the journal's diagram covers (FrameClock, SlowApps, Sound,
  * OwnRenderer): the same lines, labels and teal as the homepage diagrams.
  * Each SVG uses a 800×500 viewBox and keeps its drawing clear of the corners,
  * where PostCover puts the entry number and the tag.

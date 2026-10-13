@@ -1,0 +1,60 @@
+---
+// Cover of "Sound, without the command line": a 44.1 kHz song on its way to
+// the device, mixed at PipeWire's default 48 kHz before, and at its own rate
+// now that the sample rate is Automatic, as the entry explains.
+import './covers.css';
+
+const stages = [
+  { kind: 'Song', x: 60, width: 190 },
+  { kind: 'Mix', x: 290, width: 210 },
+  { kind: 'Device', x: 540, width: 200 },
+];
+const rows = [
+  { label: 'Before · converted', rates: ['44.1 kHz', '48 kHz', '48 kHz'], y: 170, teal: false },
+  { label: 'Now · Automatic', rates: ['44.1 kHz', '44.1 kHz', '44.1 kHz'], y: 300, teal: true },
+];
+const height = 84;
+---
+
+<svg class="cd" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  <text class="cd-label" x="60" y="112">A 44.1 kHz song · from file to device</text>
+  {
+    rows.map((row) => (
+      <g>
+        <text class:list={['cd-label', row.teal ? 'cd-label--teal' : 'cd-label--strong']} x="60" y={row.y - 14}>
+          {row.label}
+        </text>
+        {stages.map((stage, i) => (
+          <g>
+            <rect class:list={['cd-box', { 'cd-box--teal': row.teal && i > 0 }]} x={stage.x} y={row.y} width={stage.width} height={height} rx="8" />
+            <text class="cd-label cd-sd-kind" x={stage.x + 18} y={row.y + 30}>
+              {stage.kind}
+            </text>
+            <text class:list={['cd-value cd-sd-rate', { 'cd-value--teal': row.teal && i > 0 }]} x={stage.x + 18} y={row.y + 68}>
+              {row.rates[i]}
+            </text>
+            {i > 0 && (
+              <path class="cd-line cd-line--bright" d={`M ${stages[i - 1].x + stages[i - 1].width + 4} ${row.y + height / 2} H ${stage.x - 4}`} marker-end="url(#sd-arrow)" />
+            )}
+          </g>
+        ))}
+      </g>
+    ))
+  }
+
+  <defs>
+    <marker id="sd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path class="cd-line cd-line--bright" d="M 0 0 L 10 5 L 0 10" />
+    </marker>
+  </defs>
+</svg>
+
+<style>
+  .cd-sd-kind {
+    font-size: 13px;
+  }
+
+  .cd-sd-rate {
+    font-size: 30px;
+  }
+</style>

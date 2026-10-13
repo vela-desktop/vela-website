@@ -8,6 +8,7 @@
 import FrameClock from './FrameClock.astro';
 import SlowApps from './SlowApps.astro';
 import OwnRenderer from './OwnRenderer.astro';
+import Sound from './Sound.astro';
 import Screenshot from './Screenshot.astro';
 import start from '../../../assets/screenshots/start.webp';
 import files from '../../../assets/screenshots/files.webp';
@@ -26,6 +27,7 @@ export const ENTRY_COVERS: Record<string, EntryCover> = {
   'frame-clock': { component: FrameClock },
   'slow-apps': { component: SlowApps },
   'own-renderer': { component: OwnRenderer },
+  'sound': { component: Sound },
   'why-vela': { component: Screenshot, props: { src: start }, image: true },
   'about-customization': { component: Screenshot, props: { src: files, light }, image: true },
 };
