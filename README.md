@@ -57,6 +57,11 @@ tags: ["Renderer", "Wayland"]                    # optional
 - Use `.mdx` when an entry needs components. `src/components/mdx/` provides
   `Figure` (optimized image with caption; `width="content" | "wide" | "full"`) and
   `Aside` (a set-apart note).
+- Math is TeX: `$…$` inline, `$$` on the lines before and after a display
+  formula. It becomes MathML at build time (KaTeX, `src/lib/markdown-plugins.mjs`),
+  so pages load no math script or fonts. Keep plain numbers as text (`4×`, `125%`):
+  as math they get operator spacing and lose the weight of bold text around them.
+  A literal dollar sign is `\$`.
 - `src/content/blog/formatting-reference.mdx` is a draft showing every supported
   element. It stays a draft; use it as a template.
 

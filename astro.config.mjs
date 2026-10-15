@@ -3,7 +3,7 @@ import { defineConfig, fontProviders } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { satteri } from '@astrojs/markdown-satteri';
-import { headingAnchors, tableWrap } from './src/lib/markdown-plugins.mjs';
+import { headingAnchors, math, tableWrap } from './src/lib/markdown-plugins.mjs';
 import { UMAMI } from './src/consts.ts';
 import { lastModified } from './src/lib/lastmod.mjs';
 
@@ -69,7 +69,7 @@ export default defineConfig({
     }),
   ],
   markdown: {
-    processor: satteri({ hastPlugins: [headingAnchors, tableWrap] }),
+    processor: satteri({ features: { math: true }, hastPlugins: [math, headingAnchors, tableWrap] }),
     shikiConfig: {
       // Colors come from CSS custom properties in src/styles/prose.css,
       // so code blocks follow the site's tokens.
