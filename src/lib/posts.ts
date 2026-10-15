@@ -36,8 +36,9 @@ export async function getPosts(): Promise<Post[]> {
 
 /**
  * Translated journal entries, newest first, in production only those whose
- * original is published too. A translation of an entry that doesn't exist, or
- * in a language src/lib/i18n.ts doesn't list, fails the build.
+ * original is published too. A published translation of an entry that doesn't
+ * exist, or one in a language src/lib/i18n.ts doesn't list, fails the build; a
+ * draft can wait for its original.
  */
 export async function getTranslations(lang?: Lang): Promise<TranslatedPost[]> {
   const show = (draft: boolean) => import.meta.env.DEV || !draft;
@@ -50,7 +51,11 @@ export async function getTranslations(lang?: Lang): Promise<TranslatedPost[]> {
     if (!isLang(entryLang) || entryLang === DEFAULT_LANG) {
       throw new Error(`${entry.filePath}: "${entryLang}" is not a translation language (src/lib/i18n.ts).`);
     }
-    if (!original) throw new Error(`${entry.filePath}: there is no journal entry "${id}" in src/content/blog/.`);
+    if (!original) {
+      // A draft can be written before its original; a published one can't.
+      if (entry.data.draft) continue;
+      throw new Error(`${entry.filePath}: there is no journal entry "${id}" in src/content/blog/.`);
+    }
     if (!show(entry.data.draft) || !show(original.data.draft) || (lang && entryLang !== lang)) continue;
     translations.push({
       id,

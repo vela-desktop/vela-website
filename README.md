@@ -88,7 +88,8 @@ original changes, update the translation and set its `updatedDate`.
 Languages are listed in `src/lib/i18n.ts`, with the words around an entry
 (byline, dates, pager) in each; a new one also needs adding to the sitemap's
 `i18n` option in `astro.config.mjs`. A translation in a language not listed
-there, or of an entry that doesn't exist, fails the build.
+there, or of an entry that doesn't exist, fails the build. A draft translation
+(`draft: true`) can be written first and waits for its original.
 
 ## Project layout
 
