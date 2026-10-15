@@ -1,0 +1,175 @@
+---
+title: "Volevo una UI più nitida a forza bruta. Poi ho guardato una X da 10 pixel."
+seoTitle: "Supersampling su un desktop Linux: cosa insegna una X da 10 pixel"
+description: "Volevo fare supersampling di tutto il desktop. Una X da 10 pixel mi ha mostrato che la nitidezza viene dalla pixel grid, non da più sample."
+pubDate: 2026-10-15T19:00:00+02:00
+draft: true
+---
+
+Quando noto un bordo leggermente sfocato, uno stroke dallo spessore incostante o un’icona fuori griglia di mezzo pixel, non riesco più a ignorarlo. È una fissazione parecchio scomoda quando stai scrivendo un desktop environment da zero.
+
+In queste settimane sto lavorando al redesign di Vela. Stanno cambiando icone, controlli e superfici, ma andando avanti con i mockup mi sono accorto che non mi bastava disegnare forme migliori: volevo che arrivassero a schermo nel modo più nitido possibile.
+
+Così qualche giorno fa mi è venuta un’idea tanto semplice quanto brutale: *e se renderizzassi l'intera UI a una risoluzione interna enorme per poi fare downsampling?* Le GPU moderne sono veloci, e Vela gira già su un renderer Vulkan scritto in casa proprio per avere il pieno controllo sull'output. Sembrava bastasse alzare una manopola.
+
+Invece quello che doveva essere un rapido esperimento di supersampling si è trasformato in un'indagine tra fractional scaling, subpixel phase, optical sizing e la matematica sorprendentemente rognosa necessaria per disegnare una `X` da 10 pixel nell’angolo di una finestra. Quello che segue è il resoconto di queste prove: cosa sembrava funzionare sulla carta, cosa è crollato nei test e come penso di cambiare il rendering di Vela.
+
+---
+
+## L’idea iniziale: buttarci sopra più pixel
+
+Su un normale monitor 1920 × 1080 con scaling al 100%, un’icona standard vive in un box di 32 × 32 pixel. È una griglia minuscola di appena 1.024 quadratini: qualsiasi diagonale, curva stretta o angolo arrotondato finisce inevitabilmente tritato dalla pixel grid.
+
+L'approccio classico a forza bruta è il **Supersampling Antialiasing (SSAA)**: invece di stimare la coverage di ogni singolo pixel a schermo, rasterizzi a risoluzione più alta e riduci l'immagine con un buon reconstruction filter. Renderizzare quell’icona 32 × 32 a una risoluzione **4× per asse** significa lavorare su un buffer di 128 × 128 pixel, cioè 16 sample per pixel di output (quello che nei videogiochi viene solitamente chiamato 16× SSAA; qui userò sempre *per asse* per evitare ambiguità).
+
+Appena provi a portare questo concetto su un intero desktop, però, ti scontri con una domanda banale solo in apparenza: **su cosa stai facendo supersampling, esattamente?** Sull'intero framebuffer offscreen dell'app? Sulle singole icone? Solo sui bordi dei vettori? La risposta cambia radicalmente il consumo di memoria e la resa finale. Ma prima ancora di arrivarci, ho sbattuto contro un problema più immediato.
+
+---
+
+## Il nodo del fractional scaling
+
+Ragionare su un’icona da 32 pixel al 100% è immediato. Ma al 125% la stessa icona occupa 40 pixel fisici; al 150% ne occupa 48, al 175% sale a 56 e al 200% arriva a 64. Quando entra in gioco il fractional scaling, fare "SSAA 4×" può voler dire due cose molto diverse.
+
+### 1. Moltiplicare la dimensione logica (4× logico)
+
+Il mio primo istinto è stato applicare il supersampling *prima* dello scaling del monitor: un’icona logica di 32 × 32 viene sempre disegnata in un buffer fisso di 128 × 128, che raddoppia a 256 × 256 solo raggiungendo il 200%.
+
+Il problema è che il monitor conosce solo i pixel fisici. Ecco cosa succede davvero a schermo con un buffer logico fisso:
+
+| Scaling | Icona fisica | Buffer interno | Sample effettivi per asse fisico |
+| :--- | :--- | :--- | :--- |
+| **100%** | 32 × 32 | 128 × 128 | **4,00×** |
+| **125%** | 40 × 40 | 128 × 128 | **3,20×** |
+| **150%** | 48 × 48 | 128 × 128 | **2,67×** |
+| **175%** | 56 × 56 | 128 × 128 | **2,29×** |
+| **200%** | 64 × 64 | 256 × 256 | **4,00×** |
+
+Man mano che sali dal 100% al 175%, la sample density cala, per poi risalire di colpo al 200%. Se l'obiettivo è avere una resa visiva costante e prevedibile, perdere nitidezza proprio sulle scale frazionarie ha poco senso.
+
+### 2. Moltiplicare la dimensione fisica (4× fisico)
+
+L’alternativa è ancorare il supersampling direttamente alla **griglia fisica finale**:
+
+| Scaling | Icona fisica | Buffer interno | Moltiplicatore sulla dimensione logica |
+| :--- | :--- | :--- | :--- |
+| **100%** | 32 × 32 | 128 × 128 | **4×** |
+| **125%** | 40 × 40 | 160 × 160 | **5×** |
+| **150%** | 48 × 48 | 192 × 192 | **6×** |
+| **175%** | 56 × 56 | 224 × 224 | **7×** |
+| **200%** | 64 × 64 | 256 × 256 | **8×** |
+
+Qui i numeri ci vengono incontro: poiché i fattori di scaling standard procedono a passi di 0,25 (1/4), moltiplicare per un fattore SSAA fisico di 4 cancella la frazione. Ogni livello di scaling produce un moltiplicatore intero rispetto alle coordinate logiche (4×, 5×, 6×, 7×, 8×):
+
+$$
+\text{Sample interni per asse} = \text{Lunghezza logica} \times \text{Scaling del display} \times \text{Fattore SSAA}
+$$
+
+Il punto fondamentale a livello architetturale è che **scaling del display e antialiasing non devono essere passaggi separati su delle bitmap**. Non ha senso rasterizzare a 4× logico e poi scalare l'immagine ottenuta; bisogna combinare scaling del layout e sample density in un’unica trasformazione, valutando la geometria direttamente nello spazio di sampling finale.
+
+Tutto molto pulito, finché le dimensioni logiche sono multipli di 4. Il resto dell'interfaccia, però, non è così accomodante.
+
+---
+
+## Il caso fastidioso: 57,5 pixel e la subpixel phase
+
+Le icone hanno taglie comode (16, 24, 32, 48), ma prendi i pulsanti della titlebar di Vela: ognuno è largo 46 pixel logici. Al 125% di scaling, la larghezza fisica esatta diventa **57,5 pixel**. E lo stesso vale per il raggio da 6 pixel degli angoli delle card (7,5 pixel) o per il glyph da 10 pixel dentro i pulsanti (12,5 pixel).
+
+Le texture sulla GPU devono avere dimensioni intere, quindi quel ,5 va gestito. La scorciatoia più tentante è arrotondare subito il box del layout a 57 o 58 pixel prima di rasterizzare. Ma tre pulsanti affiancati misurano 172,5 pixel: arrotondandoli singolarmente arrivi a 171 o 174, creando disallineamenti visibili. Peggio ancora, arrotondare a monte distrugge proprio l'informazione geometrica che l'antialiasing dovrebbe preservare: se il bordo destro cade a metà della cinquantottesima colonna di pixel, quella colonna deve ricevere un’alpha coverage del 50%, non sparire o diventare piena.
+
+È il classico problema della **subpixel phase**. Due linee verticali identiche da 1 pixel cambiano completamente aspetto in base a dove cadono sulla griglia fisica:
+- Centrata su una colonna, la linea riempie un solo pixel ed è nitidissima.
+- A cavallo tra due colonne, ripartisce la sua energia al 50% su due pixel adiacenti, apparendo larga il doppio e sbiadita.
+
+Per il renderer di Vela questo significa che conoscere le dimensioni di un elemento e la scala del monitor non basta: serve sapere **dove cade esattamente la geometria rispetto alla griglia fisica**, anche durante un trascinamento o un'animazione subpixel. Ero partito da *"renderizziamo tutto più grande"* e mi sono ritrovato a dover preservare la subpixel phase della geometria continua fino all'ultimo stadio di rasterizzazione.
+
+---
+
+## Vettori, icone piccole e la realtà di Linux
+
+### Gli SVG e l'optical sizing
+
+Il set di icone nativo di Vela sarà in SVG. Essendo una descrizione matematica di path e curve, per un’icona 32 × 32 al 125% con SSAA fisico 4× possiamo valutare i vettori direttamente a 160 × 160 e scendere a 40 × 40 senza passaggi intermedi.
+
+Tuttavia, "vettoriale" non vuol dire automaticamente nitido a qualsiasi dimensione. Se rimpicciolisci un'icona complessa a 16 × 16 pixel, i tratti sottili spariscono e gli spazi vuoti collassano in una macchia grigia. Paradossalmente, un rasterizer più preciso rende ancora più evidente un cattivo design perché non lo maschera dietro una sfocatura accidentale. Come nella tipografia, serve **optical sizing**: alle taglie piccole le icone devono avere forme più semplici, aperture più ampie e tratti proporzionalmente più spessi.
+
+### I PNG di terze parti
+
+C'è poi la realtà di un desktop Linux: le app di terze parti forniscono SVG, set di PNG a varie risoluzioni o vecchie bitmap pescate dal tema attivo secondo la [Freedesktop Icon Theme Specification](https://specifications.freedesktop.org/icon-theme-spec/latest/).
+
+Qui fare supersampling alla cieca è solo uno spreco. Se un'app passa un PNG 32 × 32 e dobbiamo disegnarlo in un box fisico di 40 × 40, ingrandirlo a 160 × 160 per poi ridurlo a 40 × 40 non inventa dettagli che non esistono: ricampiona solo due volte la stessa bitmap.
+
+Per le icone raster conviene selezionare con cura la sorgente nell'`IconProvider` (che in Vela poggia su `QIcon::fromTheme()`) e filtrare in un colpo solo:
+- **PNG 48 × 48 o 64 × 64:** downsampling diretto in un unico passaggio.
+- **PNG 256 × 256:** usabile, ma a volte meno leggibile di un 48 × 48 rifinito a mano dal designer per le basse risoluzioni.
+- **PNG 32 × 32 o 16 × 16:** upscaling diretto limitando i danni con un buon reconstruction filter.
+
+L'unico caso in cui il supersampling ha senso su un PNG è quando gli applichi una maschera di ritaglio (come uno squircle) o una rotazione: lì è la maschera geometrica a beneficiare di più sample, non la texture interna.
+
+---
+
+## Il resto del desktop non è un’icona
+
+Allargando lo sguardo a pulsanti, card, ombre e superfici sfocate, appare chiaro che quasi nessun elemento della UI richiede il supersampling dell'intera superficie:
+
+- **Pulsanti e rettangoli arrotondati:** un pulsante 200 × 40 è per il 95% colore piatto. Calcolare 16 sample per pixel su migliaia di pixel interni identici solo per ammorbidire quattro angolini è assurdo. Basta lavorare sul perimetro.
+- **Ombre, gradienti e blur:** il compositor di Vela calcola già le ombre analiticamente nei fragment shader come funzioni continue di falloff, mentre i gradienti non hanno bordi geometrici e i blur filtrano già i pixel vicini.
+- **Bordi sottili da 1 pixel:** al 125% un bordo da 1 pixel logico diventa 1,25 pixel fisici; al 150% diventa 1,5. Deve scalare proporzionalmente ammorbidendosi su due pixel o fare snap a 1 pixel fisico netto? Questa non è una questione di antialiasing, ma una scelta precisa di design.
+
+A quel punto è stato chiaro che stavo confondendo sotto la parola "nitidezza" tre problemi ben distinti:
+1. **Design geometrico:** quale forma esatta vogliamo disegnare a questa dimensione fisica?
+2. **Allineamento sulla griglia:** dove cadono i bordi rispetto ai pixel fisici del pannello?
+3. **Rasterizzazione dei bordi:** come calcoliamo l’alpha coverage lungo quei contorni?
+
+Per metterlo alla prova, sono andato a guardare l'elemento più piccolo e banale di tutto il desktop.
+
+---
+
+## Tre piccoli pulsanti nella titlebar
+
+A distanza normale, i pulsanti minimize, maximize e close di Vela sembrano a posto. Ma se guardi da vicino su uno schermo con fractional scaling noti subito delle imprecisioni: la barretta del minimize è leggermente velata, il quadrato del maximize perde decisione sui bordi e la `X` del close rischia di impastarsi al centro.
+
+La cosa interessante è che queste tre icone non sono né PNG né SVG: **Vela le disegna già proceduralmente in C.**
+
+Aprendo [`compositor/src/decoration.c`](https://github.com/vela-desktop/vela/blob/main/compositor/src/decoration.c), il funzionamento è molto semplice. I simboli sono definiti come segmenti in un quadrato unitario con dimensione logica base di 10 pixel:
+
+```c
+#define GLYPH_SIZE 10
+```
+
+Per generare la texture del simbolo, il compositor calcola la dimensione fisica arrotondando il valore scalato:
+
+```c
+int size = round(10 * display_scale);
+```
+
+Poi itera su ogni pixel, misura la distanza dal centro del pixel al segmento più vicino, la converte in alpha coverage e carica il buffer sulla GPU. Come soluzione leggera è ottima, ma seguendo il percorso dei dati fino allo schermo sono saltati fuori due problemi:
+
+1. **Doppio resampling:** al 125%, 10 × 1,25 fa 12,5 pixel. Il codice arrotonda a una texture di **13 × 13 pixel**. Quando però il compositor impagina la titlebar, posiziona il nodo di 10 pixel logici in coordinate continue. E al 125% il rettangolo di destinazione non può combaciare 1:1 con la texture: lo spazio è di 12,5 pixel, la texture di 13. Così interviene il filtro bilineare della GPU, che ricampiona una texture *già* antialiasata sfocandola una seconda volta.
+2. **Terminazioni arrotondate implicite:** calcolare la distanza pura da un segmento produce automaticamente estremità tonde (round cap). Sulle diagonali della `X` non dà fastidio, ma sulla barra del minimize e sugli angoli del maximize disperde alpha coverage verso l'esterno, mangiandosi gli spigoli vivi a 90°.
+
+Il problema non era quanti sample usassi, ma il fatto che stavo disegnando la forma sbagliata e che il compositor la alterava prima di metterla a schermo.
+
+---
+
+## Dal supersampling all'antialiasing analitico
+
+I controlli della finestra sono così piccoli e isolati da essere il banco di prova ideale. Invece di gestirli come texture generiche arrotondate a monte, sto progettando un micro-renderer dedicato (`WindowControlGlyph`) che riceva l'intero contesto: tipo di simbolo, bounds logici, scaling del display e subpixel phase esatta.
+
+Così ogni simbolo può applicare regole geometriche su misura:
+- **Minimize (`-`):** snap rigido sulla riga di pixel fisici, spessore intero e terminazioni verticali piatte.
+- **Maximize (`[]`):** un vero rettangolo cavo chiuso con spigoli vivi a 90°, non quattro segmenti con estremità tonde sovrapposte.
+- **Restore:** due contorni chiusi con intersezioni e occlusioni calcolate in modo netto.
+- **Close (`X`):** niente snap forzato per le diagonali, ma una coverage precisa al subpixel e bilanciamento ottico dell'incrocio centrale per evitare che sembri intasato.
+
+All'inizio pensavo di implementare questo micro-renderer facendo supersampling 4× su CPU. Poi mi sono chiesto: se la geometria è composta solo da segmenti, rettangoli e intersezioni semplici, perché approssimare la coverage facendo la media di 16 punti quando posso **calcolare l'area esatta del pixel coperta dalla forma**?
+
+Questo è l'**antialiasing analitico**: intersechi direttamente il poligono geometrico con il quadrato di ogni singolo pixel di output e calcoli l'area dell'intersezione. Il codice attuale in `decoration.c` ci va vicino usando la distanza dal centro del pixel, che però fallisce proprio sugli spigoli vivi, sui tagli netti e sugli incroci diagonali.
+
+Il prossimo passo sarà quindi un test comparativo diretto sulla stessa identica geometria:
+1. **Il rasterizer attuale basato sulla distanza** (ma con l'allineamento a schermo corretto per evitare il filtro bilineare).
+2. **Un riferimento SSAA a forza bruta** a 4× e 8× per asse fisico.
+3. **Un rasterizer analitico** che calcola l'intersezione esatta con il box del pixel.
+
+Se il calcolo analitico pareggia la resa del riferimento SSAA 8× senza sprecare memoria e senza passaggi di downsampling, andrà dritto nel compositor di Vela.
+
+Alla fine, una `X` da 10 pixel ha smontato la mia idea iniziale nel modo migliore possibile: la nitidezza di una UI non si ottiene buttando più sample sulla GPU, ma rispettando la griglia fisica, mantenendo continua la geometria fino all'ultimo istante e facendo i conti giusti sui pixel che hai davvero.

@@ -1,0 +1,179 @@
+---
+title: "I wanted to brute-force a crisper UI. Then I looked at a 10-pixel X."
+seoTitle: "Supersampling a Linux desktop: why a 10-pixel X needs better math"
+description: "I set out to supersample the entire desktop. A 10-pixel close button showed me that sharpness comes from the pixel grid, not from more samples."
+pubDate: 2026-10-15T19:00:00+02:00
+draft: true
+---
+
+Once I notice a slightly blurry edge, an uneven stroke weight, or an icon sitting half a pixel off-grid, I can’t unsee it. That is an inconvenient personality trait when you are building a desktop environment from scratch.
+
+Lately I’ve been overhauling Vela’s visual identity for a major redesign. Icons, controls, and surfaces are all changing, and the further I got into the mockups, the more I realized I didn’t just want nicer shapes—I wanted those shapes to land on the monitor as cleanly as physically possible.
+
+A few days ago, that obsession led me to a wonderfully naive idea: *what if I rendered the entire UI at a massive internal resolution and downsampled it?* Modern GPUs are fast, and Vela already runs on a custom Vulkan renderer I wrote specifically for low-level visual control. Why not just turn the quality knob all the way up?
+
+What started as a quick supersampling experiment quickly turned into a deep dive through fractional scaling, subpixel phase, vector optical sizing, and the surprisingly thorny math of drawing a 10-pixel `X` in the corner of a window. Here is what looked great on paper, what fell apart under inspection, and how I plan to change Vela's rendering pipeline.
+
+---
+
+## The initial idea: throw more pixels at it
+
+Picture a standard 1920 × 1080 monitor at 100% scaling. A typical UI icon lives inside a 32 × 32 pixel box. That is a tiny canvas of just 1,024 squares—every diagonal line, tight curve, and rounded corner gets chewed up by the pixel grid, no matter how clean the underlying math is.
+
+The classic brute-force fix is **Supersampling Antialiasing (SSAA)**: instead of estimating how much of each screen pixel a shape covers, you rasterize at a much higher resolution and downsample with a good reconstruction filter. Rendering that 32 × 32 icon at **4× per axis** gives you a 128 × 128 buffer, or 16 samples per output pixel (often called 16× SSAA in games; I’ll stick to *per axis* here for clarity).
+
+The moment you try to apply "SSAA for a desktop," though, you hit a deceptively hard question: **what, exactly, are you supersampling?** The entire offscreen application framebuffer? Individual icons? Vector edges only? The answer completely changes the memory footprint and visual result. Before I could even settle that, I ran into a more immediate problem.
+
+---
+
+## Enter fractional scaling
+
+Reasoning about a 32-pixel icon at 100% scale is easy. At 125%, that same icon spans 40 physical pixels. At 150%, it’s 48; at 175%, 56; at 200%, 64. Once fractional scaling enters the picture, "4× SSAA" splits into two very different interpretations.
+
+### 1. Scaling the logical size (4× logical)
+
+My first instinct was to treat supersampling as something that happens *before* display scaling: a 32 × 32 logical icon always gets rasterized into a fixed 128 × 128 buffer, stepping up to 256 × 256 only when display scaling hits 200%.
+
+The catch is that monitors don’t care about logical pixels; they only show physical ones. Here is what actually reaches the screen with a fixed 4× logical buffer:
+
+| Display scale | Physical icon | Internal buffer | Effective samples per physical axis |
+| :--- | :--- | :--- | :--- |
+| **100%** | 32 × 32 | 128 × 128 | **4.00×** |
+| **125%** | 40 × 40 | 128 × 128 | **3.20×** |
+| **150%** | 48 × 48 | 128 × 128 | **2.67×** |
+| **175%** | 56 × 56 | 128 × 128 | **2.29×** |
+| **200%** | 64 × 64 | 256 × 256 | **4.00×** |
+
+As the user scales up from 100% to 175%, effective sample density steadily drops, then jumps back up at 200%. Nothing breaks, but if the whole point is predictable visual quality, having sharpness degrade on fractional scales defeats the purpose.
+
+### 2. Scaling the physical size (4× physical)
+
+The alternative is tying the sample rate directly to the **final physical pixel grid**:
+
+| Display scale | Physical icon | Internal buffer | Multiplier on logical size |
+| :--- | :--- | :--- | :--- |
+| **100%** | 32 × 32 | 128 × 128 | **4×** |
+| **125%** | 40 × 40 | 160 × 160 | **5×** |
+| **150%** | 48 × 48 | 192 × 192 | **6×** |
+| **175%** | 56 × 56 | 224 × 224 | **7×** |
+| **200%** | 64 × 64 | 256 × 256 | **8×** |
+
+There is a neat mathematical coincidence here: because standard desktop scale factors move in increments of 0.25 (1/4), multiplying by a physical SSAA factor of 4 clears the fraction. Every standard scale level yields an integer multiplier over logical coordinates (4×, 5×, 6×, 7×, 8×):
+
+$$
+\text{Internal Samples per Axis} = \text{Logical Length} \times \text{Display Scale} \times \text{SSAA Factor}
+$$
+
+The architectural takeaway is what really matters: **display scaling and antialiasing are not sequential passes over bitmaps.** You shouldn't rasterize at 4× logical size and then scale the intermediate image. Instead, you combine layout scale and sample density into a single transform *before* touching the rasterizer, evaluating the original geometry directly in its final sampling space.
+
+That works cleanly whenever logical sizes are multiples of 4. The rest of the UI, however, isn't that tidy.
+
+---
+
+## The annoying case: 57.5 pixels and subpixel phase
+
+Icons use friendly sizes (16, 24, 32, 48), but look at Vela’s titlebar buttons: each one is 46 logical pixels wide. At 125% scaling, its exact physical width is **57.5 pixels**. The same thing happens to 6-pixel card corner radii (7.5 physical pixels) and the 10-pixel glyphs inside titlebar buttons (12.5 physical pixels).
+
+Monitors don’t have half-pixels, and GPU textures need integer dimensions, so that .5 has to be resolved somewhere. The tempting shortcut is rounding the layout box early—snapping 57.5 to 57 or 58 and rasterizing to fill it. But three buttons side by side span 172.5 pixels; rounded individually, they total 171 or 174, leaving a 1.5-pixel discrepancy that turns into uneven gaps or overlaps. Worse, rounding early throws away the exact geometric truth antialiasing is meant to preserve. If a shape's true right edge lands halfway through the 58th pixel column, that column should get 50% alpha coverage—not get lopped off or stretched to 100%.
+
+This brings us to **subpixel phase**. Two identical 1-pixel vertical lines look completely different depending on where they land on the physical grid:
+- Centered squarely on a pixel column, the line fills that single column with crisp, high-contrast coverage.
+- Straddling the boundary between two columns, it splits its energy 50/50 across two adjacent pixels, looking twice as wide and half as opaque.
+
+For Vela, this meant shifting my mental model. Knowing an element's size and the monitor's scale factor isn't enough; the renderer needs to know **where the geometry lands relative to the physical pixel grid**, even as a window is dragged or animated across subpixel positions. I started with *"let's just render bigger"* and ended up at *"preserve the subpixel phase of continuous geometry until final rasterization."*
+
+---
+
+## Vectors, tiny icons, and the reality of a Linux desktop
+
+### SVGs and optical sizing
+
+Vela’s official icon set will be SVG-based, which fits naturally into a phase-aware pipeline. For a 32 × 32 logical icon at 125% scale with 4× physical supersampling, Vela can evaluate the vector paths directly at 160 × 160 and downsample to 40 × 40, never touching a blurry 32 × 32 intermediate bitmap.
+
+Still, "vector" doesn’t automatically mean "crisp at every size." Shrink a detailed illustration down to 16 × 16 logical pixels and thin strokes vanish, negative space collapses, and neighboring paths turn into gray mush. In fact, a high-precision renderer makes poorly designed small icons look *worse*, because it stops hiding overcrowded geometry behind accidental bilinear blur.
+
+Typography solved this centuries ago with **optical sizing**, and icons need the same treatment: smaller sizes require simplified silhouettes, wider counters, and proportionally heavier strokes tuned for human perception rather than strict geometric scaling.
+
+### Third-party PNGs
+
+Vela is also a Linux desktop, meaning third-party apps will hand us SVGs, multi-resolution PNG folders, or legacy bitmaps pulled from the user's active theme via the [Freedesktop Icon Theme Specification](https://specifications.freedesktop.org/icon-theme-spec/latest/).
+
+Here, blanket supersampling is pure waste. If an app only provides a 32 × 32 PNG for a 40 × 40 physical box, upscaling that bitmap into a 160 × 160 buffer just to downsample it back to 40 × 40 won't conjure up missing detail—it just resamples the same low-res grid twice.
+
+For raster icons, the right strategy inside Vela’s `IconProvider` (built on `QIcon::fromTheme()`) is smart asset selection followed by a single filtering pass:
+- **48 × 48 or 64 × 64 PNG:** direct, single-pass high-quality downsampling.
+- **256 × 256 PNG:** usable, though sometimes softer than a 48 × 48 asset that was hand-hinted by the designer.
+- **32 × 32 or 16 × 16 PNG:** single-pass upscaling with a good reconstruction filter to contain the damage.
+
+The only time supersampling helps a PNG is when the icon is rotated, animated, or clipped by a rounded mask—where supersampling the geometric mask still sharpens the outer silhouette.
+
+---
+
+## The rest of the desktop isn't an icon
+
+Looking at buttons, cards, shadows, and blurs, almost none of the standard UI primitives actually want full-surface supersampling:
+
+- **Rounded rectangles and buttons:** a 200 × 40 button is 95% flat fill. Generating 16 samples per pixel across thousands of uniform interior pixels just to smooth out four tiny corner arcs is a massive waste. Only the perimeter band needs antialiasing.
+- **Window shadows, gradients, and blurs:** Vela’s compositor already evaluates drop shadows analytically in fragment shaders as continuous falloff functions. Shader gradients have no geometric edges to alias, and blurs already filter across neighboring pixels.
+- **1-pixel hairline borders:** at 125% scale, a 1-pixel logical border becomes 1.25 physical pixels wide; at 150%, it’s 1.5. Should that border scale proportionally (becoming softer as it straddles two pixels) or snap to a crisp 1-physical-pixel hairline? That is a deliberate *design* choice—no antialiasing algorithm can make it for you.
+
+At that point, I realized I had been lumping three separate problems under the word "sharpness":
+1. **Geometry design:** what exact shape are we trying to draw at this physical size?
+2. **Grid placement:** where do its edges land on the physical pixel grid?
+3. **Edge rasterization:** how do we compute pixel coverage along those boundaries?
+
+To test that realization, I zoomed in on the most mundane element on the entire screen.
+
+---
+
+## Three tiny buttons in the titlebar
+
+At normal viewing distance, Vela’s minimize, maximize, and close buttons look fine. Zoom in on a fractionally scaled monitor, though, and the flaws show up: the minimize bar looks slightly hazy, the maximize square lacks a crisp edge, and the `X` tends to look pinched or muddy where the diagonals cross.
+
+The funny part? These buttons aren’t PNGs, and they aren’t SVGs. **Vela already draws them procedurally in C.**
+
+I opened [`compositor/src/decoration.c`](https://github.com/vela-desktop/vela/blob/main/compositor/src/decoration.c) to see what was actually happening. The compositor defines the minimize, maximize, restore, and close glyphs as line segments inside a unit square, with a nominal logical size of just 10 pixels:
+
+```c
+#define GLYPH_SIZE 10
+```
+
+To rasterize a button glyph, the compositor computes an integer texture size by rounding the scaled dimension:
+
+```c
+int size = round(10 * display_scale);
+```
+
+It then loops over every pixel in that square, measures the distance from the pixel center to the nearest line segment, converts that distance into alpha coverage, and uploads the premultiplied buffer as a GPU texture.
+
+As a lightweight baseline, it’s honestly pretty clever. So why did it still look soft? Tracing the pipeline revealed two subtle traps:
+
+1. **Mismatched resampling:** at 125% scale, 10 × 1.25 is 12.5 physical pixels. The glyph rasterizer rounds that up to a **13 × 13 physical texture**. Later, when the compositor lays out the titlebar, it places a 10-logical-pixel scene node in continuous coordinates. At 125%, the destination rectangle can't map 1:1 to that texture: the space is 12.5 pixels, the texture 13. So the compositor falls back to bilinear filtering—resampling an *already* antialiased texture and blurring the edges a second time.
+2. **Implicit capsule geometry:** measuring raw distance to a line segment naturally creates round caps. That works fine on the diagonal tips of an `X`, but on the horizontal minimize bar or the four corners of the maximize square, round caps bleed coverage outward and rob the shape of crisp 90° corners.
+
+Suddenly the question wasn’t *"how many SSAA samples can my GPU afford?"* It was *"am I even drawing the shape I think I’m drawing, and does the compositor keep it intact on the way to the screen?"*
+
+---
+
+## From supersampling to analytical antialiasing
+
+Because window controls are tiny and self-contained, they are the perfect proving ground. Instead of treating them as generic textures rounded in isolation, I’m designing a dedicated micro-renderer (`WindowControlGlyph`) that takes the full context: symbol type, logical bounds, display scale, and exact physical subpixel phase.
+
+More importantly, it lets each symbol follow geometric rules tailored to its shape:
+- **Minimize (`-`):** strict pixel snapping to the physical row grid, flat vertical caps, and an integer stroke weight.
+- **Maximize (`[]`):** evaluated as a single closed hollow rectangle with sharp 90° mitered corners rather than four overlapping round-capped segments.
+- **Restore:** two overlapping closed contours with clean occlusion and intersection edges.
+- **Close (`X`):** no integer grid snapping for the diagonals, relying instead on subpixel-accurate edge coverage and optical weight balancing at the center crossing.
+
+My original plan for the prototype was a 4×-per-axis CPU supersampler. Then it hit me: when your geometry consists entirely of straight lines, rectangles, and simple intersections, why approximate pixel coverage by averaging a 16-sample grid when you can **compute the exact area of the pixel covered by the shape**?
+
+That is **analytical antialiasing**: intersecting the geometric primitive directly against each output pixel’s box and integrating the exact covered area. The existing code in `decoration.c` is already halfway there with a signed-distance approximation from the pixel center, which falls short right at corners, flat caps, and diagonal crossings.
+
+So my next step for Vela’s window controls is a three-way showdown using the exact same glyph geometry:
+1. **The current segment-distance rasterizer** (with the 13-pixel alignment mismatch fixed).
+2. **A brute-force SSAA reference** at 4× and 8× per physical axis.
+3. **A specialized analytical coverage rasterizer** computing exact pixel-box intersections for strokes, miters, and crossings.
+
+If the analytical rasterizer visually matches the 8× SSAA reference while using less memory and zero downsampling passes, it earns its spot in Vela’s production compositor.
+
+I started out looking for an excuse to throw sixteen times more GPU samples at the entire desktop. Instead, a 10-pixel `X` taught me that a genuinely crisp UI doesn't come from brute-forcing more pixels—it comes from respecting the physical grid, keeping geometry continuous until the last possible microsecond, and doing the right math on the pixels you actually have.

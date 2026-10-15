@@ -1,0 +1,95 @@
+---
+title: "Visual coherence in Vela: compositor, shell and apps in step"
+seoTitle: "Visual coherence in Vela: one rhythm for compositor, shell and apps"
+description: "A first look at Vela's redesign: the foundations. Animations, fractional scaling and materials shared by compositor and shell, and the ideas I dropped."
+pubDate: 2026-10-16T19:00:00+02:00
+draft: true
+tags: ["Design", "Renderer"]
+---
+
+import Aside from '../../components/mdx/Aside.astro';
+
+I’m working on a major redesign of Vela: icons, controls, surfaces, animations. This is the first look at it, and it doesn’t show the new look yet. It’s about the foundations: before changing how Vela looks, I had to make the compositor, the shell and the apps move and color things the same way. It’s a small part of the redesign, a tenth, maybe a fifth, but everything else builds on it.
+
+<Aside title="To try it" tone="caution">
+What I describe here isn’t in `main` yet. It’s on the `visual-coherence/pixels` branch ([PR #40](https://github.com/vela-desktop/vela/pull/40)), where the first seven steps of the plan are done; the shared QML controls and panels come next. To install it:
+
+```sh
+vela-update --branch visual-coherence/pixels --build
+```
+
+The next plain `vela-update` takes you back to `main`.
+</Aside>
+
+## Two worlds that have to agree
+
+Building a desktop environment from scratch means getting very different worlds to speak the same language: in Vela, the Wayland compositor, written in C, on one side, and the shell and applications, written in C++ and QML, on the other.
+
+On paper these components shared the same aesthetic direction, but small fractures remained in the code: mismatched animation durations, duplicated color formulas, controls that changed state instantly, and stutters when monitors with very different refresh rates ran side by side.
+
+I didn’t have all the answers from day one; several of my first hypotheses turned out to be wrong once tested. Before touching the code, I stopped to write a design document, [`visual-coherence.md`](https://github.com/vela-desktop/vela/blob/visual-coherence/pixels/docs/visual-coherence.md), to lay out what was broken and which invariants I wanted to keep. Here are the main decisions, and the *why* behind each.
+
+## Two animation engines, one rhythm
+
+My first idea was ambitious: a single shared animation runtime in C, exposed to QML through a bridge. **I walked that back.** The compositor has to sample frames at *each monitor’s* predicted presentation time, while Qt already has a good engine of its own, with interruption and reversal solved and tested. Unifying the engines meant making things harder and rewriting parts of Qt.
+
+What had to match wasn’t the engine code, just the numbers. So I defined four duration tokens (`fast`, `normal`, `slow`, `long`) and a single decelerate curve, written both in `motion.h` and in `Theme.qml`. To keep them from drifting apart, there’s no build-system machinery, just a short script, `check-shared-values.py`, that runs with the tests and fails if the two files disagree.
+
+## Mixed refresh rates: each output samples, the wall clock retires
+
+With a 180 Hz monitor next to a 75 Hz one, a single global animation clock (the `fmax` in the code) caused a strange artifact: the faster monitor drew the slower one’s “future”, then repeated the same frame while waiting for it to catch up. The result was stutter.
+
+I couldn’t just remove that limit, though, because the end of an animation does irreversible things, like destroying the snapshot of a closing window. The fix was to separate the two:
+* **Visual state** is sampled at the presentation time of the monitor being drawn. It’s idempotent, and may even “go back in time” from one output to the next.
+* **Retirement** of resources happens only once the system clock (`CLOCK_MONOTONIC`) has passed the end of the animation, so no monitor loses the last milliseconds of motion.
+
+{/* Video to record (webm/mp4), before and after: maximizing a window at 180 Hz.
+    Before: corner radii grew instead of going away, and frames stalled at fractional scales.
+    After: per-output floating-point sampling, and corner radii interpolated from source to destination. */}
+
+## Sharp at fractional scales: round once
+
+Looking at rendering at fractional scales (125%, 150% and so on), I noticed that the title bar text and icons drawn by the compositor went through the bilinear filter at about 2% of window positions, and looked slightly soft, depending on where floating-point rounding landed. On top of that, a couple of animations rounded coordinates to logical units before they were ever converted to physical pixels.
+
+The rule I set is simple: animations work in pure floating point, and conversion to physical pixels happens in one place (`scene/frame.c`), which forces a 1:1 copy for any buffer drawn at the output’s scale, whether it comes from an app or from the compositor itself.
+
+{/* Video to record (webm/mp4), before and after, zoomed in on the title bar at 125% while the window moves.
+    Before: the title went through the bilinear filter at about 2% of positions, and button hover switched instantly.
+    After: a 1:1 copy at every position, and a 120 ms fade on title bar button hover. */}
+
+## “Qt behaves, Vela looks”
+
+About four out of five state changes in Vela’s QML controls jump instantly, and many buttons and switches hand-roll their own `MouseArea`, keyboard handling and accessibility. This is the next step of the plan, and the direction is set: build on **Qt Quick Templates** (`T.Button`, `T.Switch`, `T.Slider` and the rest). Qt handles input, focus and accessibility; Vela does the drawing, with a new base component, `Fill`, that fades color changes following the precedence between states.
+
+The shell’s panels, like Quick Settings or the Start menu, will get `PanelMotion`: a container that handles entrance, exit and shadows (`Shadow`), keeps the blur region in step with the panel as it moves, and lets a panel reverse smoothly if you reopen it while it’s closing.
+
+{/* Video to record (webm/mp4) once PanelMotion and Fill are done: Quick Settings before and after.
+    Before: tiles jump to the accent color, the blur lags behind during the opening slide, and changing page cuts the height abruptly.
+    After: smooth transitions on every control, blur locked to the moving area, and animated height between pages. */}
+
+## Mechanism for clients, policy for Vela: blur, Acrylic and Mica
+
+I also sorted out who decides what between the compositor and the shell:
+* **The shell computes the colors, the compositor draws them.** The *Mica* formula lived in two places, the compositor and the shell. Now the shell alone owns the theme: it computes the final colors and hands them to the compositor ready to use, so there’s no visible seam between the title bar and an app’s content.
+* **Blur for everyone, Acrylic for Vela.** Before, any third-party app asking for a blurred background (`ext-background-effect-v1`) got Vela’s full *Acrylic* recipe, including the theme’s gray tint. Now outside apps get a clean blur, dithered against banding, and Acrylic is kept for surfaces in the `vela-` namespace.
+
+## What I decided *not* to do
+
+What ends up in the bin is often as interesting as what stays. The design document keeps a long list of rejected ideas (§9); the most instructive ones:
+* **Moving the Acrylic gray into the QML fills.** It looked like a clean way to split responsibilities between compositor and shell, until I did the math on dithering. The dither is written by the compositor’s blur shader; with the gray tint on top of it, in Qt’s fixed blending, the dither left on screen would drop to less than half (from 0.38 to 0.17), and gradients would band again.
+* **Stacked translucent layers for UI states.** I tried separate rectangles for hover, press and selection, each with its own opacity. They tripled the objects and animations per control, and produced colors that didn’t match the theme’s.
+* **Three levels of reduced motion.** I considered *full, reduced, off*, but it wasn’t needed. Instead there’s a single *Animation effects* switch in Accessibility, which removes spatial movement and keeps only quick fades (`fast`), plus a slider for anyone who just wants slower or faster animations, from 50% to 300%.
+
+## Behind the scenes
+
+Maybe the most fun part of this work is building the tools that keep these rules in place later on.
+
+Functional tests spin up two headless outputs, at 180 and 75 Hz, to check animation curves down to the microsecond, and that frame counters stop when nothing is happening.
+
+With the shared controls will come `scripts/check-qml-motion.py`: a small check, run with the tests on every QML file, that reports a duration written by hand instead of a `Theme` token, or a color driven by mouse state on a plain `Rectangle` instead of a `Fill`. An exception passes only with a comment on the same line saying why, for example `// motion: follows the drag`.
+
+If you want the deeper details, the rounding simulations or the other alternatives I dropped along the way, it’s all in the [design document](https://github.com/vela-desktop/vela/blob/visual-coherence/pixels/docs/visual-coherence.md).
+
+## What’s next
+
+The compositor and protocol foundations, the first seven steps of the plan, are implemented and tested on the branch. I’m now working on the shared QML controls and the panels. After that comes the part you’ll actually see: the new look of icons, controls and surfaces, which I’ll write about in the next entries.
