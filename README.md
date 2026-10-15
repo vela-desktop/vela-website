@@ -67,16 +67,42 @@ tags: ["Renderer", "Wayland"]                    # optional
 
 The build fails on invalid front matter, so mistakes are caught before publishing.
 
+### Translations
+
+An entry can also be published in another language. The translation goes in
+`src/content/translations/<lang>/`, named like the original:
+
+```
+src/content/blog/frame-clock.mdx                  → /blog/frame-clock/
+src/content/translations/it/frame-clock.mdx       → /it/blog/frame-clock/
+```
+
+Its front matter is `title`, `description` and `pubDate`, plus optionally
+`seoTitle`, `updatedDate`, `draft` and `coverAlt`; tags and cover come from the
+original. The two pages link to each other ("Leggi in italiano" / "Read in
+English") and declare each other with `hreflang`, in the sitemap too. A
+translation has its own social preview image, and stays out of the journal
+index, the topic pages and the RSS feed, which are in English. When the
+original changes, update the translation and set its `updatedDate`.
+
+Languages are listed in `src/lib/i18n.ts`, with the words around an entry
+(byline, dates, pager) in each; a new one also needs adding to the sitemap's
+`i18n` option in `astro.config.mjs`. A translation in a language not listed
+there, or of an entry that doesn't exist, fails the build.
+
 ## Project layout
 
 ```
 astro.config.mjs        site URL, fonts, Markdown pipeline, integrations
 src/consts.ts           site metadata, links, roadmap list
+src/lib/i18n.ts         journal languages and the words around an entry in each
 src/styles/             tokens.css (design tokens), global.css, prose.css
 src/components/home/    the five homepage chapters
 src/components/journal/ journal layouts: feature, card, row, cover, empty state
-src/pages/              routes: /, /blog/, /blog/<entry>/, /blog/topics/<tag>/, /changes/,
-                        /install/, /faq/, /privacy/, /rss.xml, /robots.txt, 404
+src/layouts/            Base (every page), Page (Markdown pages), Article (journal entries)
+src/pages/              routes: /, /blog/, /blog/<entry>/, /<lang>/blog/<entry>/,
+                        /blog/topics/<tag>/, /changes/, /install/, /faq/, /privacy/,
+                        /rss.xml, /robots.txt, 404
 src/assets/             screenshots, brand artwork, fonts
 .github/workflows/      CI: type-check, build, link check, Lighthouse (lighthouserc.json)
 deploy/apache/          production Apache virtual host

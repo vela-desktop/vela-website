@@ -1,0 +1,399 @@
+---
+// A journal entry, in any of its languages: the page around the entry's
+// rendered text, which comes in through the slot.
+import { Picture, getImage } from 'astro:assets';
+import Base from './Base.astro';
+import PostMeta from '../components/journal/PostMeta.astro';
+import SailMark from '../components/journal/SailMark.astro';
+import { formatDate, ogImageUrl, postUrl, topicUrl, type Entry } from '../lib/posts';
+import { DEFAULT_LANG, UI } from '../lib/i18n';
+import { AUTHOR, LINKS } from '../consts';
+import { articleSchema, breadcrumbSchema } from '../lib/schema';
+import '../styles/prose.css';
+
+interface Props {
+  post: Entry;
+  /** The same entry in the other languages it exists in. */
+  translations?: Entry[];
+  newer?: Entry;
+  older?: Entry;
+}
+
+const { post, translations = [], newer, older } = Astro.props;
+const { title, seoTitle, description, pubDate, updatedDate, cover, coverAlt, tags } = post.data;
+const lang = post.lang ?? DEFAULT_LANG;
+const ui = UI[lang];
+
+const ogImage = cover
+  ? (await getImage({ src: cover, width: 1200, height: 630, fit: 'cover', format: 'jpg' })).src
+  : ogImageUrl(post);
+const alternates = [post, ...translations].map((entry) => ({ lang: entry.lang ?? DEFAULT_LANG, path: postUrl(entry) }));
+---
+
+<Base
+  title={title}
+  seoTitle={seoTitle}
+  description={description}
+  author={AUTHOR.name}
+  type="article"
+  image={ogImage}
+  imageAlt={cover ? coverAlt : `${title} — Vela Journal`}
+  publishedTime={pubDate}
+  modifiedTime={updatedDate}
+  noindex={post.data.draft}
+  lang={lang}
+  alternates={alternates}
+  jsonLd={[
+    articleSchema(post, ogImage, translations),
+    breadcrumbSchema([
+      ['Vela', '/'],
+      ['Journal', '/blog/'],
+      [title, postUrl(post)],
+    ]),
+  ]}
+>
+  <article class="article">
+    <header class="article__header">
+      <a class="article__back" href="/blog/">
+        <span class="arrow arrow--back" aria-hidden="true">←</span> {ui.journal}
+      </a>
+
+      {
+        tags.length > 0 && (
+          <ul class="article__tags" role="list" aria-label={ui.topics}>
+            {tags.map((tag) => <li><a href={topicUrl(tag)}>{tag}</a></li>)}
+          </ul>
+        )
+      }
+
+      <h1 class="article__title">{title}</h1>
+      <p class="article__dek">{description}</p>
+
+      <div class="article__byline">
+        <p class="article__author">{ui.by} <a href={AUTHOR.url} rel="author noopener">{AUTHOR.name}</a></p>
+        <PostMeta post={post} />
+        {
+          updatedDate && (
+            <p class="article__updated">
+              {ui.updated} <time datetime={updatedDate.toISOString()}>{formatDate(updatedDate, lang)}</time>
+            </p>
+          )
+        }
+        {
+          translations.length > 0 && (
+            <p class="article__language">
+              {ui.translatedFrom && <>{ui.translatedFrom} </>}
+              {translations.map((other) => {
+                const otherLang = other.lang ?? DEFAULT_LANG;
+                return (
+                  <a href={postUrl(other)} hreflang={otherLang} lang={otherLang}>
+                    {UI[otherLang].readIn}
+                  </a>
+                );
+              })}
+            </p>
+          )
+        }
+      </div>
+    </header>
+
+    {
+      cover && (
+        <figure class="article__cover">
+          <Picture
+            src={cover}
+            alt={coverAlt ?? ''}
+            formats={['avif', 'webp']}
+            fallbackFormat="webp"
+            widths={[640, 960, 1280, 1600, 1920]}
+            sizes="(max-width: 90rem) 94vw, 1344px"
+            loading="eager"
+            fetchpriority="high"
+          />
+        </figure>
+      )
+    }
+
+    <div class="prose article__body">
+      <slot />
+    </div>
+
+    <footer class="article__end">
+      <div class="article__mark">
+        <span class="article__mark-rule" aria-hidden="true"></span>
+        <SailMark size={22} />
+        <span class="article__mark-rule" aria-hidden="true"></span>
+      </div>
+
+      <p class="article__colophon">
+        {ui.published(formatDate(pubDate, lang))}{' '}
+        {updatedDate && <>{ui.lastUpdated(formatDate(updatedDate, lang))}{' '}</>}
+        {ui.follow[0]}<a href={LINKS.rss}>{ui.follow[1]}</a>{ui.follow[2]}
+        <a href={LINKS.repo} rel="noopener">{ui.follow[3]}</a>{ui.follow[4]}
+      </p>
+
+      {
+        (newer || older) && (
+          <nav class="article__pager" aria-label={ui.moreEntries}>
+            {older ? (
+              <a class="pager pager--older" href={postUrl(older)} rel="prev">
+                <span class="label">{ui.previous}</span>
+                <span class="pager__title">{older.data.title}</span>
+              </a>
+            ) : (
+              <span />
+            )}
+            {newer && (
+              <a class="pager pager--newer" href={postUrl(newer)} rel="next">
+                <span class="label">{ui.next}</span>
+                <span class="pager__title">{newer.data.title}</span>
+              </a>
+            )}
+          </nav>
+        )
+      }
+
+      <a class="article__all link" href="/blog/">{ui.allEntries} <span class="arrow" aria-hidden="true">→</span></a>
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .article {
+    padding-top: calc(var(--header-height) + var(--space-2xl));
+    padding-bottom: var(--space-section);
+    background:
+      radial-gradient(50rem 26rem at 50% 0%, rgb(77 163 255 / 0.07), transparent 70%),
+      var(--paper);
+  }
+
+  .article__header {
+    width: min(100% - 2 * var(--gutter), 56rem);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .article__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--duration-fast) linear;
+  }
+
+  .article__back:hover {
+    color: var(--text);
+  }
+
+  .arrow--back {
+    transition: transform var(--duration-slow) var(--ease-decelerate);
+  }
+
+  .article__back:hover .arrow--back {
+    transform: translateX(-0.25em);
+  }
+
+  .article__tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: var(--space-xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  .article__tags a {
+    display: block;
+    padding: 0.2rem 0.65rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    text-decoration: none;
+    transition: border-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .article__tags a:hover {
+    border-color: var(--teal);
+  }
+
+  .article__title {
+    margin-top: var(--space-l);
+    font-family: var(--font-serif);
+    font-size: var(--step-5);
+    font-weight: 420;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+  }
+
+  .article__tags + .article__title {
+    margin-top: var(--space-m);
+  }
+
+  .article__dek {
+    max-width: 40rem;
+    margin: var(--space-m) auto 0;
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    font-style: italic;
+    font-weight: 350;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  .article__byline {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 1.25rem;
+    margin-top: var(--space-l);
+    padding-block: 0.9rem;
+    border-block: 1px solid var(--line);
+  }
+
+  .article__byline :global(.post-meta) {
+    justify-content: center;
+  }
+
+  .article__author,
+  .article__updated,
+  .article__language {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+  }
+
+  .article__author a,
+  .article__language a {
+    color: var(--text-muted);
+  }
+
+  .article__author a:hover,
+  .article__language a:hover {
+    color: var(--text);
+  }
+
+  .article__cover {
+    width: min(100% - 2 * var(--gutter), var(--width-page));
+    margin: var(--space-2xl) auto 0;
+  }
+
+  .article__cover :global(img) {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-window);
+  }
+
+  .article__body {
+    margin-top: var(--space-2xl);
+  }
+
+  /* ── The ending ── */
+  .article__end {
+    width: min(100% - 2 * var(--gutter), var(--measure));
+    margin: var(--space-3xl) auto 0;
+  }
+
+  .article__mark {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .article__mark-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--line-strong);
+  }
+
+  .article__colophon {
+    margin-top: var(--space-l);
+    font-family: var(--font-serif);
+    font-size: var(--step-0);
+    font-style: italic;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .article__colophon a {
+    color: var(--text);
+  }
+
+  .article__pager {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gutter);
+    margin-top: var(--space-2xl);
+  }
+
+  .pager {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    color: inherit;
+    text-decoration: none;
+    transition:
+      border-color var(--duration-normal) var(--ease-decelerate),
+      background-color var(--duration-normal) var(--ease-decelerate);
+  }
+
+  .pager:hover {
+    border-color: var(--line-bright);
+    background: rgb(255 255 255 / 0.025);
+  }
+
+  .pager--newer {
+    text-align: right;
+  }
+
+  .pager__title {
+    font-family: var(--font-serif);
+    font-size: var(--step-1);
+    line-height: 1.25;
+  }
+
+  .article__all {
+    display: table;
+    margin: var(--space-xl) auto 0;
+    font-size: var(--step--1);
+    font-weight: 500;
+  }
+
+  @media (max-width: 40rem) {
+    .article__header {
+      text-align: left;
+    }
+
+    .article__tags,
+    .article__byline,
+    .article__byline :global(.post-meta) {
+      justify-content: flex-start;
+    }
+
+    .article__dek {
+      margin-left: 0;
+    }
+
+    .article__pager {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pager--newer {
+      text-align: left;
+    }
+  }
+</style>

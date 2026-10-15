@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Head, { type Props as HeadProps } from '../components/Head.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { DEFAULT_LANG, UI } from '../lib/i18n';
 
 export type Props = HeadProps & {
   /** Extra class on <body>, for page-level theming. */
@@ -10,21 +11,24 @@ export type Props = HeadProps & {
 };
 
 const { bodyClass, ...head } = Astro.props;
+const lang = head.lang ?? DEFAULT_LANG;
+// The navigation and the footer are only written in English.
+const chromeLang = lang === DEFAULT_LANG ? undefined : DEFAULT_LANG;
 ---
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang={lang} dir="ltr">
   <head>
     <Head {...head} />
     <slot name="head" />
   </head>
   <body class={bodyClass}>
-    <a class="skip-link" href="#main">Skip to content</a>
-    <Header />
+    <a class="skip-link" href="#main">{UI[lang].skipLink}</a>
+    <Header lang={chromeLang} />
     <main id="main" tabindex="-1">
       <slot />
     </main>
-    <Footer />
+    <Footer lang={chromeLang} />
     <script>
       import '../scripts/enhance';
     </script>

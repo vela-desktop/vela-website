@@ -1,0 +1,38 @@
+---
+// Translated journal entries: /<lang>/blog/<entry>/. The pager moves between
+// entries translated into the same language.
+import { render } from 'astro:content';
+import Article from '../../../layouts/Article.astro';
+import { getTranslations, type Entry, type TranslatedPost } from '../../../lib/posts';
+import { DEFAULT_LANG, LANGS } from '../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const translations = await getTranslations();
+  return LANGS.filter((lang) => lang !== DEFAULT_LANG).flatMap((lang) => {
+    const inLang = translations.filter((translation) => translation.lang === lang);
+    return inLang.map((post, i) => ({
+      params: { lang, slug: post.id },
+      props: {
+        post,
+        translations: [post.original, ...translations.filter((other) => other.id === post.id && other.lang !== lang)],
+        newer: inLang[i - 1],
+        older: inLang[i + 1],
+      },
+    }));
+  });
+}
+
+interface Props {
+  post: TranslatedPost;
+  translations: Entry[];
+  newer?: TranslatedPost;
+  older?: TranslatedPost;
+}
+
+const { post, translations, newer, older } = Astro.props;
+const { Content } = await render(post.entry);
+---
+
+<Article post={post} translations={translations} newer={newer} older={older}>
+  <Content />
+</Article>

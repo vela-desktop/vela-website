@@ -1,7 +1,8 @@
 // Structured data (schema.org, as JSON-LD) for search engines and other
 // readers of the page. Pages pass these objects to <Base jsonLd={…}>.
 import { AUTHOR, LINKS, SITE } from '../consts';
-import { ogImageUrl, postUrl, type Post } from './posts';
+import { DEFAULT_LANG } from './i18n';
+import { ogImageUrl, postUrl, type Entry } from './posts';
 
 type Thing = Record<string, unknown>;
 
@@ -55,9 +56,21 @@ export function softwareSchema(version?: string): Thing {
   };
 }
 
-export function articleSchema(post: Post, image?: string): Thing {
+/**
+ * A journal entry. `translations` are the same entry in the other languages it
+ * exists in: the original, on a translation, and the translations, on the
+ * original.
+ */
+export function articleSchema(post: Entry, image?: string, translations: Entry[] = []): Thing {
   const { title, description, pubDate, updatedDate, tags } = post.data;
+  const lang = post.lang ?? DEFAULT_LANG;
   const url = absolute(postUrl(post));
+  const reference = (other: Entry) => ({
+    '@type': 'BlogPosting',
+    url: absolute(postUrl(other)),
+    inLanguage: other.lang ?? DEFAULT_LANG,
+  });
+  const original = translations.find((other) => (other.lang ?? DEFAULT_LANG) === DEFAULT_LANG);
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -68,7 +81,9 @@ export function articleSchema(post: Post, image?: string): Thing {
     image: absolute(image ?? ogImageUrl(post)),
     datePublished: pubDate.toISOString(),
     dateModified: (updatedDate ?? pubDate).toISOString(),
-    inLanguage: 'en',
+    inLanguage: lang,
+    translationOfWork: lang !== DEFAULT_LANG && original ? reference(original) : undefined,
+    workTranslation: lang === DEFAULT_LANG && translations.length > 0 ? translations.map(reference) : undefined,
     keywords: tags.length > 0 ? tags.join(', ') : undefined,
     author,
     publisher: vela,

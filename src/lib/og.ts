@@ -9,7 +9,8 @@ import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import satori from 'satori';
 import sharp from 'sharp';
-import { formatDate, readingTime, seed, type Post } from './posts';
+import { DEFAULT_LANG, UI } from './i18n';
+import { formatDate, readingTime, seed, type Entry } from './posts';
 import iconSvg from '../assets/brand/vela_icon.svg?raw';
 import wallpaperSvg from '../assets/brand/vela-wallpaper.svg?raw';
 
@@ -86,10 +87,11 @@ const mono = {
 };
 
 /** Title, labels and the shading that keeps them readable, as an SVG overlay. */
-async function overlay(post: Post): Promise<string> {
+async function overlay(post: Entry): Promise<string> {
   const { title, pubDate, tags } = post.data;
+  const lang = post.lang ?? DEFAULT_LANG;
   const titleSize = title.length > 60 ? 64 : title.length > 36 ? 76 : 92;
-  const meta = `${formatDate(pubDate)}  ·  ${readingTime(post)} min read`;
+  const meta = `${formatDate(pubDate, lang)}  ·  ${UI[lang].minRead(readingTime(post))}`;
 
   // Satori adds padding to the declared size, so the frame is a fixed box and
   // the content sits inside it with margins.
@@ -160,8 +162,11 @@ async function overlay(post: Post): Promise<string> {
   return satori(tree as Parameters<typeof satori>[0], { width: WIDTH, height: HEIGHT, fonts: await fontsPromise });
 }
 
-/** The social preview image for one journal entry, as PNG. */
-export async function renderOgImage(post: Post): Promise<Buffer> {
+/**
+ * The social preview image for one journal entry, as PNG. Translations share
+ * the original's background, since it comes from the id.
+ */
+export async function renderOgImage(post: Entry): Promise<Buffer> {
   const [base, text] = await Promise.all([background(post.id), overlay(post)]);
   return sharp(base)
     .composite([{ input: Buffer.from(text) }])

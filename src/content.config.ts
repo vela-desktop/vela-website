@@ -30,4 +30,24 @@ const blog = defineCollection({
       }),
 });
 
-export const collections = { blog };
+/**
+ * Translations of journal entries.
+ *
+ * src/content/translations/<lang>/<entry>.md(x), where <entry> is the id of
+ * the original in src/content/blog/: it/frame-clock.mdx → /it/blog/frame-clock/.
+ * Tags and cover come from the original; the rest is the translation's own.
+ */
+const translations = defineCollection({
+  loader: glob({ pattern: '*/**/[^_]*.{md,mdx}', base: './src/content/translations' }),
+  schema: z.object({
+    title: z.string().min(1),
+    seoTitle: z.string().min(1).optional(),
+    description: z.string().min(1),
+    pubDate: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+    draft: z.boolean().default(false),
+    coverAlt: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, translations };

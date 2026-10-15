@@ -1,12 +1,18 @@
 ---
 import Logo from './Logo.astro';
 import { LINKS, NAV } from '../consts';
+import { unprefixed } from '../lib/i18n';
+
+interface Props {
+  /** Set on pages in another language, since the header is in English. */
+  lang?: string;
+}
 
 const path = Astro.url.pathname;
-const isJournal = path.startsWith('/blog');
+const isJournal = unprefixed(path).startsWith('/blog');
 ---
 
-<header class="site-header" data-header>
+<header class="site-header" data-header lang={Astro.props.lang}>
   <div class="site-header__inner container--wide">
     <a class="brand" href="/" aria-label="Vela — home">
       <Logo size={26} />

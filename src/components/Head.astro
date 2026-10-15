@@ -1,6 +1,7 @@
 ---
 import { Font } from 'astro:assets';
 import { SITE, UMAMI } from '../consts';
+import { DEFAULT_LANG, LOCALES, type Lang } from '../lib/i18n';
 
 export interface Props {
   /** The page's own title; the <title> adds SITE.titleSuffix to it. */
@@ -19,6 +20,10 @@ export interface Props {
   author?: string;
   /** schema.org objects, rendered as JSON-LD (see src/lib/schema.ts). */
   jsonLd?: Record<string, unknown>[];
+  /** The language of the page. */
+  lang?: Lang;
+  /** Every language the page exists in, this one included, with its path. */
+  alternates?: { lang: Lang; path: string }[];
 }
 
 const {
@@ -33,6 +38,8 @@ const {
   noindex = false,
   author,
   jsonLd = [],
+  lang = DEFAULT_LANG,
+  alternates = [],
 } = Astro.props;
 
 const fullTitle = seoTitle ?? (title ? `${title} — ${SITE.titleSuffix}` : SITE.title);
@@ -48,6 +55,16 @@ const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 <meta name="description" content={description} />
 {author && <meta name="author" content={author} />}
 {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+{
+  !noindex && alternates.length > 1 && (
+    <>
+      {alternates.map((alternate) => <link rel="alternate" hreflang={alternate.lang} href={new URL(alternate.path, Astro.site)} />)}
+      {alternates
+        .filter((alternate) => alternate.lang === DEFAULT_LANG)
+        .map((alternate) => <link rel="alternate" hreflang="x-default" href={new URL(alternate.path, Astro.site)} />)}
+    </>
+  )
+}
 
 <meta name="theme-color" content="#050b15" />
 <meta name="color-scheme" content="dark" />
@@ -63,7 +80,12 @@ const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 <meta property="og:title" content={title ?? SITE.title} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonical} />
-<meta property="og:locale" content={SITE.locale} />
+<meta property="og:locale" content={LOCALES[lang].ogLocale} />
+{
+  alternates
+    .filter((alternate) => alternate.lang !== lang)
+    .map((alternate) => <meta property="og:locale:alternate" content={LOCALES[alternate.lang].ogLocale} />)
+}
 <meta property="og:image" content={imageUrl} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />

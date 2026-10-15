@@ -1,7 +1,26 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { slug } from 'github-slugger';
+import { DEFAULT_LANG, LOCALES, isLang, type Lang } from './i18n';
 
 export type Post = CollectionEntry<'blog'>;
+
+/**
+ * A journal entry in another language: the translation's text and front
+ * matter over its original's, which gives it its tags and cover. `id` is the
+ * original's.
+ */
+export interface TranslatedPost {
+  id: string;
+  lang: Lang;
+  body?: string;
+  data: Post['data'];
+  original: Post;
+  /** The translation itself, for render(). */
+  entry: CollectionEntry<'translations'>;
+}
+
+/** An entry in any language, for what reads only its id, text and front matter. */
+export type Entry = Pick<Post, 'id' | 'body' | 'data'> & { lang?: Lang };
 
 /**
  * Journal entries, newest first.
@@ -15,8 +34,45 @@ export async function getPosts(): Promise<Post[]> {
   return posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 }
 
-export function postUrl(post: Post): string {
-  return `/blog/${post.id}/`;
+/**
+ * Translated journal entries, newest first, in production only those whose
+ * original is published too. A translation of an entry that doesn't exist, or
+ * in a language src/lib/i18n.ts doesn't list, fails the build.
+ */
+export async function getTranslations(lang?: Lang): Promise<TranslatedPost[]> {
+  const show = (draft: boolean) => import.meta.env.DEV || !draft;
+  const originals = new Map((await getCollection('blog')).map((post) => [post.id, post]));
+  const translations: TranslatedPost[] = [];
+  for (const entry of await getCollection('translations')) {
+    const [entryLang, ...rest] = entry.id.split('/');
+    const id = rest.join('/');
+    const original = originals.get(id);
+    if (!isLang(entryLang) || entryLang === DEFAULT_LANG) {
+      throw new Error(`${entry.filePath}: "${entryLang}" is not a translation language (src/lib/i18n.ts).`);
+    }
+    if (!original) throw new Error(`${entry.filePath}: there is no journal entry "${id}" in src/content/blog/.`);
+    if (!show(entry.data.draft) || !show(original.data.draft) || (lang && entryLang !== lang)) continue;
+    translations.push({
+      id,
+      lang: entryLang,
+      body: entry.body,
+      data: {
+        ...original.data,
+        ...entry.data,
+        draft: entry.data.draft || original.data.draft,
+        coverAlt: entry.data.coverAlt ?? original.data.coverAlt,
+      },
+      original,
+      entry,
+    });
+  }
+  return translations.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+}
+
+/** /blog/<id>/ for originals, /<lang>/blog/<id>/ for translations. */
+export function postUrl(post: { id: string; lang?: Lang }): string {
+  const lang = post.lang ?? DEFAULT_LANG;
+  return lang === DEFAULT_LANG ? `/blog/${post.id}/` : `/${lang}/blog/${post.id}/`;
 }
 
 /** The page listing every entry with a tag: "Renderer" → /blog/topics/renderer/. */
@@ -25,16 +81,17 @@ export function topicUrl(tag: string): string {
 }
 
 /** The generated social preview image of an entry (src/pages/og/blog/). */
-export function ogImageUrl(post: Post): string {
-  return `/og/blog/${post.id}.png`;
+export function ogImageUrl(post: { id: string; lang?: Lang }): string {
+  const lang = post.lang ?? DEFAULT_LANG;
+  return lang === DEFAULT_LANG ? `/og/blog/${post.id}.png` : `/og/blog/${lang}/${post.id}.png`;
 }
 
-const dateFormat = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
+const dateFormats = new Map(
+  Object.entries(LOCALES).map(([lang, { dateLocale }]) => [
+    lang,
+    new Intl.DateTimeFormat(dateLocale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }),
+  ]),
+);
 
 const shortDateFormat = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
@@ -43,8 +100,8 @@ const shortDateFormat = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'UTC',
 });
 
-export function formatDate(date: Date): string {
-  return dateFormat.format(date);
+export function formatDate(date: Date, lang: Lang = DEFAULT_LANG): string {
+  return dateFormats.get(lang)!.format(date);
 }
 
 export function formatShortDate(date: Date): string {
@@ -52,7 +109,7 @@ export function formatShortDate(date: Date): string {
 }
 
 /** Minutes to read, from the raw Markdown body (~230 words per minute). */
-export function readingTime(post: Post): number {
+export function readingTime(post: { body?: string }): number {
   const text = (post.body ?? '')
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/<[^>]+>/g, ' ')

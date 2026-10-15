@@ -13,7 +13,6 @@ export const SITE = {
   tagline: 'A modern, fluid and sharp Linux desktop built for today’s hardware.',
   status: 'Alpha',
   license: 'GPL-3.0-or-later',
-  locale: 'en_US',
 } as const;
 
 /**

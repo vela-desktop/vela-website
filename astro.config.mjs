@@ -62,6 +62,9 @@ export default defineConfig({
     mdx(),
     sitemap({
       filter: (page) => !page.endsWith('/404/'),
+      // Pages under /it/ are the Italian versions of the same path without
+      // it; the sitemap links each pair (src/lib/i18n.ts lists the languages).
+      i18n: { defaultLocale: 'en', locales: { en: 'en', it: 'it' } },
       serialize(item) {
         const date = lastmod.get(new URL(item.url).pathname);
         return date ? { ...item, lastmod: date.toISOString() } : item;

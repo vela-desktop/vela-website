@@ -1,20 +1,22 @@
 ---
-import { formatDate, readingTime, type Post } from '../../lib/posts';
+import { formatDate, readingTime, type Entry } from '../../lib/posts';
+import { DEFAULT_LANG, UI } from '../../lib/i18n';
 
 export interface Props {
-  post: Post;
+  post: Entry;
   class?: string;
 }
 
 const { post, class: className } = Astro.props;
+const lang = post.lang ?? DEFAULT_LANG;
 const minutes = readingTime(post);
 ---
 
 <p class:list={['post-meta', className]}>
-  {post.data.draft && <span class="post-meta__draft">Draft</span>}
-  <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+  {post.data.draft && <span class="post-meta__draft">{UI[lang].draft}</span>}
+  <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, lang)}</time>
   <span aria-hidden="true">·</span>
-  <span>{minutes} min read</span>
+  <span>{UI[lang].minRead(minutes)}</span>
 </p>
 
 <style>
