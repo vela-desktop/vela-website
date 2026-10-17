@@ -1,0 +1,70 @@
+---
+title: "Oltre il clone di Windows: il futuro di Vela tra costellazioni, libertà di scelta e una nuova identità visiva"
+pubDate: 2026-10-16
+draft: true
+author: "MoltenCream"
+description: "Una conversazione notturna su Discord con il contributor lowel.l svela la visione a lungo termine di Vela: il major redesign ispirato alla costellazione Vela, il setup Mix & Match e un nuovo Task Manager integrato nel compositor."
+tags: ["Vela", "Linux", "Desktop Environment", "Design", "Open Source"]
+---
+
+# Oltre il clone di Windows: il futuro di Vela tra costellazioni, libertà di scelta e una nuova identità visiva
+
+Quando pubblichi un progetto open source giovanissimo e con ancora poche stelle su GitHub, non sai mai chi finirà per incrociare il tuo codice[cite: 1]. A volte, le riflessioni più importanti sulla direzione di un software non nascono a tavolino, ma nel cuore della notte su Discord, tra la revisione della Pull Request #57 e della #58 e una chiacchierata spontanea con chi ha deciso di dare fiducia alla tua idea[cite: 1].
+
+È esattamente quello che è successo parlando con `lowel.l`, uno sviluppatore e utente Linux dalla Turchia che ha iniziato ad aprire numerosi branch e PR sul fork di Vela (oltre a offrirsi di curare la traduzione in turco), e che entrerà ufficialmente nella lista dei contributor del progetto[cite: 1]. Da quella conversazione è emerso il manifesto perfetto di cosa rappresenta Vela oggi e di cosa sta per diventare[cite: 1].
+
+---
+
+## La ricerca di un desktop che faccia sentire davvero "a casa"
+
+La storia di `lowel.l` riflette l'esperienza di molti utenti che passano a Linux[cite: 1]. Dopo circa 8–9 mesi passati principalmente su CachyOS provando KDE, GNOME, Hyprland e altre soluzioni, non si era mai sentito davvero a casa con nessuno di essi[cite: 1]. GNOME era quello che ci si avvicinava di più, ma col tempo molti ambienti desktop avevano iniziato a sembrargli stantii, perdendo la sensazione di freschezza anche cambiando configurazione e personalizzandoli[cite: 1].
+
+Il suo obiettivo principale è rendere Linux più facile e piacevole per le persone, inclusi i suoi amici che non hanno familiarità con il sistema, evitando che debbano affrontare piccoli problemi frustranti su funzioni di base che affliggono anche molte distribuzioni nate per offrire un'esperienza simile a Windows[cite: 1]. Aveva persino pensato di creare una propria distribuzione attorno a questa idea, ma si trattava di un progetto enorme da portare avanti da solo e con risorse limitate[cite: 1].
+
+Quando ha scoperto Vela, ha iniziato a personalizzarlo e a correggere i problemi in cui si imbatteva per adattarlo al proprio workflow e alle proprie abitudini[cite: 1]. All'inizio non aveva nemmeno intenzione di aprire delle PR perché dava per scontato che avrei implementato io stesso quelle funzioni col tempo, ma ha deciso comunque di provarci, arrivando a dirmi che anche se un giorno dovessi smettere di lavorare su Vela, vorrebbe continuare a portarlo avanti finché potrà permetterselo[cite: 1].
+
+---
+
+## Dal punto di partenza di Windows 11 alla costellazione Vela
+
+Chi guarda Vela oggi vede un design ispirato a Windows 11[cite: 1]. Apprezzo molto il design di Windows 11 ed è per questo che l'ho scelto come direzione iniziale, ma si tratta solo di un punto di partenza[cite: 1].
+
+Attualmente sto lavorando a un **major redesign** che darà a Vela una propria identità visiva unica[cite: 1]. Sto comunque considerando di mantenere l'attuale look ispirato a Windows 11 come tema ufficiale alternativo, così chi lo preferisce potrà continuare a utilizzarlo[cite: 1].
+
+In senso astratto, **Vela è una costellazione** (`https://en.wikipedia.org/wiki/Vela_(constellation)`), e il nuovo stile visivo ruoterà attorno a questo concetto senza rendere tutto letteralmente a tema spaziale[cite: 1]:
+
+* **Tema scuro:** un design ispirato allo spazio e all'astronomia[cite: 1].
+* **Tema chiaro:** un design ispirato al mare e alla navigazione, mantenendo un legame ideale con le stelle[cite: 1].
+* **Icon pack proprietario:** invece di integrare il pacchetto di icone Microsoft, realizzerò un icon pack originale con l'aiuto di un mio amico esperto nel settore[cite: 1].
+* **Tipografia open source:** per il font la scelta ricade su `calcom/sans-ui` (`https://github.com/calcom/sans-ui`), una soluzione open source che non è una copia di Microsoft, ha un'estetica eccellente e risulta almeno tanto nitida quanto il font di Windows[cite: 1].
+
+---
+
+## Un'esperienza "Mix & Match" fin dal primo avvio
+
+Dare a Vela una propria identità non significa togliere agli utenti la libertà di sentire il desktop come proprio[cite: 1]. L'obiettivo è creare esattamente quel senso di freschezza visiva ricercato dagli utenti, accompagnato dalla fluidità e dalla nitidezza garantite dal compositor custom di Vela[cite: 1].
+
+Immagino un'esperienza di **first-run setup** che permetta agli utenti di personalizzare il proprio desktop combinando elementi UI ispirati a macOS, GNOME, Windows e altri sistemi, in modo che chiunque possa creare un'interfaccia comoda e intuitiva[cite: 1]. Molti utenti, ad esempio, hanno chiesto un Global Menu: a me personalmente non piace, ma nel setup iniziale diventerà una domanda diretta accompagnata da un'immagine di esempio (*"Vuoi il Global Menu, sì o no?"*, *"Menu Start in stile Windows o in stile macOS?"*)[cite: 1].
+
+Durante la conversazione, `lowel.l` ha anche condiviso l'idea di realizzare in futuro uno strumento simile a *Windhawk* per Vela, pensato per installare e gestire piccole mod che modificano parti del desktop senza dover intervenire manualmente su tutto[cite: 1]. È un'idea interessante per il lungo termine (probabilmente tra almeno 2–3 mesi o più), ma prima di arrivare a uno strumento del genere seguiremo un ordine preciso[cite: 1]:
+
+1. Opzioni di personalizzazione modificabili manualmente[cite: 1].
+2. Funzioni di esportazione e importazione[cite: 1].
+3. Supporto ai temi[cite: 1].
+4. Sistema di modding[cite: 1].
+
+---
+
+## "Meglio, non uguale": il futuro delle app di sistema e del Task Manager
+
+Nel suo fork, `lowel.l` aveva sperimentato con un singolo prompt la creazione di repliche 1:1 di applicazioni come Paint e Media Player utilizzando le icone Microsoft[cite: 1]. Abbiamo però concordato che non verranno realizzate altre applicazioni native per Vela prima del major redesign e che queste app verranno spostate fuori come progetti standalone (lasciando aperta la decisione se chiudere o mantenere la issue #75)[cite: 1].
+
+Fin dall'origine Vela non è nato per i neofiti e continua a non esserlo[cite: 1]. Non ho alcun problema con i nuovi utenti, ma per strumenti come il **Task Manager** il mio obiettivo è realizzare qualcosa di **migliore e più potente**, non uguale a quello esistente[cite: 1].
+
+Prendendo ispirazione da **TMOG** (`https://tmog.org/`), creato dall'autore originale del Task Manager di Windows per capire a colpo d'occhio perché il computer rallenta, voglio costruire un Task Manager nello stile di Vela ma **integrato direttamente con il compositor**[cite: 1]:
+
+* Rilevamento automatico di un'applicazione che consuma troppa CPU[cite: 1].
+* Rilevamento automatico dei crash delle applicazioni[cite: 1].
+* Salvataggio potenziale di un report diagnostico tramite `vela-report`[cite: 1].
+
+Quando `lowel.l` ha proposto di aggiungere una funzione simile a quella di Omarchy — dove in caso di crash un agente AI selezionato può trovare e risolvere automaticamente il problema — ho chiarito che non sono convinto di voler rendere Vela un desktop environment "Agent-first"[cite: 1]. Abbiamo scherzato sul fatto che non disdegnerei una donazione da 10 milioni per dei semplici dotfiles, ma siamo d'accordo che non a tutti piace l'intelligenza artificiale e che non debba essere inserita ovunque[cite: 1].
