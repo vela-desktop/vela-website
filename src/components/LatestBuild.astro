@@ -11,7 +11,7 @@ export interface Props {
 
 const { more } = Astro.props;
 const build = await latestAlphaBuild();
-const megabytes = build && (build.size / 1_000_000).toFixed(1);
+const megabytes = (bytes: number) => (bytes / 1_000_000).toFixed(1);
 ---
 
 {
@@ -22,7 +22,13 @@ const megabytes = build && (build.size / 1_000_000).toFixed(1);
       <p class="build__meta">
         <time datetime={build.published.toISOString()}>{formatDate(build.published)}</time>
         <span aria-hidden="true">·</span>
-        <span>Arch Linux package, {megabytes} MB</span>
+        <span>Arch Linux package, {megabytes(build.size)} MB</span>
+        {build.rpmSize && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>Fedora 44 RPM, {megabytes(build.rpmSize)} MB</span>
+          </>
+        )}
         <span aria-hidden="true">·</span>
         <a href={build.url} rel="noopener">Release on GitHub</a>
       </p>

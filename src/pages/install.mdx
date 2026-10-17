@@ -4,7 +4,7 @@ title: "Install Vela"
 seoTitle: "Install Vela, a modern Linux desktop environment"
 description: "Try Vela in a window on your current desktop, or install it and pick it at the login screen."
 label: "Get started"
-updated: 2026-10-12
+updated: 2026-10-17
 ---
 
 import Aside from '../components/mdx/Aside.astro';
@@ -20,7 +20,7 @@ Vela is alpha software. You can already use it every day, but it's still changin
 
 - **A GPU with Vulkan 1.4.** AMD or Intel with Mesa 25.0 or newer, or NVIDIA with the proprietary driver 570 or newer, or NVK.
 - **A login screen that lists Wayland sessions**, such as SDDM or Plasma Login.
-- **The usual Linux services** for the features that need them: NetworkManager for Wi‑Fi, BlueZ for Bluetooth, PipeWire for audio, UDisks2 for drives, xdg-desktop-portal for screen sharing, and Xwayland for X11 apps and games.
+- **The usual Linux services** for the features that need them: NetworkManager for Wi‑Fi, BlueZ for Bluetooth, PipeWire and WirePlumber for sound, UDisks2 for drives, xdg-desktop-portal for screen sharing, and Xwayland for X11 apps and games.
 
 Vela is developed and tested daily on an AMD Radeon RX 9070 XT with Mesa/RADV. NVIDIA, Intel, NVK, virtual machines and hybrid-GPU laptops are supported paths, but have had less testing. The [hardware coverage](https://github.com/vela-desktop/vela/blob/main/docs/hardware.md) page lists exactly what has been verified and where.
 
@@ -36,42 +36,77 @@ cmake --build build
 sh scripts/run-nested.sh
 ```
 
-You'll need the build dependencies listed under [Other distributions](#other-distributions) below. Your host desktop keeps the Super key, so in nested mode many shortcuts also work with Alt; the [shortcut reference](https://github.com/vela-desktop/vela/blob/main/docs/shortcuts.md) lists them.
+You'll need the build dependencies listed under [Other distributions](#other-distributions) below, or the [lists for every distribution](https://github.com/vela-desktop/vela/blob/main/docs/development.md#distribution-dependencies) in the developer guide. Your host desktop keeps the Super key, so in nested mode many shortcuts also work with Alt; the [shortcut reference](https://github.com/vela-desktop/vela/blob/main/docs/shortcuts.md) lists them.
 
 A nested session is great for exploring, but it can't tell you whether Vela works with your monitor and driver directly. For that, you need a real session.
 
 ## Arch Linux, CachyOS, EndeavourOS
 
-Vela installs as a native `vela-git` package. Install `git`, `curl` and `base-devel`, then run:
+Vela installs as a native `vela-git` package. Run:
 
 ```sh
+sudo pacman -S --needed git curl base-devel cosign
 git clone https://github.com/vela-desktop/vela.git
-sh vela/packaging/arch/vela-update
+sh vela/packaging/vela-update
 ```
 
-`vela-update` handles the first installation too. It looks for a prebuilt alpha package matching the latest commit on `main`, checks its SHA-256 checksum and installs it with pacman. If there isn't one, it builds the package on your machine. You don't need a GitHub account.
+`vela-update` handles the first installation too. It looks for a prebuilt alpha package matching the latest commit on `main`, then checks its SHA-256 checksum and its signed build provenance with Cosign before installing it with pacman. If there's no package for that commit, or it can't be verified, it builds the package on your machine instead. You don't need a GitHub account or the GitHub CLI.
 
 <LatestBuild more="changes" />
 
-From then on, run `vela-update` whenever you want the latest version:
+## Fedora 44
+
+On Fedora 44 (x86_64), Vela installs as a native `vela-git` RPM, with the same updater:
+
+```sh
+sudo dnf install git curl rpm-build dnf5-plugins
+git clone https://github.com/vela-desktop/vela.git
+sh vela/packaging/vela-update
+```
+
+Fedora 44 doesn't ship Cosign in its repositories, and without it `vela-update` can't verify the prebuilt RPMs, so it builds every update locally. To use the prebuilt ones, install the official Cosign RPM from Sigstore before the first run:
+
+```sh
+version=$(curl -fsSL https://api.github.com/repos/sigstore/cosign/releases/latest |
+    python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"].removeprefix("v"))')
+curl -fL -o cosign.rpm "https://github.com/sigstore/cosign/releases/download/v${version}/cosign-${version}-1.x86_64.rpm"
+sudo dnf install ./cosign.rpm
+rm cosign.rpm
+```
+
+Only get Cosign from the official Sigstore releases: Vela trusts it to check everything else.
+
+<Aside title="Fedora support is new">
+  The RPMs are built and test-installed in a fresh Fedora 44 container before every release, but they've had little testing on real hardware so far. Other Fedora releases, other DNF-based distributions and the immutable variants, such as Silverblue and Kinoite, aren't supported by the installer. There you can [build from source](#other-distributions).
+</Aside>
+
+## Updating
+
+On both Arch and Fedora, run `vela-update` whenever you want the latest version:
 
 ```sh
 vela-update            # update if something new is available
 vela-update --check    # only check, and list the changes
 vela-update --build    # always build locally
+vela-update --jobs 2   # build with fewer parallel jobs
 ```
 
-The last three packages stay in `~/.cache/vela-update/packages/`. If an update goes wrong, reinstall the previous one:
+To try a branch or an exact commit, use `--branch` or `--commit`. They apply only to that run: the next plain `vela-update` goes back to `main`. The [installation guide](https://github.com/vela-desktop/vela/blob/main/docs/installation.md#updating-selecting-revisions-and-rollback) explains them, along with test builds and troubleshooting.
+
+The last three packages stay in `~/.cache/vela-update/packages/`. If an update goes wrong, reinstall the previous one. Pick one exact file, never all of them at once:
 
 ```sh
+# Arch
 sudo pacman -U ~/.cache/vela-update/packages/vela-git-<version>.pkg.tar.zst
+# Fedora
+sudo dnf install ~/.cache/vela-update/packages/vela-git-<version>.x86_64.rpm
 ```
 
 ## Other distributions
 
-Other distributions will be supported in the future. Until then, you can build Vela from source on any distribution that ships wlroots 0.20, although it isn't officially supported there yet. You need CMake 3.22 or newer, Ninja, a C17 and C++20 compiler, wlroots 0.20, Qt 6.7 or newer, LayerShellQt, Vulkan headers and loader, `glslc`, GBM, libdrm, FreeType, HarfBuzz, Fontconfig and PAM.
+Other distributions will be supported in the future. Until then, you can build Vela from source on any distribution that ships wlroots 0.20, although it isn't officially supported there yet, and there's no updater: you rebuild by hand. You need CMake 3.22 or newer, Ninja, a C17 and C++20 compiler, wlroots 0.20, Qt 6.7 or newer with its Linguist tools, LayerShellQt, Vulkan headers and loader, `glslc`, GBM, libdrm, FreeType, HarfBuzz, Fontconfig and PAM. librsvg is optional: it draws app icons in the title bar.
 
-On **Fedora**:
+On other **Fedora** releases, for example:
 
 ```sh
 sudo dnf install git cmake ninja-build gcc gcc-c++ pkgconf-pkg-config \
@@ -81,10 +116,11 @@ sudo dnf install git cmake ninja-build gcc gcc-c++ pkgconf-pkg-config \
     qt6-qttools-devel qt6-qtsvg-devel qt6-qtwayland-devel layer-shell-qt-devel \
     vulkan-headers vulkan-loader-devel glslc freetype-devel harfbuzz-devel \
     fontconfig-devel pam-devel polkit-devel librsvg2-devel cairo-devel \
-    zlib-devel gtest-devel python3 python3-numpy python3-pillow
+    zlib-devel gtest-devel python3 python3-numpy python3-pillow shared-mime-info \
+    pipewire-devel wireplumber-devel pipewire pipewire-utils wireplumber
 ```
 
-The README has the package list for [openSUSE Tumbleweed](https://github.com/vela-desktop/vela#build-from-source) as well. That one is experimental: it isn't checked by CI yet.
+The developer guide also has the package list for [openSUSE Tumbleweed](https://github.com/vela-desktop/vela/blob/main/docs/development.md#distribution-dependencies). That one is experimental: it isn't checked by CI yet.
 
 Then build and install:
 
@@ -96,7 +132,7 @@ cmake --build build
 sudo cmake --install build
 ```
 
-This installs into `/usr/local`. If Vela doesn't appear on the login screen, your display manager may not look there:
+This installs into `/usr/local`, plus `/etc/pam.d` and `/etc/xdg`. If Vela doesn't appear on the login screen, your display manager may not look there:
 
 ```sh
 sudo ln -s /usr/local/share/wayland-sessions/vela.desktop /usr/share/wayland-sessions/

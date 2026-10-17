@@ -14,8 +14,10 @@ export interface AlphaBuild {
   version: string;
   commit: string;
   published: Date;
-  /** Size of the package in bytes. */
+  /** Size of the Arch package in bytes. */
   size: number;
+  /** Size of the Fedora RPM in bytes, when the release has one. */
+  rpmSize: number | null;
   url: string;
 }
 
@@ -70,11 +72,13 @@ export async function latestAlphaBuild(): Promise<AlphaBuild | null> {
     const pkg = release.assets.find((asset) => asset.name.endsWith('.pkg.tar.zst'));
     const version = pkg?.name.match(/^vela-git-(.+)-\d+-x86_64\.pkg\.tar\.zst$/)?.[1];
     if (!pkg || !version) continue;
+    const rpm = release.assets.find((asset) => asset.name.endsWith('.rpm'));
     return {
       version,
       commit: release.tag_name.slice('alpha-'.length),
       published: new Date(release.published_at),
       size: pkg.size,
+      rpmSize: rpm?.size ?? null,
       url: release.html_url,
     };
   }

@@ -3,7 +3,7 @@ layout: ../layouts/Page.astro
 title: "Questions and answers"
 description: "What Vela is, how it relates to KDE Plasma, which distributions and GPUs it runs on, and how to try it, in short answers."
 label: "FAQ"
-updated: 2026-10-12
+updated: 2026-10-17
 schema: faq
 ---
 
@@ -35,7 +35,7 @@ Yes. Vela is free software under the [GPL‑3.0‑or‑later](https://github.com
 
 ### Which distributions are supported?
 
-Today, Arch Linux, CachyOS and EndeavourOS, with a native package and an updater, `vela-update`. Other distributions will be supported in the future. In the meantime, you can build and install Vela on any distribution that ships wlroots 0.20, although it isn't officially supported there yet. The [install page](/install/) covers both.
+Today, Arch Linux, CachyOS, EndeavourOS and Fedora 44, with a native package and an updater, `vela-update`. Fedora support is new and has had less testing. Other distributions will be supported in the future. In the meantime, you can build and install Vela on any distribution that ships wlroots 0.20, although it isn't officially supported there yet. The [install page](/install/) covers both.
 
 ### Which GPUs does it work with?
 
@@ -85,7 +85,7 @@ The compositor restarts on its own and your Qt and KDE apps reconnect to it. If 
 
 ### How do I update it?
 
-On Arch-based distributions, run `vela-update`. It installs a prebuilt package when one is available, and builds one otherwise. The last three versions stay cached, so you can go back if an update causes trouble.
+On Arch-based distributions and Fedora 44, run `vela-update`. It installs a prebuilt package when one is available and verified, and builds one otherwise. The last three versions stay cached, so you can go back if an update causes trouble.
 
 ## Getting involved
 
