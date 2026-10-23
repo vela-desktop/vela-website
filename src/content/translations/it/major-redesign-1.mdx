@@ -40,7 +40,7 @@ A dover coincidere non era il codice del motore, ma solo i numeri. Ho quindi def
 
 ## Monitor a frequenze diverse: ogni schermo ha il suo tempo, l’orologio di sistema chiude i conti
 
-Con un monitor a 180 Hz accanto a uno a 75 Hz, un unico orologio globale per le animazioni (il `fmax` nel codice) creava uno strano effetto: il monitor più veloce finiva per disegnare il “futuro” di quello più lento, e poi ripeteva lo stesso frame aspettando che l’altro lo raggiungesse. Risultato: micro-scatti.
+Con un monitor a 180 Hz accanto a uno a 75 Hz, un unico orologio globale per le animazioni (il `fmax` nel codice) poteva creare uno strano effetto: il monitor più veloce finiva per disegnare il “futuro” di quello più lento, e poi ripeteva lo stesso frame aspettando che l’altro lo raggiungesse. Risultato: micro-scatti. Con il late latching, come in una sessione normale, i tempi dei due monitor differivano di circa un millisecondo e quasi non si notava; diventava evidente quando la differenza arrivava a un frame o più, come con Vela annidato in KWin o con il late latching disattivato.
 
 Però non potevo semplicemente eliminare l’orologio unico, perché alla fine di un’animazione succedono cose irreversibili, come distruggere lo snapshot di una finestra che si chiude. Ho risolto separando le due cose:
 * **Lo stato visivo** viene calcolato per l’istante in cui il monitor che sta disegnando mostrerà il frame. È un’operazione idempotente, che può anche “tornare indietro nel tempo” passando da un monitor all’altro.

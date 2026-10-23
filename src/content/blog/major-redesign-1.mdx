@@ -41,7 +41,7 @@ What had to match wasn’t the engine code, just the numbers. So I defined four 
 
 ## Mixed refresh rates: each output samples, the wall clock retires
 
-With a 180 Hz monitor next to a 75 Hz one, a single global animation clock (the `fmax` in the code) caused a strange artifact: the faster monitor drew the slower one’s “future”, then repeated the same frame while waiting for it to catch up. The result was stutter.
+With a 180 Hz monitor next to a 75 Hz one, a single global animation clock (the `fmax` in the code) could cause a strange artifact: the faster monitor drew the slower one’s “future”, then repeated the same frame while waiting for it to catch up. The result was stutter. With late latching, as in a normal session, the two monitors’ timing differed by about a millisecond and it hardly showed; it was plain when the difference reached a frame or more, as with Vela nested in KWin or with late latching off.
 
 I couldn’t just remove that limit, though, because the end of an animation does irreversible things, like destroying the snapshot of a closing window. The fix was to separate the two:
 * **Visual state** is sampled at the presentation time of the monitor being drawn. It’s idempotent, and may even “go back in time” from one output to the next.
