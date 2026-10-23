@@ -8,6 +8,16 @@ tags: ["Design", "Renderer"]
 ---
 
 import Aside from '../../components/mdx/Aside.astro';
+import Video from '../../components/mdx/Video.astro';
+import maximize from '../../assets/videos/visual-coherence/maximize.webm';
+import maximizeMp4 from '../../assets/videos/visual-coherence/maximize.mp4';
+import maximizePoster from '../../assets/videos/visual-coherence/maximize.png';
+import titleBar from '../../assets/videos/visual-coherence/titlebar.webm';
+import titleBarMp4 from '../../assets/videos/visual-coherence/titlebar.mp4';
+import titleBarPoster from '../../assets/videos/visual-coherence/titlebar.png';
+import quickSettings from '../../assets/videos/visual-coherence/quick-settings.webm';
+import quickSettingsMp4 from '../../assets/videos/visual-coherence/quick-settings.mp4';
+import quickSettingsPoster from '../../assets/videos/visual-coherence/quick-settings.png';
 
 I’m working on a major redesign of Vela: icons, controls, surfaces, animations. This is the first look at it, and it doesn’t show the new look yet. It’s about the foundations: before changing how Vela looks, I had to make the compositor, the shell and the apps move and color things the same way. It’s a small part of the redesign, a tenth, maybe a fifth, but everything else builds on it.
 
@@ -37,9 +47,9 @@ I couldn’t just remove that limit, though, because the end of an animation doe
 * **Visual state** is sampled at the presentation time of the monitor being drawn. It’s idempotent, and may even “go back in time” from one output to the next.
 * **Retirement** of resources happens only once the system clock (`CLOCK_MONOTONIC`) has passed the end of the animation, so no monitor loses the last milliseconds of motion.
 
-{/* Video to record (webm/mp4), before and after: maximizing a window at 180 Hz.
-    Before: corner radii grew instead of going away, and frames stalled at fractional scales.
-    After: per-output floating-point sampling, and corner radii interpolated from source to destination. */}
+<Video webm={maximize} mp4={maximizeMp4} poster={maximizePoster} width="wide"
+  label="Side by side, before and after: a Settings window maximizes and restores at 180 Hz, at a quarter of the speed."
+  caption="Maximize and restore at 180 Hz, next to a 60 Hz monitor, at a quarter of the speed. Before on the left, after on the right." />
 
 ## Sharp at fractional scales: round once
 
@@ -47,9 +57,9 @@ Looking at rendering at fractional scales (125%, 150% and so on), I noticed that
 
 The rule I set is simple: animations work in pure floating point, and conversion to physical pixels happens in one place (`scene/frame.c`), which forces a 1:1 copy for any buffer drawn at the output’s scale, whether it comes from an app or from the compositor itself.
 
-{/* Video to record (webm/mp4), before and after, zoomed in on the title bar at 125% while the window moves.
-    Before: the title went through the bilinear filter at about 2% of positions, and button hover switched instantly.
-    After: a 1:1 copy at every position, and a 120 ms fade on title bar button hover. */}
+<Video webm={titleBar} mp4={titleBarMp4} poster={titleBarPoster} width="content"
+  label="One above the other, before and after: a title bar at 125%, enlarged four times, moves one unit at a time, then the pointer passes over its buttons."
+  caption="The title bar at 125%, enlarged four times, while the window moves one unit at a time, then the pointer over the buttons, at half speed. Before above, after below." />
 
 ## “Qt behaves, Vela looks”
 
@@ -57,9 +67,9 @@ About four out of five state changes in Vela’s QML controls used to jump insta
 
 The shell’s panels, from Quick Settings and the Start menu to the Notification Center and the dialogs, now live in `PanelMotion`: a container that handles entrance, exit and shadows (`Shadow`), keeps the blur region in step with the panel as it moves, and lets a panel reverse smoothly if you reopen it while it’s closing.
 
-{/* Video to record (webm/mp4): Quick Settings before and after.
-    Before: tiles jump to the accent color, the blur lags behind during the opening slide, and changing page cuts the height abruptly.
-    After: smooth transitions on every control, blur locked to the moving area, and animated height between pages. */}
+<Video webm={quickSettings} mp4={quickSettingsMp4} poster={quickSettingsPoster} width="content"
+  label="Side by side, before and after: Quick Settings opens, the pointer passes over the tiles, the sound page opens and closes, then the panel closes."
+  caption="Quick Settings at half speed: opening, the pointer over the tiles, the sound page and back, closing. Before on the left, after on the right." />
 
 ## Mechanism for clients, policy for Vela: blur, Acrylic and Mica
 
