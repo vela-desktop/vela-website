@@ -8,9 +8,6 @@ draft: true
 
 import Aside from '../../../components/mdx/Aside.astro';
 import Video from '../../../components/mdx/Video.astro';
-import maximize from '../../../assets/videos/visual-coherence/maximize.webm';
-import maximizeMp4 from '../../../assets/videos/visual-coherence/maximize.mp4';
-import maximizePoster from '../../../assets/videos/visual-coherence/maximize.png';
 import titleBar from '../../../assets/videos/visual-coherence/titlebar.webm';
 import titleBarMp4 from '../../../assets/videos/visual-coherence/titlebar.mp4';
 import titleBarPoster from '../../../assets/videos/visual-coherence/titlebar.png';
@@ -45,10 +42,6 @@ Con un monitor a 180 Hz accanto a uno a 75 Hz, un unico orologio globale per le 
 Però non potevo semplicemente eliminare l’orologio unico, perché alla fine di un’animazione succedono cose irreversibili, come distruggere lo snapshot di una finestra che si chiude. Ho risolto separando le due cose:
 * **Lo stato visivo** viene calcolato per l’istante in cui il monitor che sta disegnando mostrerà il frame. È un’operazione idempotente, che può anche “tornare indietro nel tempo” passando da un monitor all’altro.
 * **Le operazioni irreversibili**, come liberare le risorse, avvengono solo quando l’orologio di sistema (`CLOCK_MONOTONIC`) ha superato la fine dell’animazione, così nessun monitor perde gli ultimi millisecondi di movimento.
-
-<Video webm={maximize} mp4={maximizeMp4} poster={maximizePoster} width="wide"
-  label="Affiancati, prima e dopo: una finestra di Impostazioni si massimizza e torna com’era a 180 Hz, a un quarto della velocità."
-  caption="Maximize e ripristino a 180 Hz, accanto a un monitor a 60 Hz, a un quarto della velocità. Prima a sinistra, dopo a destra." />
 
 ## Nitidezza con il fractional scaling: arrotondare una volta sola
 

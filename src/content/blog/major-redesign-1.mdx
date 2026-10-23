@@ -9,9 +9,6 @@ tags: ["Design", "Renderer"]
 
 import Aside from '../../components/mdx/Aside.astro';
 import Video from '../../components/mdx/Video.astro';
-import maximize from '../../assets/videos/visual-coherence/maximize.webm';
-import maximizeMp4 from '../../assets/videos/visual-coherence/maximize.mp4';
-import maximizePoster from '../../assets/videos/visual-coherence/maximize.png';
 import titleBar from '../../assets/videos/visual-coherence/titlebar.webm';
 import titleBarMp4 from '../../assets/videos/visual-coherence/titlebar.mp4';
 import titleBarPoster from '../../assets/videos/visual-coherence/titlebar.png';
@@ -46,10 +43,6 @@ With a 180 Hz monitor next to a 75 Hz one, a single global animation clock (the 
 I couldn’t just remove that limit, though, because the end of an animation does irreversible things, like destroying the snapshot of a closing window. The fix was to separate the two:
 * **Visual state** is sampled at the presentation time of the monitor being drawn. It’s idempotent, and may even “go back in time” from one output to the next.
 * **Retirement** of resources happens only once the system clock (`CLOCK_MONOTONIC`) has passed the end of the animation, so no monitor loses the last milliseconds of motion.
-
-<Video webm={maximize} mp4={maximizeMp4} poster={maximizePoster} width="wide"
-  label="Side by side, before and after: a Settings window maximizes and restores at 180 Hz, at a quarter of the speed."
-  caption="Maximize and restore at 180 Hz, next to a 60 Hz monitor, at a quarter of the speed. Before on the left, after on the right." />
 
 ## Sharp at fractional scales: round once
 
