@@ -1,0 +1,87 @@
+---
+// A short muted clip with an optional caption, for MDX journal entries: a
+// before/after recording, a demo. It plays in a loop while it's on screen,
+// unless the reader prefers reduced motion; then it waits on its poster for
+// the play button.
+//
+//   import Video from '../../components/mdx/Video.astro';
+//   import maximize from './maximize.webm';
+//   import maximizeMp4 from './maximize.mp4';
+//   import maximizePoster from './maximize.png';
+//   <Video webm={maximize} mp4={maximizeMp4} poster={maximizePoster} label="…" caption="…" width="wide" />
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+export interface Props {
+  webm: string;
+  /** For browsers without WebM (older Safari). */
+  mp4?: string;
+  /** Shown before the clip plays and with reduced motion; also gives the clip its size. */
+  poster: ImageMetadata;
+  /** What the clip shows, for screen readers. */
+  label: string;
+  caption?: string;
+  /** content (default) · wide · full */
+  width?: 'content' | 'wide' | 'full';
+}
+
+const { webm, mp4, poster, label, caption, width = 'content' } = Astro.props;
+const still = await getImage({ src: poster, format: 'webp', width: Math.min(poster.width, 1920) });
+---
+
+<figure class:list={['figure', 'video', `figure--${width}`]}>
+  <video
+    class="video__clip"
+    controls
+    muted
+    loop
+    playsinline
+    preload="none"
+    poster={still.src}
+    width={poster.width}
+    height={poster.height}
+    aria-label={label}
+    data-clip
+  >
+    <source src={webm} type="video/webm" />
+    {mp4 && <source src={mp4} type="video/mp4" />}
+  </video>
+  {(caption || Astro.slots.has('default')) && (
+    <figcaption>
+      {caption}
+      <slot />
+    </figcaption>
+  )}
+</figure>
+
+<script>
+  // Play each clip while at least half of it is on screen, and only if the
+  // reader hasn't asked for less motion. The controls stay, to pause it.
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const clips = document.querySelectorAll<HTMLVideoElement>('video[data-clip]');
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const { target, isIntersecting } of entries) {
+        const clip = target as HTMLVideoElement;
+        if (isIntersecting && !still.matches) clip.play().catch(() => {});
+        else if (!isIntersecting) clip.pause();
+      }
+    },
+    { threshold: 0.5 },
+  );
+  clips.forEach((clip) => observer.observe(clip));
+</script>
+
+<style>
+  .video__clip {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-m);
+    background: var(--line);
+  }
+
+  .figure--full .video__clip {
+    border-radius: 0;
+  }
+</style>
