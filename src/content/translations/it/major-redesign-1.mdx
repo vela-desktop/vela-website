@@ -7,6 +7,13 @@ draft: true
 ---
 
 import Aside from '../../../components/mdx/Aside.astro';
+import Video from '../../../components/mdx/Video.astro';
+import titleBar from '../../../assets/videos/visual-coherence/titlebar.webm';
+import titleBarMp4 from '../../../assets/videos/visual-coherence/titlebar.mp4';
+import titleBarPoster from '../../../assets/videos/visual-coherence/titlebar.png';
+import quickSettings from '../../../assets/videos/visual-coherence/quick-settings.webm';
+import quickSettingsMp4 from '../../../assets/videos/visual-coherence/quick-settings.mp4';
+import quickSettingsPoster from '../../../assets/videos/visual-coherence/quick-settings.png';
 
 Sto lavorando a un grande redesign di Vela: icone, controlli, superfici, animazioni. Questo è il primo assaggio, e non mostra ancora il nuovo aspetto. Parla delle fondamenta: prima di cambiare l’aspetto di Vela, dovevo fare in modo che compositor, shell e app usassero gli stessi movimenti e gli stessi colori. È una parte piccola del redesign, un decimo, forse un quinto, ma tutto il resto poggia lì sopra.
 
@@ -30,15 +37,11 @@ A dover coincidere non era il codice del motore, ma solo i numeri. Ho quindi def
 
 ## Monitor a frequenze diverse: ogni schermo ha il suo tempo, l’orologio di sistema chiude i conti
 
-Con un monitor a 180 Hz accanto a uno a 75 Hz, un unico orologio globale per le animazioni (il `fmax` nel codice) creava uno strano effetto: il monitor più veloce finiva per disegnare il “futuro” di quello più lento, e poi ripeteva lo stesso frame aspettando che l’altro lo raggiungesse. Risultato: micro-scatti.
+Con un monitor a 180 Hz accanto a uno a 75 Hz, un unico orologio globale per le animazioni (il `fmax` nel codice) poteva creare uno strano effetto: il monitor più veloce finiva per disegnare il “futuro” di quello più lento, e poi ripeteva lo stesso frame aspettando che l’altro lo raggiungesse. Risultato: micro-scatti. Con il late latching, come in una sessione normale, i tempi dei due monitor differivano di circa un millisecondo e quasi non si notava; diventava evidente quando la differenza arrivava a un frame o più, come con Vela annidato in KWin o con il late latching disattivato.
 
 Però non potevo semplicemente eliminare l’orologio unico, perché alla fine di un’animazione succedono cose irreversibili, come distruggere lo snapshot di una finestra che si chiude. Ho risolto separando le due cose:
 * **Lo stato visivo** viene calcolato per l’istante in cui il monitor che sta disegnando mostrerà il frame. È un’operazione idempotente, che può anche “tornare indietro nel tempo” passando da un monitor all’altro.
 * **Le operazioni irreversibili**, come liberare le risorse, avvengono solo quando l’orologio di sistema (`CLOCK_MONOTONIC`) ha superato la fine dell’animazione, così nessun monitor perde gli ultimi millisecondi di movimento.
-
-{/* Video da fare (webm/mp4), prima e dopo: maximize di una finestra a 180 Hz.
-    Prima: il raggio degli angoli cresceva invece di azzerarsi e i frame saltavano alle scale frazionarie.
-    Dopo: campionamento per output in virgola mobile e raggio degli angoli interpolato da sorgente a destinazione. */}
 
 ## Nitidezza con il fractional scaling: arrotondare una volta sola
 
@@ -46,9 +49,9 @@ Analizzando il rendering a scale frazionarie (125%, 150% e così via), ho notato
 
 La regola che ho fissato è semplice: le animazioni lavorano in virgola mobile pura, e la conversione in pixel fisici avviene in un solo posto (`scene/frame.c`), che impone una copia 1:1 per qualsiasi buffer disegnato alla scala dell’output, che sia di un’app o del compositor.
 
-{/* Video da fare (webm/mp4), prima e dopo, zoomato sulla titlebar al 125% mentre la finestra si muove.
-    Prima: il titolo passava dal filtro bilineare in circa il 2% delle posizioni e l'hover dei pulsanti era istantaneo.
-    Dopo: copia 1:1 in ogni posizione e hover dei pulsanti della titlebar sfumato in 120 ms. */}
+<Video webm={titleBar} mp4={titleBarMp4} poster={titleBarPoster} width="content"
+  label="Uno sopra l’altro, prima e dopo: una titlebar al 125%, ingrandita quattro volte, si sposta di un’unità alla volta, poi il puntatore passa sui pulsanti."
+  caption="La titlebar al 125%, ingrandita quattro volte, mentre la finestra si sposta di un’unità alla volta, poi il puntatore sui pulsanti, a metà velocità. Prima sopra, dopo sotto." />
 
 ## “Qt behaves, Vela looks”
 
@@ -56,9 +59,9 @@ Circa quattro cambi di stato su cinque, nei controlli QML di Vela, avvenivano di
 
 I pannelli della shell, da Quick Settings e dal menu Start fino al Centro notifiche e ai dialoghi, ora si basano su `PanelMotion`: un contenitore che gestisce entrata, uscita e ombre (`Shadow`), tiene la regione di blur allineata durante lo scorrimento e permette a un pannello di invertire il movimento senza scatti se lo riapri mentre si sta chiudendo.
 
-{/* Video da fare (webm/mp4): Quick Settings prima e dopo.
-    Prima: i tile cambiano colore di scatto, il blur resta indietro durante lo slide iniziale e il cambio pagina taglia l'altezza di netto.
-    Dopo: transizioni morbide su ogni controllo, blur ancorato all'area in movimento, cambio d'altezza fluido tra le pagine. */}
+<Video webm={quickSettings} mp4={quickSettingsMp4} poster={quickSettingsPoster} width="content"
+  label="Affiancati, prima e dopo: si aprono le Quick Settings, il puntatore passa sui tile, si apre e si chiude la pagina dell’audio, poi il pannello si chiude."
+  caption="Le Quick Settings a metà velocità: apertura, il puntatore sui tile, la pagina dell’audio e ritorno, chiusura. Prima a sinistra, dopo a destra." />
 
 ## Meccanismo per i client, policy per Vela: blur, Acrylic e Mica
 
