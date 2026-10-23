@@ -3,7 +3,8 @@ title: "I wanted to brute-force a crisper UI. Then I looked at a 10-pixel X."
 seoTitle: "Supersampling a Linux desktop: why a 10-pixel X needs better math"
 description: "I set out to supersample the entire desktop. A 10-pixel close button showed me that sharpness comes from the pixel grid, not from more samples."
 pubDate: 2026-10-15T19:00:00+02:00
-draft: true
+draft: false
+tags: ["Renderer"]
 ---
 
 Once I notice a slightly blurry edge, an uneven stroke weight, or an icon sitting half a pixel off-grid, I can’t unsee it. That is an inconvenient personality trait when you are building a desktop environment from scratch.
@@ -141,7 +142,7 @@ I opened [`compositor/src/decoration.c`](https://github.com/vela-desktop/vela/bl
 To rasterize a button glyph, the compositor computes an integer texture size by rounding the scaled dimension:
 
 ```c
-int size = round(10 * display_scale);
+int size = vela_max(1, (int)lround(GLYPH_SIZE * scale));
 ```
 
 It then loops over every pixel in that square, measures the distance from the pixel center to the nearest line segment, converts that distance into alpha coverage, and uploads the premultiplied buffer as a GPU texture.

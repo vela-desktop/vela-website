@@ -3,7 +3,7 @@ title: "Volevo una UI più nitida a forza bruta. Poi ho guardato una X da 10 pix
 seoTitle: "Supersampling su un desktop Linux: cosa insegna una X da 10 pixel"
 description: "Volevo fare supersampling di tutto il desktop. Una X da 10 pixel mi ha mostrato che la nitidezza viene dalla pixel grid, non da più sample."
 pubDate: 2026-10-15T19:00:00+02:00
-draft: true
+draft: false
 ---
 
 Quando noto un bordo leggermente sfocato, uno stroke dallo spessore incostante o un’icona fuori griglia di mezzo pixel, non riesco più a ignorarlo. È una fissazione parecchio scomoda quando stai scrivendo un desktop environment da zero.
@@ -139,7 +139,7 @@ Aprendo [`compositor/src/decoration.c`](https://github.com/vela-desktop/vela/blo
 Per generare la texture del simbolo, il compositor calcola la dimensione fisica arrotondando il valore scalato:
 
 ```c
-int size = round(10 * display_scale);
+int size = vela_max(1, (int)lround(GLYPH_SIZE * scale));
 ```
 
 Poi itera su ogni pixel, misura la distanza dal centro del pixel al segmento più vicino, la converte in alpha coverage e carica il buffer sulla GPU. Come soluzione leggera è ottima, ma seguendo il percorso dei dati fino allo schermo sono saltati fuori due problemi:
