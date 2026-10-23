@@ -2,55 +2,49 @@
 title: "Coerenza visiva in Vela: compositor, shell e app allo stesso ritmo"
 seoTitle: "Coerenza visiva in Vela: un solo ritmo per compositor, shell e app"
 description: "Il primo assaggio del redesign di Vela: le fondamenta. Animazioni, scaling e materiali condivisi tra compositor e shell, e le idee che ho scartato."
-pubDate: 2026-10-16T19:00:00+02:00
+pubDate: 2026-10-19T19:00:00+02:00
 draft: true
 ---
 
 import Aside from '../../../components/mdx/Aside.astro';
 
-Sto lavorando a un grande redesign di Vela: icone, controlli, superfici, animazioni. Questo è il primo assaggio, e non mostra ancora il nuovo aspetto. Parla delle fondamenta: prima di cambiare come Vela appare, dovevo fare in modo che compositor, shell e app si muovessero e si colorassero allo stesso modo. È una parte piccola del redesign, un decimo, forse un quinto, ma tutto il resto ci si appoggia sopra.
+Sto lavorando a un grande redesign di Vela: icone, controlli, superfici, animazioni. Questo è il primo assaggio, e non mostra ancora il nuovo aspetto. Parla delle fondamenta: prima di cambiare l’aspetto di Vela, dovevo fare in modo che compositor, shell e app usassero gli stessi movimenti e gli stessi colori. È una parte piccola del redesign, un decimo, forse un quinto, ma tutto il resto poggia lì sopra.
 
-<Aside title="Per provarlo" tone="caution">
-Quello che descrivo qui non è ancora in `main`. È nel branch `visual-coherence/pixels` ([PR #40](https://github.com/vela-desktop/vela/pull/40)), dove sono pronti i primi sette passi del piano; i controlli QML e i pannelli condivisi sono i prossimi. Per installarlo:
-
-```sh
-vela-update --branch visual-coherence/pixels --build
-```
-
-Il prossimo `vela-update` senza opzioni riporta a `main`.
+<Aside title="Per provarlo">
+Tutto quello che descrivo qui è in `main` dal 17 ottobre ([PR #40](https://github.com/vela-desktop/vela/pull/40)), e in ogni build alpha da allora. Se usi una build precedente, basta lanciare `vela-update` senza opzioni.
 </Aside>
 
 ## Due mondi da far andare d’accordo
 
 Costruire un desktop environment da zero significa far dialogare mondi diversi: in Vela c’è il compositor Wayland, scritto in C, da una parte, e la shell con le applicazioni, scritte in C++ e QML, dall’altra.
 
-Sulla carta questi componenti condividevano la stessa direzione estetica, ma nel codice erano rimaste diverse piccole fratture: durate delle animazioni disallineate, formule dei colori duplicate, controlli che cambiavano stato di scatto e qualche incertezza con monitor a refresh rate molto diversi.
+Sulla carta questi componenti condividevano la stessa direzione estetica, ma nel codice erano rimaste diverse piccole incongruenze: durate delle animazioni disallineate, formule dei colori duplicate, controlli che cambiavano stato di scatto e scatti con monitor a refresh rate molto diversi.
 
-Non avevo tutte le risposte pronte fin dal primo giorno, anzi: diverse ipotesi iniziali si sono rivelate sbagliate alla prova dei fatti. Prima di toccare il codice mi sono fermato a scrivere un design document, [`visual-coherence.md`](https://github.com/vela-desktop/vela/blob/visual-coherence/pixels/docs/visual-coherence.md), per mettere in fila cosa non funzionava e quali invarianti volevo rispettare. Ecco le decisioni principali, e il *perché* di ognuna.
+Non avevo tutte le risposte pronte fin dal primo giorno, anzi: diverse ipotesi iniziali si sono rivelate sbagliate alla prova dei fatti. Prima di toccare il codice mi sono fermato a scrivere un design document, [`visual-coherence.md`](https://github.com/vela-desktop/vela/blob/main/docs/visual-coherence.md), per mettere in fila cosa non funzionava e quali invarianti volevo rispettare. Ecco le decisioni principali, e il *perché* di ognuna.
 
 ## Due motori di animazione, un solo ritmo
 
 La prima idea era ambiziosa: scrivere un unico motore di animazione in C e collegarlo a QML con un bridge. **Sono tornato sui miei passi.** Il compositor deve calcolare i frame in base al tempo di presentazione previsto di *ogni singolo monitor*, mentre Qt ha già un ottimo motore interno che gestisce benissimo interruzioni e inversioni di rotta. Unificare i motori voleva dire complicarsi la vita e riscrivere pezzi di Qt.
 
-A dover coincidere non era il codice del motore, ma solo i numeri. Ho quindi definito quattro token di durata (`fast`, `normal`, `slow`, `long`) e una sola curva di decelerazione, scritti sia in `motion.h` sia in `Theme.qml`. Perché col tempo non tornino a divergere non ho messo in piedi complessi sistemi di build: basta uno script breve, `check-shared-values.py`, che gira nei test e segnala se i valori non combaciano.
+A dover coincidere non era il codice del motore, ma solo i numeri. Ho quindi definito quattro token di durata (`fast`, `normal`, `slow`, `long`) e una sola curva di decelerazione, scritti sia in `motion.h` sia in `Theme.qml`. Per evitare che col tempo tornino a divergere non ho messo in piedi complessi sistemi di build: basta uno script breve, `check-shared-values.py`, che gira nei test e segnala se i valori non combaciano.
 
-## Monitor a frequenze diverse: ogni output campiona, l’orologio ritira
+## Monitor a frequenze diverse: ogni schermo ha il suo tempo, l’orologio di sistema chiude i conti
 
 Con un monitor a 180 Hz accanto a uno a 75 Hz, un unico orologio globale per le animazioni (il `fmax` nel codice) creava uno strano effetto: il monitor più veloce finiva per disegnare il “futuro” di quello più lento, e poi ripeteva lo stesso frame aspettando che l’altro lo raggiungesse. Risultato: micro-scatti.
 
-Però non potevo semplicemente togliere quel limite, perché la fine di un’animazione fa cose irreversibili, come distruggere lo snapshot di una finestra che si chiude. Ho risolto separando i due concetti:
-* **Lo stato visivo** viene campionato al tempo di presentazione del monitor che sta disegnando in quel momento. È un’operazione idempotente, che può anche “tornare indietro nel tempo” passando da un monitor all’altro.
-* **Il ritiro** delle risorse avviene solo quando l’orologio di sistema (`CLOCK_MONOTONIC`) ha superato la fine dell’animazione, così nessun monitor perde gli ultimi millisecondi di movimento.
+Però non potevo semplicemente eliminare l’orologio unico, perché alla fine di un’animazione succedono cose irreversibili, come distruggere lo snapshot di una finestra che si chiude. Ho risolto separando le due cose:
+* **Lo stato visivo** viene calcolato per l’istante in cui il monitor che sta disegnando mostrerà il frame. È un’operazione idempotente, che può anche “tornare indietro nel tempo” passando da un monitor all’altro.
+* **Le operazioni irreversibili**, come liberare le risorse, avvengono solo quando l’orologio di sistema (`CLOCK_MONOTONIC`) ha superato la fine dell’animazione, così nessun monitor perde gli ultimi millisecondi di movimento.
 
 {/* Video da fare (webm/mp4), prima e dopo: maximize di una finestra a 180 Hz.
     Prima: il raggio degli angoli cresceva invece di azzerarsi e i frame saltavano alle scale frazionarie.
     Dopo: campionamento per output in virgola mobile e raggio degli angoli interpolato da sorgente a destinazione. */}
 
-## Nitidezza al fractional scaling: arrotondare una volta sola
+## Nitidezza con il fractional scaling: arrotondare una volta sola
 
-Analizzando il rendering a scale frazionarie (125%, 150% e così via), ho notato che il testo e le icone della titlebar, disegnati dal compositor, finivano nel filtro bilineare in circa il 2% delle posizioni della finestra, e risultavano leggermente sfocati: dipendeva da come cadevano gli arrotondamenti in virgola mobile. Inoltre un paio di animazioni arrotondavano le coordinate alle unità logiche prima ancora di convertirle in pixel fisici.
+Analizzando il rendering a scale frazionarie (125%, 150% e così via), ho notato che il testo e le icone della titlebar, disegnati dal compositor, passavano dal filtro bilineare in circa il 2% delle posizioni della finestra, e risultavano leggermente sfocati: dipendeva da come cadevano gli arrotondamenti in virgola mobile. Inoltre un paio di animazioni arrotondavano le coordinate alle unità logiche prima ancora di convertirle in pixel fisici.
 
-La regola che ho fissato è semplice: le animazioni lavorano in virgola mobile pura, e la conversione in pixel fisici avviene in un solo posto (`scene/frame.c`), che forza una copia 1:1 per qualsiasi buffer disegnato alla scala dell’output, che sia di un’app o del compositor.
+La regola che ho fissato è semplice: le animazioni lavorano in virgola mobile pura, e la conversione in pixel fisici avviene in un solo posto (`scene/frame.c`), che impone una copia 1:1 per qualsiasi buffer disegnato alla scala dell’output, che sia di un’app o del compositor.
 
 {/* Video da fare (webm/mp4), prima e dopo, zoomato sulla titlebar al 125% mentre la finestra si muove.
     Prima: il titolo passava dal filtro bilineare in circa il 2% delle posizioni e l'hover dei pulsanti era istantaneo.
@@ -58,26 +52,26 @@ La regola che ho fissato è semplice: le animazioni lavorano in virgola mobile p
 
 ## “Qt behaves, Vela looks”
 
-Circa quattro cambi di stato su cinque, nei controlli QML di Vela, avvengono di scatto, e molti pulsanti e switch reimplementano a mano `MouseArea`, la tastiera e l’accessibilità. Questo è il prossimo passo del piano, e la direzione è decisa: appoggiarmi a **Qt Quick Templates** (`T.Button`, `T.Switch`, `T.Slider` e gli altri). Qt si occupa di input, focus e accessibilità; Vela disegna, con un nuovo componente di base, `Fill`, che sfuma i cambi di colore seguendo le precedenze tra gli stati.
+Circa quattro cambi di stato su cinque, nei controlli QML di Vela, avvenivano di scatto, e molti pulsanti e switch reimplementavano a mano `MouseArea`, la tastiera e l’accessibilità. Ora si appoggiano a **Qt Quick Templates** (`T.Button`, `T.Switch`, `T.Slider` e gli altri). Qt si occupa di input, focus e accessibilità; Vela disegna, con un nuovo componente di base, `Fill`, che sfuma i cambi di colore rispettando quale stato prevale sugli altri. Nella shell, in Impostazioni, in Esplora file e nella finestra di autenticazione di polkit, nessun colore di stato cambia più di scatto.
 
-Per i pannelli della shell, come Quick Settings o il menu Start, arriverà `PanelMotion`: un contenitore che gestisce entrata, uscita e ombre (`Shadow`), tiene la regione di blur allineata durante lo scorrimento e permette a un pannello di invertire il movimento senza scatti se lo riapri mentre si sta chiudendo.
+I pannelli della shell, da Quick Settings e dal menu Start fino al Centro notifiche e ai dialoghi, ora si basano su `PanelMotion`: un contenitore che gestisce entrata, uscita e ombre (`Shadow`), tiene la regione di blur allineata durante lo scorrimento e permette a un pannello di invertire il movimento senza scatti se lo riapri mentre si sta chiudendo.
 
-{/* Video da fare (webm/mp4) quando PanelMotion e Fill saranno pronti: Quick Settings prima e dopo.
+{/* Video da fare (webm/mp4): Quick Settings prima e dopo.
     Prima: i tile cambiano colore di scatto, il blur resta indietro durante lo slide iniziale e il cambio pagina taglia l'altezza di netto.
     Dopo: transizioni morbide su ogni controllo, blur ancorato all'area in movimento, cambio d'altezza fluido tra le pagine. */}
 
 ## Meccanismo per i client, policy per Vela: blur, Acrylic e Mica
 
-Ho fatto ordine anche su chi decide cosa tra compositor e shell:
-* **La shell calcola i colori, il compositor li disegna.** La formula del materiale *Mica* era duplicata nel compositor e nella shell. Ora l’unica proprietaria del tema è la shell: calcola i colori finali e li passa già pronti al compositor, così tra la titlebar e il contenuto dell’app non si vede più uno stacco.
-* **Blur per tutti, Acrylic per Vela.** Prima, qualsiasi app di terze parti che chiedeva uno sfondo sfocato (`ext-background-effect-v1`) riceveva la ricetta *Acrylic* completa di Vela, compresa la tinta grigia del tema. Ora le app esterne ricevono un blur pulito, con dithering contro il banding, e l’Acrylic resta alle superfici con namespace `vela-`.
+Ho messo ordine anche nella divisione dei compiti tra compositor e shell:
+* **La shell calcola i colori, il compositor li disegna.** La formula del materiale *Mica* era duplicata nel compositor e nella shell. Ora il tema lo gestisce solo la shell: calcola i colori finali e li passa già pronti al compositor, così tra la titlebar e il contenuto dell’app non si vede più uno stacco.
+* **Blur per tutti, Acrylic per Vela.** Prima, qualsiasi app di terze parti che chiedeva uno sfondo sfocato (`ext-background-effect-v1`) riceveva la ricetta *Acrylic* completa di Vela, compresa la tinta grigia del tema. Ora le app esterne ricevono un blur pulito, con dithering contro il banding, e l’Acrylic resta riservato alle superfici di Vela, quelle con namespace `vela-`.
 
 ## Cosa ho deciso di *non* fare
 
 Spesso è più interessante sapere cosa finisce nel cestino di cosa resta. Nel design document c’è una lunga lista di idee scartate (§9); le più istruttive:
-* **Spostare il grigio dell’Acrylic dentro i riempimenti QML.** Sembrava un buon modo per pulire le responsabilità tra compositor e shell, ma avevo fatto male i conti con il dithering. Il dither lo scrive lo shader del blur nel compositor; con la tinta grigia sopra, nel blending fisso di Qt, l’ampiezza del dither visibile a schermo sarebbe scesa a meno della metà (da 0,38 a 0,17), e il banding sui gradienti sarebbe tornato.
+* **Spostare il grigio dell’Acrylic dentro i riempimenti QML.** Sembrava un buon modo per dividere meglio i compiti tra compositor e shell, finché non ho fatto i conti con il dithering. Il dither lo scrive lo shader del blur nel compositor; con la tinta grigia sopra, nel blending fisso di Qt, l’ampiezza del dither visibile a schermo sarebbe scesa a meno della metà (da 0,38 a 0,17), e il banding sui gradienti sarebbe tornato.
 * **Layer traslucidi sovrapposti per gli stati della UI.** Avevo provato rettangoli separati per hover, pressione e selezione, ognuno con la sua opacità: triplicavano gli oggetti e le animazioni di ogni controllo, e producevano colori diversi da quelli del tema.
-* **Tre livelli di riduzione del movimento.** Avevo pensato a *completo, ridotto, spento*, ma non serviva. Ho preferito un solo switch in *Accessibilità*, che toglie tutti i movimenti spaziali e lascia solo dissolvenze rapide (`fast`), più uno slider per chi vuole semplicemente animazioni più lente o più veloci, dal 50% al 300%.
+* **Tre livelli di riduzione del movimento.** Avevo pensato a *completo, ridotto, spento*, ma non serviva. Ho preferito un solo switch in *Accessibilità*, che toglie tutti gli spostamenti e lascia solo dissolvenze rapide (`fast`), più uno slider per chi vuole semplicemente animazioni più lente o più veloci, dal 50% al 300%.
 
 ## Dietro le quinte
 
@@ -85,10 +79,10 @@ La parte forse più divertente di questo lavoro è costruire gli strumenti che f
 
 Ci sono test funzionali che simulano due monitor headless, a 180 e 75 Hz, per verificare al microsecondo le curve di animazione e che i contatori dei frame si fermino quando non succede niente.
 
-Con i controlli condivisi arriverà anche `scripts/check-qml-motion.py`: un piccolo controllo su tutti i file QML, nei test, che segnala una durata scritta a mano invece di un token di `Theme`, o un colore legato allo stato del mouse su un semplice `Rectangle` invece che su un `Fill`. Un’eccezione passa solo con un commento sulla stessa riga che ne spiega il motivo, per esempio `// motion: follows the drag`.
+Con i controlli condivisi è arrivato anche `scripts/check-qml-motion.py`: un piccolo controllo che gira nei test su tutti i file QML e fallisce se trova una durata scritta a mano invece di un token di `Theme`, o un colore legato allo stato del mouse su un semplice `Rectangle` invece che su un `Fill`. Un’eccezione passa solo con un commento sulla stessa riga che ne spiega il motivo, per esempio `// motion: follows the drag`. Oggi tutto il codice lo passa.
 
-Se vi interessano i dettagli più tecnici, i calcoli sulle tolleranze di arrotondamento o le altre alternative scartate lungo il percorso, trovate tutto nel [design document](https://github.com/vela-desktop/vela/blob/visual-coherence/pixels/docs/visual-coherence.md).
+Se vi interessano i dettagli più tecnici, i calcoli sulle tolleranze di arrotondamento o le altre alternative scartate lungo il percorso, trovate tutto nel [design document](https://github.com/vela-desktop/vela/blob/main/docs/visual-coherence.md).
 
 ## Cosa viene dopo
 
-Le fondamenta lato compositor e protocolli, i primi sette passi del piano, sono implementate e testate nel branch. Ora sto lavorando ai controlli QML condivisi e ai pannelli. Poi arriva la parte che si vede davvero: il nuovo aspetto di icone, controlli e superfici, che racconterò nei prossimi articoli.
+Le fondamenta sono finite: tutti e undici i passi del piano, dal compositor e dai suoi protocolli fino ai controlli QML condivisi e ai pannelli, sono in `main`. Ora arriva la parte che si vede davvero: il nuovo aspetto di icone, controlli e superfici, che racconterò nei prossimi articoli.

@@ -2,7 +2,7 @@
 title: "Visual coherence in Vela: compositor, shell and apps in step"
 seoTitle: "Visual coherence in Vela: one rhythm for compositor, shell and apps"
 description: "A first look at Vela's redesign: the foundations. Animations, fractional scaling and materials shared by compositor and shell, and the ideas I dropped."
-pubDate: 2026-10-16T19:00:00+02:00
+pubDate: 2026-10-19T19:00:00+02:00
 draft: true
 tags: ["Design", "Renderer"]
 ---
@@ -11,14 +11,8 @@ import Aside from '../../components/mdx/Aside.astro';
 
 I’m working on a major redesign of Vela: icons, controls, surfaces, animations. This is the first look at it, and it doesn’t show the new look yet. It’s about the foundations: before changing how Vela looks, I had to make the compositor, the shell and the apps move and color things the same way. It’s a small part of the redesign, a tenth, maybe a fifth, but everything else builds on it.
 
-<Aside title="To try it" tone="caution">
-What I describe here isn’t in `main` yet. It’s on the `visual-coherence/pixels` branch ([PR #40](https://github.com/vela-desktop/vela/pull/40)), where the first seven steps of the plan are done; the shared QML controls and panels come next. To install it:
-
-```sh
-vela-update --branch visual-coherence/pixels --build
-```
-
-The next plain `vela-update` takes you back to `main`.
+<Aside title="To try it">
+Everything I describe here has been in `main` since October 17 ([PR #40](https://github.com/vela-desktop/vela/pull/40)), and in every alpha build since. If you’re on an older one, a plain `vela-update` brings it in.
 </Aside>
 
 ## Two worlds that have to agree
@@ -27,7 +21,7 @@ Building a desktop environment from scratch means getting very different worlds 
 
 On paper these components shared the same aesthetic direction, but small fractures remained in the code: mismatched animation durations, duplicated color formulas, controls that changed state instantly, and stutters when monitors with very different refresh rates ran side by side.
 
-I didn’t have all the answers from day one; several of my first hypotheses turned out to be wrong once tested. Before touching the code, I stopped to write a design document, [`visual-coherence.md`](https://github.com/vela-desktop/vela/blob/visual-coherence/pixels/docs/visual-coherence.md), to lay out what was broken and which invariants I wanted to keep. Here are the main decisions, and the *why* behind each.
+I didn’t have all the answers from day one; several of my first hypotheses turned out to be wrong once tested. Before touching the code, I stopped to write a design document, [`visual-coherence.md`](https://github.com/vela-desktop/vela/blob/main/docs/visual-coherence.md), to lay out what was broken and which invariants I wanted to keep. Here are the main decisions, and the *why* behind each.
 
 ## Two animation engines, one rhythm
 
@@ -59,11 +53,11 @@ The rule I set is simple: animations work in pure floating point, and conversion
 
 ## “Qt behaves, Vela looks”
 
-About four out of five state changes in Vela’s QML controls jump instantly, and many buttons and switches hand-roll their own `MouseArea`, keyboard handling and accessibility. This is the next step of the plan, and the direction is set: build on **Qt Quick Templates** (`T.Button`, `T.Switch`, `T.Slider` and the rest). Qt handles input, focus and accessibility; Vela does the drawing, with a new base component, `Fill`, that fades color changes following the precedence between states.
+About four out of five state changes in Vela’s QML controls used to jump instantly, and many buttons and switches hand-rolled their own `MouseArea`, keyboard handling and accessibility. Now they build on **Qt Quick Templates** (`T.Button`, `T.Switch`, `T.Slider` and the rest). Qt handles input, focus and accessibility; Vela does the drawing, with a new base component, `Fill`, that fades color changes following the precedence between states. In the shell, Settings, Files and the polkit prompt, no state color jumps anymore.
 
-The shell’s panels, like Quick Settings or the Start menu, will get `PanelMotion`: a container that handles entrance, exit and shadows (`Shadow`), keeps the blur region in step with the panel as it moves, and lets a panel reverse smoothly if you reopen it while it’s closing.
+The shell’s panels, from Quick Settings and the Start menu to the Notification Center and the dialogs, now live in `PanelMotion`: a container that handles entrance, exit and shadows (`Shadow`), keeps the blur region in step with the panel as it moves, and lets a panel reverse smoothly if you reopen it while it’s closing.
 
-{/* Video to record (webm/mp4) once PanelMotion and Fill are done: Quick Settings before and after.
+{/* Video to record (webm/mp4): Quick Settings before and after.
     Before: tiles jump to the accent color, the blur lags behind during the opening slide, and changing page cuts the height abruptly.
     After: smooth transitions on every control, blur locked to the moving area, and animated height between pages. */}
 
@@ -86,10 +80,10 @@ Maybe the most fun part of this work is building the tools that keep these rules
 
 Functional tests spin up two headless outputs, at 180 and 75 Hz, to check animation curves down to the microsecond, and that frame counters stop when nothing is happening.
 
-With the shared controls will come `scripts/check-qml-motion.py`: a small check, run with the tests on every QML file, that reports a duration written by hand instead of a `Theme` token, or a color driven by mouse state on a plain `Rectangle` instead of a `Fill`. An exception passes only with a comment on the same line saying why, for example `// motion: follows the drag`.
+With the shared controls came `scripts/check-qml-motion.py`: a small check, run with the tests on every QML file, that fails on a duration written by hand instead of a `Theme` token, or a color driven by mouse state on a plain `Rectangle` instead of a `Fill`. An exception passes only with a comment on the same line saying why, for example `// motion: follows the drag`. Today the whole repository passes it.
 
-If you want the deeper details, the rounding simulations or the other alternatives I dropped along the way, it’s all in the [design document](https://github.com/vela-desktop/vela/blob/visual-coherence/pixels/docs/visual-coherence.md).
+If you want the deeper details, the rounding simulations or the other alternatives I dropped along the way, it’s all in the [design document](https://github.com/vela-desktop/vela/blob/main/docs/visual-coherence.md).
 
 ## What’s next
 
-The compositor and protocol foundations, the first seven steps of the plan, are implemented and tested on the branch. I’m now working on the shared QML controls and the panels. After that comes the part you’ll actually see: the new look of icons, controls and surfaces, which I’ll write about in the next entries.
+The foundations are done: all eleven steps of the plan, from the compositor and its protocols to the shared QML controls and the panels, are in `main`. Next comes the part you’ll actually see: the new look of icons, controls and surfaces, which I’ll write about in the next entries.
