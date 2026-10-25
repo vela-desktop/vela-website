@@ -1,0 +1,125 @@
+---
+title: "Perché Vela non è scritta in Rust"
+seoTitle: "Perché Vela non è scritta in Rust: C, wlroots, Vulkan e Qt"
+description: "Perché il compositor di Vela è in C e la shell in C++, e non in Rust: wlroots, Vulkan e Qt, una sola toolchain e il codice scritto con l'AI."
+pubDate: 2026-10-25T11:00:00+01:00
+draft: false
+---
+
+import Aside from '../../../components/mdx/Aside.astro';
+
+Ogni volta che parlo di Vela arriva la stessa domanda: perché non Rust? Nel 2026 un nuovo desktop per Linux, con un compositor scritto da zero, sembra il candidato perfetto per il linguaggio che ha fatto della sicurezza della memoria la sua bandiera.
+
+La risposta breve è che Rust è un ottimo linguaggio, ma non è lo strumento giusto per *questo* progetto. Vela si regge su tre fondamenta scritte in C e C++: wlroots, Vulkan e Qt. Scegliere Rust avrebbe significato combattere contro tutte e tre, per una sicurezza che, nei punti in cui conta davvero, sarebbe finita comunque dentro blocchi `unsafe`.
+
+## Quali sono i componenti di Vela
+
+Vela è un desktop completo per Linux: un compositor Wayland, un renderer Vulkan, una shell in Qt Quick, un file manager e un'app di impostazioni. Ogni pezzo poggia su una base che non ho scritto io e che non ha senso riscrivere:
+
+- **wlroots 0.20** per backend, protocolli Wayland e gestione dei buffer. È una libreria C.
+- **Vulkan 1.4** per il rendering, senza fallback OpenGL. È un'API C.
+- **Qt 6 e Qt Quick** per la shell, Files e Settings. È un framework C++.
+
+La domanda giusta quindi non è "Rust o C?" in astratto. È: quale linguaggio parla meglio con queste tre fondamenta, e mi lascia concentrare le energie su ciò che rende Vela diversa?
+
+## wlroots parla C
+
+Il compositor chiama wlroots in quasi ogni file. Il modello di wlroots è fatto di segnali e listener: un oggetto nasce da un evento, si registra su altri oggetti e muore quando arriva il suo segnale di destroy. È proprio la parte dove stanno i bug di lifetime più insidiosi.
+
+In Rust le strade sarebbero due:
+
+1. **Usare wlroots tramite binding.** Esistono, ma sono poco mantenuti e inseguono a fatica le versioni di wlroots. E il modello a listener andrebbe comunque avvolto in `unsafe`: la sicurezza di Rust si fermerebbe proprio sulla soglia del codice più delicato. Lì il Rust `unsafe` non è più semplice del C stesso: ha regole molto più severe sull'aliasing dei riferimenti mutabili, e nei callback ricorsivi di grafi di puntatori C basta creare un riferimento temporaneo nel momento sbagliato per avere comportamento indefinito, proprio dove il compilatore ha smesso di proteggerti.
+2. **Passare a Smithay**, la libreria per compositor scritta in Rust su cui si basano COSMIC e niri. È l'alternativa più seria: i protocolli Wayland, il backend DRM e l'input sono in Rust sicuro, senza binding verso il C. Ma Smithay include solo renderer OpenGL ES e pixman; per Vulkan offre l'inizializzazione e poco altro. Il renderer, che è [la parte di Vela che la rende diversa dagli altri desktop](/blog/own-renderer/), andrebbe comunque scritto da zero, in Rust `unsafe`.
+
+Ho scelto di restare vicino a wlroots e di scrivere il compositor nel suo stesso stile: C17, snake_case, `wl_list`, un'unica funzione di distruzione per ogni oggetto che rimuove ogni listener in modo esplicito. `wl_list` è una lista doppiamente collegata, proprio l'esempio che fa [antirez](https://www.youtube.com/watch?v=5SLsH755XAA), il creatore di Redis, per spiegare perché resta sul C: in Rust strutture del genere richiedono un codice meno diretto e blocchi `unsafe` scritti con cura, mentre in C si scrivono nel modo più semplice possibile.
+
+Questa, per esempio, è la funzione che distrugge una superficie layer, come la taskbar o lo sfondo, in `compositor/src/layer.c`:
+
+```c
+static void handle_destroy(struct wl_listener *listener, void *data)
+{
+    struct vela_layer_surface *layer = wl_container_of(listener, layer, destroy);
+    wl_list_remove(&layer->link);
+    vela_focus_forget_layer(layer->server, layer);
+    struct vela_output *output = vela_layer_surface_output(layer);
+    if (output) {
+        vela_output_arrange_layers(output); // frees the space it took
+    }
+    wl_list_remove(&layer->map.link);
+    wl_list_remove(&layer->unmap.link);
+    wl_list_remove(&layer->commit.link);
+    wl_list_remove(&layer->destroy.link);
+    wl_list_remove(&layer->new_popup.link);
+    vela_node_destroy(&layer->surface_node->node);
+    vela_node_destroy(&layer->tree->node);
+    free(layer);
+}
+```
+
+Nessun distruttore implicito e nessun riferimento condiviso: tutto quello che succede quando l'oggetto muore è scritto lì, in ordine.
+
+## La shell è Qt Quick
+
+Taskbar, menu Start, impostazioni rapide, notifiche, Files, Settings e lock screen sono scritti in Qt Quick: oltre cento file QML e i modelli C++ che li alimentano. Qt è un framework C++, con il suo sistema di meta-oggetti, segnali e proprietà.
+
+Da Rust si può usare Qt, con progetti come cxx-qt. Ma diventa uno strato in più fra il codice di Vela e il framework: un generatore di binding da tenere aggiornato, errori che attraversano due linguaggi, e una documentazione che resta pensata per il C++. Per un'interfaccia, dove la maggior parte della logica vive comunque in QML, il guadagno non ripaga quello strato. E non sarebbe una scelta in linea con la filosofia di Vela.
+
+## Vulkan: dove la memoria non è più tua
+
+Il cuore di Vela è il renderer: buffer delle app importati come DMA-BUF, fence esplicite e implicite, semafori timeline, memoria condivisa con il driver e con il kernel. In questo territorio la sicurezza della memoria non dipende dal linguaggio del codice. Dipende da contratti che il compilatore non vede: quando la GPU ha finito di leggere un buffer, quando un'app può riutilizzarlo, quando il kernel lo considera libero.
+
+In Rust questo codice sarebbe scritto con `ash`, e quasi ogni chiamata resterebbe `unsafe`.
+
+Con Smithay non cambierebbe: il renderer si aggancerebbe alla libreria implementando i suoi trait, come oggi si aggancia a wlroots implementando l'interfaccia pubblica `wlr_renderer`. Il lavoro è lo stesso, cambia solo il linguaggio. Smithay toglie l'`unsafe` dove Vela ha meno bisogno di aiuto, e lo lascia tutto nel renderer, dove ne avrebbe di più.
+
+## Una sola toolchain
+
+Vela si compila con CMake, un compilatore C17 e C++20 e le librerie che le distribuzioni già forniscono. Il pacchetto per Arch e l'RPM per Fedora seguono le regole di packaging normali di quelle distro.
+
+Aggiungere Rust significherebbe aggiungere cargo, crate da scaricare e da tenere allineati con le politiche delle distribuzioni, tempi di compilazione più lunghi e un secondo modo di costruire il progetto. Per un desktop che vuole essere facile da pacchettizzare, ogni toolchain in più è un costo per chi mantiene i pacchetti, non solo per me. Dipendenze e tempi di compilazione sono anche due dei motivi per cui antirez resta sul C: un gestore di pacchetti spinge ad accumulare dipendenze su dipendenze, e i tempi di compilazione di Rust allungano il ciclo fra una modifica e la prova.
+
+Lo avevo già documentato per l'agente polkit di Vela, dove avevo valutato Rust: nessun guadagno reale di sicurezza, perché la password passa comunque dal prompt Qt, e c'era il costo certo di una seconda toolchain.
+
+## Cosa Rust mi avrebbe dato davvero
+
+Non sarebbe giusto dire che Rust non avrebbe portato niente di meglio del C. Ci sono classi di errore che il suo compilatore rifiuta e che in C devo cercare con altri strumenti:
+
+- **Valori di ritorno ignorati.** Un'allocazione non controllata o un risultato Vulkan scartato, in Rust, sarebbero un `Option` o un `Result` che non si può ignorare per distrazione.
+- **Una politica coerente sugli errori.** In C ogni modulo può decidere a modo suo come reagire alla memoria esaurita; in Rust la decisione è una sola.
+- **Lifetime nel codice interno.** Dove il codice non tocca wlroots, Vulkan o Qt, il borrow checker avrebbe davvero eliminato intere categorie di bug.
+- **Protocolli in Rust sicuro.** Con Smithay, la gestione dei protocolli Wayland e del ciclo di vita degli oggetti sarebbe stata codice Rust sicuro invece di listener C da registrare e rimuovere a mano.
+
+Sono vantaggi reali. La mia valutazione è che, in un progetto in cui le parti più rischiose stanno proprio ai confini con C e C++, quei vantaggi non compensano il costo di scrivere tutto il resto in un linguaggio diverso da quello delle fondamenta.
+
+C'è poi un aspetto che riguarda il modo in cui Vela viene costruita. Il codice è scritto da LLM: io lo revisiono da sviluppatore e prendo tutte le decisioni di architettura e di design. Si potrebbe pensare che questo sposti la bilancia verso Rust: un compilatore che rifiuta intere classi di errore sembra il revisore ideale per codice generato.
+
+La mia esperienza dice il contrario, e non solo la mia: come [dice antirez](https://www.youtube.com/watch?v=5SLsH755XAA), gli LLM hanno visto molto più codice C che Rust, e su un linguaggio semanticamente più semplice ragionano meglio. La complessità di Rust, fra lifetime, trait e wrapper attorno alle librerie C, non pesa solo su chi programma: pesa anche sull'AI, che su quel codice fa più fatica a ragionare. Il C è un linguaggio piccolo ed esplicito: ogni allocazione, ogni puntatore e ogni distruzione sono scritti nel codice, senza meccanismi nascosti. Su un codice grande ma lineare l'AI sbaglia meno, e sia per me sia per il modello è molto più immediato ispezionare il flusso di esecuzione e individuare un problema di memoria, perché è tutto visibile in superficie.
+
+Questo non vuol dire fidarsi né dell'AI né della sola revisione umana: la sicurezza di Vela non è delegata all'assenza di distrazioni, ma a invarianti verificabili a macchina, test deterministici e regole strutturali che il codice è obbligato a rispettare.
+
+## Come recupero quelle garanzie in C
+
+Non scegliere Rust non significa rinunciare al rigore. Significa spostarlo altrove:
+
+- **Regole scritte per il core.** Ogni struttura dichiara chi la crea, chi la distrugge e quando. Niente stato globale, allocazioni visibili, nessuna allocazione nascosta nel ciclo dei frame.
+- **Test che definiscono il comportamento.** Le suite GoogleTest coprono [frame clock](/blog/frame-clock/), geometria, colore e configurazione. I test funzionali coprono finestre, monitor, sessione, lock e [applicazioni lente sulla GPU](/blog/slow-apps/).
+- **Prove invece di promesse.** Un test confronta [bit per bit l'immagine di una finestra](/blog/why-vela/) al 100%, 125%, 150%, 175% e 200%, appena aperta, agganciata a sinistra e a destra, massimizzata e ripristinata. Durante la riscrittura del compositor da C++ a C, un harness A/B ha confrontato pixel per pixel il vecchio compositor e il nuovo.
+- **Strumenti automatici.** Sanitizer (ASan e UBSan), analisi statica e CodeQL girano in CI su ogni pull request. I validation layer di Vulkan si usano durante lo sviluppo e nei test eseguiti su GPU AMD e NVIDIA reali.
+
+Il prossimo passo è far fare al compilatore C una parte del lavoro che farebbe Rust: un unico punto di allocazione con una sola politica, e `warn_unused_result` sulle funzioni il cui risultato non si può ignorare.
+
+## E in futuro?
+
+Non è una scelta ideologica, e la porta non è chiusa. Vela è fatta di processi separati che parlano fra loro solo tramite protocolli Wayland e un socket di comandi. Questo permette di scrivere un componente in un altro linguaggio senza toccare il resto.
+
+Se un giorno Rust entrerà in Vela, lo farà ai bordi: in un programma isolato come il demone della luminosità, lo strumento di report o l'updater, dove non deve attraversare wlroots, Vulkan o Qt. Il core del compositor resta in C, nella stessa lingua della libreria su cui è costruito.
+
+## In conclusione
+
+Sceglierei Rust senza esitare per un progetto in cui il codice più delicato è anche quello in cui il compilatore può aiutare. Vela non è quel progetto: le sue parti più delicate dialogano con Vulkan, con il driver e con il kernel, dove le garanzie di Rust si fermano, e la qualità di Vela dipende da quanto bene lo fanno.
+
+Ho scelto il linguaggio delle fondamenta su cui poggia Vela e ho messo il rigore dove il compilatore non arriva: in regole scritte, test che provano il comportamento e strumenti che cercano gli errori in automatico. Se volete giudicare la scelta, il modo migliore è leggere il codice, ed è tutto lì.
+
+<Aside title="Da dove iniziare a leggere">
+  [`docs/c-core.md`](https://github.com/vela-desktop/vela/blob/main/docs/c-core.md) racconta la riscrittura da C++ a C e le regole che il core segue. [`compositor/src/render/renderer.c`](https://github.com/vela-desktop/vela/blob/main/compositor/src/render/renderer.c) è il renderer Vulkan e il punto in cui si aggancia a wlroots come `wlr_renderer`. [`scripts/test-sharpness.sh`](https://github.com/vela-desktop/vela/blob/main/scripts/test-sharpness.sh) è il test che confronta le finestre bit per bit.
+</Aside>

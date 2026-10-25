@@ -1,0 +1,94 @@
+---
+// Cover of "Why Vela isn't written in Rust": Vela's three foundations and
+// what Rust would mean on each, as the entry argues. Smithay makes the
+// protocols safe Rust; the renderer stays unsafe either way; Qt needs bindings.
+import './covers.css';
+
+const column = { x: 85, width: 190, gap: 30 };
+const columns = [
+  { what: 'Protocols', detail: 'Input · DRM', base: 'wlroots', lang: 'C', rust: 'Safe Rust', tone: 'teal' },
+  { what: 'Renderer', detail: 'DMA-BUF · fences', base: 'Vulkan', lang: 'C API', rust: 'unsafe', tone: 'coral' },
+  { what: 'Shell', detail: 'QML · apps', base: 'Qt', lang: 'C++', rust: 'Bindings', tone: 'plain' },
+];
+const x = (i: number) => column.x + i * (column.width + column.gap);
+const middle = (i: number) => x(i) + column.width / 2;
+---
+
+<svg class="cd" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  {
+    columns.map((c, i) => (
+      <g>
+        <rect
+          class:list={['cd-box', { 'cd-box--teal': c.tone === 'teal', 'wnr-unsafe': c.tone === 'coral' }]}
+          x={x(i)}
+          y="104"
+          width={column.width}
+          height="44"
+          rx="8"
+          stroke-dasharray={c.tone === 'plain' ? '4 5' : undefined}
+        />
+        <text
+          class:list={['cd-label', 'wnr-small', { 'cd-label--teal': c.tone === 'teal', 'wnr-unsafe-label': c.tone === 'coral' }]}
+          x={middle(i)}
+          y="131"
+          text-anchor="middle"
+        >
+          {c.rust}
+        </text>
+
+        <line
+          class:list={['cd-line', { 'wnr-unsafe-line': c.tone === 'coral' }]}
+          x1={middle(i)}
+          y1="150"
+          x2={middle(i)}
+          y2="178"
+          stroke-dasharray="4 5"
+        />
+
+        <rect class="cd-box" x={x(i)} y="180" width={column.width} height="110" rx="10" />
+        <text class="cd-label cd-label--strong wnr-big" x={middle(i)} y="228" text-anchor="middle">
+          {c.what}
+        </text>
+        <text class="cd-label wnr-small" x={middle(i)} y="258" text-anchor="middle">
+          {c.detail}
+        </text>
+
+        <line class="cd-line" x1={middle(i)} y1="292" x2={middle(i)} y2="330" stroke-dasharray="4 5" />
+
+        <rect class="cd-box" x={x(i)} y="330" width={column.width} height="64" rx="10" />
+        <text class="cd-label cd-label--strong wnr-big" x={x(i) + 18} y="369">
+          {c.base}
+        </text>
+        <text class="cd-label wnr-small" x={x(i) + column.width - 18} y="368" text-anchor="end">
+          {c.lang}
+        </text>
+      </g>
+    ))
+  }
+</svg>
+
+<style>
+  .wnr-big {
+    font-size: 20px;
+  }
+
+  .wnr-small {
+    font-size: 14px;
+    letter-spacing: 0.06em;
+  }
+
+  .wnr-unsafe {
+    fill: rgb(255 145 88 / 0.08);
+    stroke: var(--coral);
+  }
+
+  .wnr-unsafe-label {
+    fill: var(--coral);
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+
+  .wnr-unsafe-line {
+    stroke: var(--coral);
+  }
+</style>
