@@ -1,0 +1,36 @@
+---
+title: "Vela is leaving alpha!"
+seoTitle: "Vela is leaving alpha: the 0.1 beta, Ubuntu 26.10, and less and less KDE"
+description: "The feature freeze for Vela 0.1, the first beta, starts on 27 October. Meanwhile, Ubuntu 26.10 arrives, and Vela depends less and less on KDE."
+pubDate: 2026-10-26T21:00:00+01:00
+draft: false
+tags: ["Release"]
+---
+
+Here we are: on 27 October, `main` enters the feature freeze for **Vela 0.1, the first beta**. From then on there are no new features, only fixes, tests and polish, until Vela is ready to ship with a real version number.
+
+## The beta
+
+0.1 doesn't bring big news: it consolidates the work done so far and makes what's already there stable, with a few small additions. The exception is the **Updates page in Settings**, which will also notify you when a new update is available. A couple of things are still missing before the release, such as Bluetooth pairing and screen capture on NVIDIA, along with more bug and security fixes. Other features will come in the next releases: if you're curious, there's the [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md).
+
+## Ubuntu 26.10
+
+After Arch and Fedora, Vela comes to **Ubuntu 26.10** too:
+
+```sh
+sudo apt install git ca-certificates sudo
+git clone https://github.com/vela-desktop/vela.git
+sh vela/packaging/vela-update
+```
+
+`vela-update` builds Vela on your computer and installs it as a native DEB package. I've tried it in a VM with GPU passthrough, but support is still experimental: keep another desktop at hand, and if something goes wrong, report it with `vela-report`.
+
+## Less and less KDE
+
+Vela has never used KWin or the Plasma shell, but so far it has relied on several pieces of KDE. Now it's moving away from them, one step at a time: the polkit agent is already Vela's own, with 0.1 the KDE portal and Plasma Workspace will no longer be needed, and later on a portal of Vela's own will arrive and, who knows, a font and icons of its own too.
+
+KDE apps, on the other hand, remain welcome: they become a choice, not a requirement. Vela still has a special relationship with KDE, and will keep it for a long time, probably until 1.0 or close to it: to round out the Vela desktop I recommend KDE apps, KWallet in particular, and everyday ones like the calculator and Kate. Vela has no problem with third-party GTK or Qt apps either. For now, Vela's official terminal is Konsole.
+
+## What now?
+
+Try it, especially on hardware I don't have and on Ubuntu, and tell me how it went. We'll talk about the details when 0.1 comes out, in a post of its own. It's really close!
