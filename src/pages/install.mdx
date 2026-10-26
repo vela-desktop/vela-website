@@ -4,13 +4,13 @@ title: "Install Vela"
 seoTitle: "Install Vela, a modern Linux desktop environment"
 description: "Try Vela in a window on your current desktop, or install it and pick it at the login screen."
 label: "Get started"
-updated: 2026-10-17
+updated: 2026-10-26
 ---
 
 import Aside from '../components/mdx/Aside.astro';
 import LatestBuild from '../components/LatestBuild.astro';
 
-Vela is alpha software. You can already use it every day, but it's still changing quickly, and it hasn't been tested on every GPU and driver. Read this page before installing. It takes five minutes, and it can save you an evening.
+Vela is alpha software, and its first beta, 0.1, is on its way. You can already use it every day, but it's still changing quickly, and it hasn't been tested on every GPU and driver. Read this page before installing. It takes five minutes, and it can save you an evening.
 
 <Aside title="Before you start" tone="caution">
   Keep a working desktop session, or at least a TTY, that you can fall back to. Installing Vela doesn't replace your current desktop: it adds a new session to the login screen, next to the ones you already have.
@@ -80,9 +80,26 @@ Only get Cosign from the official Sigstore releases: Vela trusts it to check eve
   The RPMs are built and test-installed in a fresh Fedora 44 container before every release, but they've had little testing on real hardware so far. Other Fedora releases, other DNF-based distributions and the immutable variants, such as Silverblue and Kinoite, aren't supported by the installer. There you can [build from source](#other-distributions).
 </Aside>
 
+## Ubuntu 26.10
+
+On Ubuntu 26.10, Vela installs as a native `vela-git` DEB, again with `vela-update`. Enable the *universe* repository first, then run:
+
+```sh
+sudo apt update
+sudo apt install git ca-certificates sudo
+git clone https://github.com/vela-desktop/vela.git
+sh vela/packaging/vela-update
+```
+
+Here `vela-update` always builds Vela on your machine: it installs the build dependencies with APT, compiles the selected commit, and installs the result as a DEB. The packages built by CI don't have signed build provenance yet, so the updater doesn't download them, not even with `--download`. The first installation and every update take a while; `--jobs` sets how many parallel jobs the build uses.
+
+<Aside title="Ubuntu support is experimental">
+  CI builds the DEB and test-installs it in a fresh Ubuntu 26.10 container, and it has been tried in a virtual machine with GPU passthrough, but real hardware hasn't been tested much yet. Other Ubuntu releases aren't supported.
+</Aside>
+
 ## Updating
 
-On both Arch and Fedora, run `vela-update` whenever you want the latest version:
+On Arch, Fedora and Ubuntu, run `vela-update` whenever you want the latest version:
 
 ```sh
 vela-update            # update if something new is available
@@ -100,6 +117,8 @@ The last three packages stay in `~/.cache/vela-update/packages/`. If an update g
 sudo pacman -U ~/.cache/vela-update/packages/vela-git-<version>.pkg.tar.zst
 # Fedora
 sudo dnf install ~/.cache/vela-update/packages/vela-git-<version>.x86_64.rpm
+# Ubuntu
+sudo apt-get install --allow-downgrades --reinstall ~/.cache/vela-update/packages/vela-git_<version>_amd64.deb
 ```
 
 ## Other distributions
