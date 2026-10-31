@@ -18,7 +18,7 @@ voice, not a change of site.
 4. **Efficiency through architecture.** Static HTML, ~1.4 KB of inline JavaScript, AVIF/WebP
    at responsive widths, self-hosted fonts with metric-matched fallbacks (CLS 0).
    Richness comes from composition and type, not from runtime weight.
-5. **Honest states.** Alpha status is visible in the header, hero, status block and
+5. **Honest states.** Beta status is visible in the header, hero, status block and
    footer. With no journal entries, the journal says so and points to the commit
    history and the roadmap; nothing is invented to fill space.
 
@@ -37,7 +37,7 @@ voice, not a change of site.
 **Color** — from the wallpaper. Ink scale `--ink-0…4` (#02060c → #12243a),
 `--navy` #06182d (Vela's desktop color), `--paper` #0a1019 for the journal.
 Accents: `--accent` #8cc8ff for links and focus, `--teal` #46d6e0 for labels and
-light, `--coral` #ff9158 only for the alpha marker and drafts — the wallpaper's
+light, `--coral` #ff9158 only for the status marker and drafts — the wallpaper's
 single warm spark. Text: `--text`, `--text-muted`, `--text-faint` (all ≥ 4.5:1 on ink).
 
 **Type** — four roles, never a family name in a component:

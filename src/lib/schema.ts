@@ -36,7 +36,7 @@ export function websiteSchema(): Thing {
   };
 }
 
-/** `version` is the latest alpha package, when the build could read it. */
+/** `version` is the latest Beta release, when the build could read it. */
 export function softwareSchema(version?: string): Thing {
   return {
     '@context': 'https://schema.org',

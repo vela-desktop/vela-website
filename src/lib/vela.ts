@@ -1,7 +1,7 @@
 // What is happening in the Vela repository, read from the GitHub API at build
-// time: the latest alpha package and the recent changes on main. Pages built
+// time: the latest Beta release and the recent changes on main. Pages built
 // from it stay current because deploy/autodeploy.sh also rebuilds the site
-// when Vela's main branch or its alpha releases change.
+// when Vela's main branch or its release tags change.
 //
 // The API is optional for the build: if it can't be reached, the functions
 // return null or an empty list, and the pages point to GitHub instead.
@@ -9,15 +9,12 @@
 
 const API = 'https://api.github.com/repos/vela-desktop/vela';
 
-export interface AlphaBuild {
-  /** Package version, e.g. "0.1.0.r88.gfd80a32". */
+export interface BetaRelease {
+  /** Version from the tag, e.g. "0.1.0" for v0.1.0. */
   version: string;
-  commit: string;
   published: Date;
-  /** Size of the Arch package in bytes. */
-  size: number;
-  /** Size of the Fedora RPM in bytes, when the release has one. */
-  rpmSize: number | null;
+  /** The packages the release has, in bytes: Arch, Fedora 44, Ubuntu 26.10. */
+  packages: { label: string; size: number }[];
   url: string;
 }
 
@@ -64,21 +61,28 @@ interface GitHubRelease {
   assets: { name: string; size: number }[];
 }
 
-/** The newest prebuilt alpha package, as installed by `vela-update`. */
-export async function latestAlphaBuild(): Promise<AlphaBuild | null> {
+// Release assets of the Beta channel (the `vela` package), by distribution.
+const PACKAGES = [
+  { label: 'Arch Linux package', name: /^vela-\d[^/]*-x86_64\.pkg\.tar\.zst$/ },
+  { label: 'Fedora 44 RPM', name: /^vela-\d[^/]*\.x86_64\.rpm$/ },
+  { label: 'Ubuntu 26.10 DEB', name: /^vela_\d[^/]*_amd64\.deb$/ },
+];
+
+/** The newest numbered Beta release, as installed by `vela-update --channel beta`. */
+export async function latestBeta(): Promise<BetaRelease | null> {
   const releases = await get<GitHubRelease[]>('/releases?per_page=10');
   for (const release of releases ?? []) {
-    if (release.draft || !release.tag_name.startsWith('alpha-')) continue;
-    const pkg = release.assets.find((asset) => asset.name.endsWith('.pkg.tar.zst'));
-    const version = pkg?.name.match(/^vela-git-(.+)-\d+-x86_64\.pkg\.tar\.zst$/)?.[1];
-    if (!pkg || !version) continue;
-    const rpm = release.assets.find((asset) => asset.name.endsWith('.rpm'));
+    const version = release.tag_name.match(/^v(0\.\d+\.\d+)$/)?.[1];
+    if (release.draft || !version) continue;
+    const packages = PACKAGES.flatMap(({ label, name }) => {
+      const asset = release.assets.find((asset) => name.test(asset.name));
+      return asset ? [{ label, size: asset.size }] : [];
+    });
+    if (packages.length === 0) continue;
     return {
       version,
-      commit: release.tag_name.slice('alpha-'.length),
       published: new Date(release.published_at),
-      size: pkg.size,
-      rpmSize: rpm?.size ?? null,
+      packages,
       url: release.html_url,
     };
   }

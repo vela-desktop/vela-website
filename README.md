@@ -15,7 +15,7 @@ npm run build        # type-check and build to dist/ (drafts excluded)
 npm run preview      # serve dist/ locally
 ```
 
-The *What's new* page and the latest alpha build on *Install* are read from the
+The *What's new* page and the latest Beta release on *Install* are read from the
 GitHub API at build time (`src/lib/vela.ts`). Without network access the build
 still succeeds and those parts point to GitHub instead; set `GITHUB_TOKEN` to
 raise the API rate limit.

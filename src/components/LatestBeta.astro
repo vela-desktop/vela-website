@@ -1,7 +1,8 @@
 ---
-// The newest prebuilt alpha package (src/lib/vela.ts), on the Install and
-// What's new pages. Renders nothing when GitHub couldn't be reached.
-import { latestAlphaBuild } from '../lib/vela';
+// The newest Beta release (src/lib/vela.ts), on the Install and What's new
+// pages. Renders nothing when GitHub couldn't be reached or there is no
+// release yet.
+import { latestBeta } from '../lib/vela';
 import { formatDate } from '../lib/posts';
 
 export interface Props {
@@ -10,33 +11,31 @@ export interface Props {
 }
 
 const { more } = Astro.props;
-const build = await latestAlphaBuild();
+const release = await latestBeta();
 const megabytes = (bytes: number) => (bytes / 1_000_000).toFixed(1);
 ---
 
 {
-  build && (
-    <aside class="build" aria-label="Latest alpha build">
-      <p class="build__label label label--accent">Latest alpha build</p>
-      <p class="build__version">{build.version}</p>
+  release && (
+    <aside class="build" aria-label="Latest Beta release">
+      <p class="build__label label label--accent">Latest Beta</p>
+      <p class="build__version">Vela {release.version}</p>
       <p class="build__meta">
-        <time datetime={build.published.toISOString()}>{formatDate(build.published)}</time>
-        <span aria-hidden="true">·</span>
-        <span>Arch Linux package, {megabytes(build.size)} MB</span>
-        {build.rpmSize && (
+        <time datetime={release.published.toISOString()}>{formatDate(release.published)}</time>
+        {release.packages.map((pkg) => (
           <>
             <span aria-hidden="true">·</span>
-            <span>Fedora 44 RPM, {megabytes(build.rpmSize)} MB</span>
+            <span>{pkg.label}, {megabytes(pkg.size)} MB</span>
           </>
-        )}
+        ))}
         <span aria-hidden="true">·</span>
-        <a href={build.url} rel="noopener">Release on GitHub</a>
+        <a href={release.url} rel="noopener">Release notes on GitHub</a>
       </p>
       <p class="build__more">
         {more === 'changes' ? (
           <a href="/changes/">What’s new on main</a>
         ) : (
-          <a href="/install/#arch-linux-cachyos-endeavouros">Install it with vela-update</a>
+          <a href="/install/">Install it with vela-update</a>
         )}
       </p>
     </aside>

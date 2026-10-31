@@ -11,7 +11,7 @@ export const SITE = {
   description:
     'Vela is an independent Linux desktop environment with its own Wayland compositor and Vulkan renderer, a Qt Quick shell, and its own Files and Settings.',
   tagline: 'A modern, fluid and sharp Linux desktop built for today’s hardware.',
-  status: 'Alpha',
+  status: 'Beta',
   license: 'GPL-3.0-or-later',
 } as const;
 
@@ -64,16 +64,16 @@ export const NAV = [
 ] as const;
 
 /**
- * The "Next" list from the roadmap (docs/roadmap.md in the Vela repository).
- * Shown on the homepage while the journal has no entries. Update it when the
- * roadmap changes.
+ * What comes next, from the roadmap's release sections (docs/roadmap.md in the
+ * Vela repository), in release order. Shown on the homepage while the journal
+ * has no entries. Update it when the roadmap changes.
  */
 export const ROADMAP_NEXT = [
-  'Input methods and an emoji panel',
-  'An Updates page in Settings, with a notification when a new version is out',
-  'Start menu: recommended files, and search across files and settings',
-  'Screen recording in the snipping tool',
-  'More languages',
-  'Vela’s own login screen',
+  'Touch, pen and tablet mode',
+  'An on-screen keyboard and input methods',
+  'Screen recording and text recognition in the snipping tool',
+  'Start search across files and settings, and an emoji picker',
+  'Vela’s own portal',
   'HDR and color management',
+  'More languages',
 ] as const;

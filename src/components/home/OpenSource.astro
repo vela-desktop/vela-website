@@ -24,13 +24,14 @@ const repoDisplay = LINKS.repo.replace('https://', '');
     </div>
 
     <div class="open__status" data-reveal>
-      <p class="open__status-badge"><span class="dot" aria-hidden="true"></span> Alpha</p>
+      <p class="open__status-badge"><span class="dot" aria-hidden="true"></span> Beta</p>
       <div class="open__status-text">
         <p>
-          You can already pick Vela at the login screen and use it every day: compositor, shell,
-          file manager, settings and lock screen. The GPU test suites pass in full on the primary
-          development machine, but some hardware-specific paths still rely on manual verification.
-          Expect rough edges, and expect things to change.
+          Pick Vela at the login screen and use it every day: compositor, shell, file manager,
+          settings and lock screen. Every Beta release passes the full GPU test suites on AMD and
+          NVIDIA before it’s published, and Settings tells you when the next one is out. It isn’t a
+          stable release yet: some hardware-specific paths still rely on manual verification, so
+          expect rough edges.
         </p>
         <p class="open__requirements">
           <span class="label">Requires</span>
@@ -45,12 +46,12 @@ const repoDisplay = LINKS.repo.replace('https://', '');
         <span class="path__index">01</span>
         <h3 class="path__title">Try it</h3>
         <p>
-          On Arch Linux, CachyOS, EndeavourOS and Fedora 44, Vela installs as a proper{' '}
-          <code>vela-git</code> package, updated with <code>vela-update</code>. Other
-          distributions can build from source.
+          On Arch Linux, CachyOS, EndeavourOS, Fedora 44 and Ubuntu 26.10, Vela installs as a
+          signed <code>vela</code> package from its Beta releases, updated with{' '}
+          <code>vela-update</code>. Other distributions can build from source.
         </p>
-        <pre class="terminal" aria-label="Install commands for Arch Linux and Fedora 44"><code><span class="terminal__prompt">$</span> {cloneCommand}
-<span class="terminal__prompt">$</span> sh vela/packaging/vela-update</code></pre>
+        <pre class="terminal" aria-label="Install commands for Arch Linux, Fedora 44 and Ubuntu 26.10"><code><span class="terminal__prompt">$</span> {cloneCommand}
+<span class="terminal__prompt">$</span> sh vela/packaging/vela-update --channel beta</code></pre>
         <a class="link" href={LINKS.install}>Installation guide <span class="arrow" aria-hidden="true">→</span></a>
       </li>
 

@@ -4,13 +4,13 @@ title: "Install Vela"
 seoTitle: "Install Vela, a modern Linux desktop environment"
 description: "Try Vela in a window on your current desktop, or install it and pick it at the login screen."
 label: "Get started"
-updated: 2026-10-26
+updated: 2026-10-31
 ---
 
 import Aside from '../components/mdx/Aside.astro';
-import LatestBuild from '../components/LatestBuild.astro';
+import LatestBeta from '../components/LatestBeta.astro';
 
-Vela is alpha software, and its first beta, 0.1, is on its way. You can already use it every day, but it's still changing quickly, and it hasn't been tested on every GPU and driver. Read this page before installing. It takes five minutes, and it can save you an evening.
+Vela is beta software. You can use it every day, and every release passes the full GPU test suites on AMD and NVIDIA before it's published, but it isn't a stable release yet, and it hasn't been tested on every GPU and driver. Read this page before installing. It takes five minutes, and it can save you an evening.
 
 <Aside title="Before you start" tone="caution">
   Keep a working desktop session, or at least a TTY, that you can fall back to. Installing Vela doesn't replace your current desktop: it adds a new session to the login screen, next to the ones you already have.
@@ -40,31 +40,34 @@ You'll need the build dependencies listed under [Other distributions](#other-dis
 
 A nested session is great for exploring, but it can't tell you whether Vela works with your monitor and driver directly. For that, you need a real session.
 
+## Beta or Experimental
+
+`vela-update` installs Vela on Arch, Fedora 44 and Ubuntu 26.10 as a native package, and keeps it updated. It offers two channels:
+
+- **Beta**, the `vela` package, is the one to pick. It installs the newest numbered [release](https://github.com/vela-desktop/vela/releases): prebuilt, signed, and verified with Cosign before it's installed. If a package can't be verified, `vela-update` stops without installing anything.
+- **Experimental**, the `vela-git` package, follows the latest commit on `main`, and `vela-update` builds it on your machine. It gets every change as soon as it lands, and every regression too.
+
+The commands below install the Beta. Without `--channel beta`, the first installation is Experimental. After that, the installed package decides the channel, and *Settings → System → Updates* can switch it.
+
+<LatestBeta more="changes" />
+
 ## Arch Linux, CachyOS, EndeavourOS
 
-Vela installs as a native `vela-git` package. Run:
+Run:
 
 ```sh
 sudo pacman -S --needed git curl base-devel cosign
 git clone https://github.com/vela-desktop/vela.git
-sh vela/packaging/vela-update
+sh vela/packaging/vela-update --channel beta
 ```
 
-`vela-update` handles the first installation too. It looks for a prebuilt alpha package matching the latest commit on `main`, then checks its SHA-256 checksum and its signed build provenance with Cosign before installing it with pacman. If there's no package for that commit, or it can't be verified, it builds the package on your machine instead. You don't need a GitHub account or the GitHub CLI.
+`vela-update` handles the first installation too. It downloads the release's `vela` package, checks its SHA-256 checksum and its signed build provenance with Cosign, and installs it with pacman. You don't need a GitHub account or the GitHub CLI.
 
-<LatestBuild more="changes" />
+For Experimental, run `sh vela/packaging/vela-update` instead: it builds `vela-git` from the latest commit on `main`.
 
 ## Fedora 44
 
-On Fedora 44 (x86_64), Vela installs as a native `vela-git` RPM, with the same updater:
-
-```sh
-sudo dnf install git curl rpm-build dnf5-plugins
-git clone https://github.com/vela-desktop/vela.git
-sh vela/packaging/vela-update
-```
-
-Fedora 44 doesn't ship Cosign in its repositories, and without it `vela-update` can't verify the prebuilt RPMs, so it builds every update locally. To use the prebuilt ones, install the official Cosign RPM from Sigstore before the first run:
+On Fedora 44 (x86_64), Vela installs as a native `vela` RPM, with the same updater. Fedora 44 doesn't ship Cosign in its repositories, and the Beta can't be installed without it, so install the official Cosign RPM from Sigstore first:
 
 ```sh
 version=$(curl -fsSL https://api.github.com/repos/sigstore/cosign/releases/latest |
@@ -74,7 +77,13 @@ sudo dnf install ./cosign.rpm
 rm cosign.rpm
 ```
 
-Only get Cosign from the official Sigstore releases: Vela trusts it to check everything else.
+Only get Cosign from the official Sigstore releases: Vela trusts it to check everything else. Then install Vela:
+
+```sh
+sudo dnf install git curl rpm-build dnf5-plugins
+git clone https://github.com/vela-desktop/vela.git
+sh vela/packaging/vela-update --channel beta
+```
 
 <Aside title="Fedora support is new">
   The RPMs are built and test-installed in a fresh Fedora 44 container before every release, but they've had little testing on real hardware so far. Other Fedora releases, other DNF-based distributions and the immutable variants, such as Silverblue and Kinoite, aren't supported by the installer. There you can [build from source](#other-distributions).
@@ -82,43 +91,53 @@ Only get Cosign from the official Sigstore releases: Vela trusts it to check eve
 
 ## Ubuntu 26.10
 
-On Ubuntu 26.10, Vela installs as a native `vela-git` DEB, again with `vela-update`. Enable the *universe* repository first, then run:
+On Ubuntu 26.10, Vela installs as a native `vela` DEB, again with `vela-update`. Enable the *universe* repository first. The Beta needs Cosign here too; install the official DEB from Sigstore:
 
 ```sh
 sudo apt update
-sudo apt install git ca-certificates sudo
-git clone https://github.com/vela-desktop/vela.git
-sh vela/packaging/vela-update
+sudo apt install git ca-certificates curl python3 sudo
+version=$(curl -fsSL https://api.github.com/repos/sigstore/cosign/releases/latest |
+    python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"].removeprefix("v"))')
+curl -fL -o cosign.deb "https://github.com/sigstore/cosign/releases/download/v${version}/cosign_${version}_amd64.deb"
+sudo apt install ./cosign.deb
+rm cosign.deb
 ```
 
-Here `vela-update` always builds Vela on your machine: it installs the build dependencies with APT, compiles the selected commit, and installs the result as a DEB. The packages built by CI don't have signed build provenance yet, so the updater doesn't download them, not even with `--download`. The first installation and every update take a while; `--jobs` sets how many parallel jobs the build uses.
+Then install Vela:
 
-<Aside title="Ubuntu support is experimental">
+```sh
+git clone https://github.com/vela-desktop/vela.git
+sh vela/packaging/vela-update --channel beta
+```
+
+On Ubuntu, Experimental always builds Vela on your machine: `vela-update` installs the build dependencies with APT, compiles the selected commit, and installs the result as a DEB. It takes a while; `--jobs` sets how many parallel jobs the build uses.
+
+<Aside title="Ubuntu support is the newest">
   CI builds the DEB and test-installs it in a fresh Ubuntu 26.10 container, and it has been tried in a virtual machine with GPU passthrough, but real hardware hasn't been tested much yet. Other Ubuntu releases aren't supported.
 </Aside>
 
 ## Updating
 
-On Arch, Fedora and Ubuntu, run `vela-update` whenever you want the latest version:
+*Settings → System → Updates* shows whether an update is available and what's new: a Beta release's notes, or Experimental's commits. Vela checks by itself once a day, never on a metered connection, and sends a notification when there's something new. **Install now** runs `vela-update` in a terminal, where the package manager asks for your password. When it's done, sign out and back in to use the new version.
+
+From a terminal, it's the same command:
 
 ```sh
 vela-update            # update if something new is available
 vela-update --check    # only check, and list the changes
-vela-update --build    # always build locally
-vela-update --jobs 2   # build with fewer parallel jobs
 ```
 
-To try a branch or an exact commit, use `--branch` or `--commit`. They apply only to that run: the next plain `vela-update` goes back to `main`. The [installation guide](https://github.com/vela-desktop/vela/blob/main/docs/installation.md#updating-selecting-revisions-and-rollback) explains them, along with test builds and troubleshooting.
+On the Beta, `--force` reinstalls the current release, and `--tag=v0.x.y` goes back to an earlier one: a newer Beta is never replaced by an older one without it. On Experimental, `--build` always builds locally, `--jobs 2` builds with fewer parallel jobs, and `--branch` or `--commit` install a branch or an exact commit, for that run only. The [installation guide](https://github.com/vela-desktop/vela/blob/main/docs/installation.md#updating-selecting-revisions-and-rollback) explains every option, along with test builds and troubleshooting.
 
-The last three packages stay in `~/.cache/vela-update/packages/`. If an update goes wrong, reinstall the previous one. Pick one exact file, never all of them at once:
+The last three packages of each channel stay in `~/.cache/vela-update/packages/`. If an update goes wrong, reinstall the previous one. Pick one exact file, never all of them at once:
 
 ```sh
 # Arch
-sudo pacman -U ~/.cache/vela-update/packages/vela-git-<version>.pkg.tar.zst
+sudo pacman -U ~/.cache/vela-update/packages/<package>.pkg.tar.zst
 # Fedora
-sudo dnf install ~/.cache/vela-update/packages/vela-git-<version>.x86_64.rpm
+sudo dnf install ~/.cache/vela-update/packages/<package>.x86_64.rpm
 # Ubuntu
-sudo apt-get install --allow-downgrades --reinstall ~/.cache/vela-update/packages/vela-git_<version>_amd64.deb
+sudo apt-get install --allow-downgrades --reinstall ~/.cache/vela-update/packages/<package>_amd64.deb
 ```
 
 ## Other distributions

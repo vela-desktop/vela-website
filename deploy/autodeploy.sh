@@ -1,7 +1,7 @@
 #!/bin/sh
 # Publish origin/main whenever it has a commit that is not live yet, and
-# rebuild when the Vela repository's main branch or alpha releases change
-# (the What's new page and the latest build come from them, src/lib/vela.ts).
+# rebuild when the Vela repository's main branch or release tags change
+# (the What's new page and the latest Beta come from them, src/lib/vela.ts).
 # Runs from a dedicated clone on the web server, started by
 # deploy/systemd/velade-autodeploy.timer (see docs/deployment.md).
 set -eu
@@ -16,7 +16,7 @@ main() {
   target="$(git rev-parse FETCH_HEAD)"
   # The git protocol, not the API: no rate limit for a check every two minutes.
   # If GitHub can't be reached, the site keeps what it has.
-  if refs="$(git ls-remote "$VELA" refs/heads/main 'refs/tags/alpha-*')"; then
+  if refs="$(git ls-remote "$VELA" refs/heads/main 'refs/tags/v*')"; then
     vela="$(printf '%s\n' "$refs" | sha256sum | cut -c1-16)"
   else
     vela="$(cut -s -d' ' -f2 "$state" 2>/dev/null || true)"

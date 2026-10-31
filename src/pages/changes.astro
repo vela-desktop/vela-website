@@ -2,7 +2,7 @@
 // What's new: the user-facing changes on Vela's main branch, grouped by day,
 // generated at build time from the commit history (src/lib/vela.ts).
 import Page from '../layouts/Page.astro';
-import LatestBuild from '../components/LatestBuild.astro';
+import LatestBeta from '../components/LatestBeta.astro';
 import { recentChanges, type Change } from '../lib/vela';
 import { formatDate } from '../lib/posts';
 import { LINKS } from '../consts';
@@ -19,17 +19,17 @@ const days = Object.entries(
 <Page
   frontmatter={{
     title: 'What’s new',
-    description: 'The latest changes to Vela, the Linux desktop in alpha: new features, fixes and performance work, day by day, straight from the main branch.',
+    description: 'The latest changes to Vela, the Linux desktop: new features, fixes and performance work, day by day, straight from the main branch.',
     label: 'Changes',
   }}
 >
   <p>
-    Vela is in alpha, and changes every day. This page lists what changed on the main branch,
-    newest first. Every change on main gets its own prebuilt alpha package, which{' '}
-    <code>vela-update</code> installs.
+    Vela changes every day. This page lists what changed on the main branch, newest first.
+    The Experimental channel installs these changes as they land; the Beta channel gets them
+    with the next numbered release.
   </p>
 
-  <LatestBuild more="install" />
+  <LatestBeta more="install" />
 
   {
     days.length > 0 ? (

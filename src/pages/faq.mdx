@@ -3,7 +3,7 @@ layout: ../layouts/Page.astro
 title: "Questions and answers"
 description: "What Vela is, how it relates to KDE Plasma, which distributions and GPUs it runs on, and how to try it, in short answers."
 label: "FAQ"
-updated: 2026-10-26
+updated: 2026-10-31
 schema: faq
 ---
 
@@ -21,13 +21,13 @@ Because much of what makes a desktop feel modern happens underneath the theme: w
 
 ### Is it based on KDE Plasma?
 
-No. The compositor, the heart of any desktop, is Vela's own, and so are the renderer, the shell, Files and Settings. Building a whole desktop environment is a huge undertaking, so Vela borrows a few smaller pieces from KDE to lighten the load: portals, the KDE wallet, icon themes and color schemes. That's also why Qt and KDE apps look and behave as they do in Plasma, and why Chrome, Brave and VS Code keep their saved logins.
+No. The compositor, the heart of any desktop, is Vela's own, and so are the renderer, the shell, Files and Settings. Building a whole desktop environment is a huge undertaking, so Vela borrows a few smaller pieces from KDE to lighten the load: the KDE wallet, icon themes and color schemes. That's also why Qt and KDE apps look and behave as they do in Plasma, and why Chrome, Brave and VS Code keep their saved logins.
 
-Vela is moving away from those pieces one at a time. The polkit agent is already its own, and from 0.1 the KDE portal and Plasma Workspace won't be required anymore. The goal is for Vela to be fully independent, but KDE apps will stay its recommended companions for a long time.
+Vela is moving away from those pieces one at a time. The polkit agent and Bluetooth are already its own, and since 0.1 neither the KDE portal nor Plasma Workspace is required: dialogs go through the GTK portal, screenshots and screen sharing through the wlr one. A portal of Vela's own is on the roadmap for 0.3. The goal is for Vela to be fully independent, but KDE apps will stay its recommended companions for a long time.
 
 ### Is it ready for daily use?
 
-I use it every day. It's still alpha software, though: it changes quickly, and it hasn't been tested on every GPU and driver. If you try it, keep another desktop or a TTY available. The first beta, 0.1, is [on its way](/blog/leaving-alpha/), and it's all about stability rather than new features.
+I use it every day, and since 0.1 it's in beta: numbered, signed releases that pass the full GPU test suites on AMD and NVIDIA before they're published. It isn't a stable release yet, though, and it hasn't been tested on every GPU and driver. If you try it, keep another desktop or a TTY available. The stable release will be 1.0.
 
 ### Is it free?
 
@@ -37,7 +37,7 @@ Yes. Vela is free software under the [GPL‑3.0‑or‑later](https://github.com
 
 ### Which distributions are supported?
 
-Today, Arch Linux, CachyOS, EndeavourOS, Fedora 44 and Ubuntu 26.10, with a native package and an updater, `vela-update`. Fedora support is new and has had less testing, and Ubuntu support is experimental. Other distributions will be supported in the future. In the meantime, you can build and install Vela on any distribution that ships wlroots 0.20, although it isn't officially supported there yet. The [install page](/install/) covers both.
+Today, Arch Linux, CachyOS, EndeavourOS, Fedora 44 and Ubuntu 26.10, with signed Beta packages and an updater, `vela-update`. Fedora and Ubuntu support are newer and have had less testing on real hardware. Other distributions will be supported in the future. In the meantime, you can build and install Vela on any distribution that ships wlroots 0.20, although it isn't officially supported there yet. The [install page](/install/) covers both.
 
 ### Which GPUs does it work with?
 
@@ -57,7 +57,7 @@ No. Vela is a Wayland desktop, a choice it shares with every modern desktop and 
 
 ### Can I game on it?
 
-Yes. Fullscreen games can go straight to the display without passing through the compositor (direct scanout), with variable refresh rate (FreeSync and G‑Sync) and tearing support where the game asks for it. Steam and older games run through Xwayland.
+Yes. Fullscreen games can go straight to the display without passing through the compositor (direct scanout), with variable refresh rate (FreeSync and G‑Sync) and tearing support where the game asks for it. Steam and older games run through Xwayland, at the monitor's native resolution even when the screen is scaled.
 
 ### Does it support fractional scaling and multiple monitors?
 
@@ -95,7 +95,7 @@ The compositor restarts on its own and your Qt and KDE apps reconnect to it. If 
 
 ### How do I update it?
 
-Run `vela-update`. On Arch-based distributions and Fedora 44, it installs a prebuilt package when one is available and verified, and builds one otherwise; on Ubuntu 26.10, it always builds on your machine. The last three versions stay cached, so you can go back if an update causes trouble. With 0.1, Settings gets an Updates page that tells you when an update is available and installs it for you.
+From *Settings → System → Updates*: Vela checks once a day, sends a notification when a new version is out, and installs it with **Install now**. In a terminal, it's `vela-update`. On the Beta channel you get each new release, prebuilt and verified; on Experimental, the latest commit on `main`, built on your machine. The last three versions stay cached, so you can go back if an update causes trouble. The [install page](/install/#updating) has the details.
 
 ## Getting involved
 
@@ -109,4 +109,4 @@ Testing on your hardware and reporting what you find is already a big help. For 
 
 ### What's coming next?
 
-First the 0.1 beta, focused on stability, then touch, pen and an on-screen keyboard in 0.2. The [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md) has the rest, and the [journal](/blog/) follows the work as it happens.
+Fixes to the 0.1 beta as 0.1.x releases, then touch, pen, input methods and an on-screen keyboard in 0.2. The [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md) has the rest, and the [journal](/blog/) follows the work as it happens.
