@@ -9,13 +9,34 @@
 //   import maximizeMp4 from './maximize.mp4';
 //   import maximizePoster from './maximize.png';
 //   <Video webm={maximize} mp4={maximizeMp4} poster={maximizePoster} label="…" caption="…" width="wide" />
+//
+// A longer video, like a trailer, can wait for the play button instead
+// (autoplay={false}) and offer the reader other qualities to pick from:
+//
+//   <Video webm={trailer} mp4={trailerMp4} codecs="av01.0.09M.08" quality="1080p"
+//     qualities={[{ quality: '4K', webm: trailer4k, codecs: 'av01.0.13M.08', mp4: trailer4kMp4, mp4Codecs: 'hvc1.1.6.L153.B0' }]}
+//     autoplay={false} poster={trailerPoster} label="…" width="wide" />
 import { getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import { isLang, UI } from '../../lib/i18n';
+
+export interface Quality {
+  /** Its name on the button: "1080p", "4K". */
+  quality: string;
+  webm: string;
+  mp4?: string;
+  /** The WebM's codecs, when they aren't VP9 (AV1: "av01.…"), so that browsers that can't decode them skip it. */
+  codecs?: string;
+  /** The MP4's codecs, when they aren't H.264 (HEVC: "hvc1.…"), for the same reason. */
+  mp4Codecs?: string;
+}
 
 export interface Props {
   webm: string;
   /** For browsers without WebM (older Safari). */
   mp4?: string;
+  /** The WebM's codecs, when they aren't VP9 (AV1: "av01.…"), so that browsers that can't decode them skip it. */
+  codecs?: string;
   /** Shown before the clip plays and with reduced motion; also gives the clip its size. */
   poster: ImageMetadata;
   /** What the clip shows, for screen readers. */
@@ -23,10 +44,32 @@ export interface Props {
   caption?: string;
   /** content (default) · wide · full */
   width?: 'content' | 'wide' | 'full';
+  /** false: no loop, and it waits for the play button even on screen. */
+  autoplay?: boolean;
+  /** The name of the default quality, when `qualities` offers others. */
+  quality?: string;
+  /** Other qualities the reader can switch to; the default one comes first. */
+  qualities?: Quality[];
 }
 
-const { webm, mp4, poster, label, caption, width = 'content' } = Astro.props;
+const {
+  webm,
+  mp4,
+  codecs,
+  poster,
+  label,
+  caption,
+  width = 'content',
+  autoplay = true,
+  quality = 'HD',
+  qualities = [],
+} = Astro.props;
 const still = await getImage({ src: poster, format: 'webp', width: Math.min(poster.width, 1920) });
+const param = Astro.params.lang ?? '';
+const lang = isLang(param) ? param : 'en';
+const webmType = (codecs?: string) => (codecs ? `video/webm; codecs="${codecs}"` : 'video/webm');
+const mp4Type = (codecs?: string) => (codecs ? `video/mp4; codecs="${codecs}"` : 'video/mp4');
+const choices: Quality[] = qualities.length ? [{ quality, webm, mp4, codecs }, ...qualities] : [];
 ---
 
 <figure class:list={['figure', 'video', `figure--${width}`]}>
@@ -34,18 +77,35 @@ const still = await getImage({ src: poster, format: 'webp', width: Math.min(post
     class="video__clip"
     controls
     muted
-    loop
+    loop={autoplay}
     playsinline
     preload="none"
     poster={still.src}
     width={poster.width}
     height={poster.height}
     aria-label={label}
-    data-clip
+    data-clip={autoplay ? '' : undefined}
   >
-    <source src={webm} type="video/webm" />
+    <source src={webm} type={webmType(codecs)} />
     {mp4 && <source src={mp4} type="video/mp4" />}
   </video>
+  {choices.length > 0 && (
+    <div class="video__qualities" role="group" aria-label={UI[lang].videoQuality} hidden data-qualities>
+      {choices.map((choice, i) => (
+        <button
+          type="button"
+          class="video__quality"
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          data-webm={choice.webm}
+          data-webm-type={webmType(choice.codecs)}
+          data-mp4={choice.mp4}
+          data-mp4-type={choice.mp4 && mp4Type(choice.mp4Codecs)}
+        >
+          {choice.quality}
+        </button>
+      ))}
+    </div>
+  )}
   {(caption || Astro.slots.has('default')) && (
     <figcaption>
       {caption}
@@ -70,6 +130,41 @@ const still = await getImage({ src: poster, format: 'webp', width: Math.min(post
     { threshold: 0.5 },
   );
   clips.forEach((clip) => observer.observe(clip));
+
+  // Quality buttons: only the qualities this browser can play, and only if
+  // that leaves a choice. Switching keeps the position and whether it plays.
+  for (const group of document.querySelectorAll<HTMLElement>('[data-qualities]')) {
+    const video = group.closest('figure')!.querySelector('video')!;
+    const buttons = [...group.querySelectorAll<HTMLButtonElement>('button')];
+    const playable = buttons.filter(
+      ({ dataset }) => video.canPlayType(dataset.webmType!) !== '' || (dataset.mp4 && video.canPlayType(dataset.mp4Type!) !== ''),
+    );
+    buttons.filter((button) => !playable.includes(button)).forEach((button) => button.remove());
+    if (playable.length < 2) continue;
+    group.hidden = false;
+
+    for (const button of playable) {
+      button.addEventListener('click', () => {
+        if (button.getAttribute('aria-pressed') === 'true') return;
+        const { currentTime, paused } = video;
+        const sources = [Object.assign(document.createElement('source'), { src: button.dataset.webm, type: button.dataset.webmType })];
+        if (button.dataset.mp4) sources.push(Object.assign(document.createElement('source'), { src: button.dataset.mp4, type: button.dataset.mp4Type }));
+        video.replaceChildren(...sources);
+        video.load();
+        if (currentTime > 0 || !paused) {
+          video.addEventListener(
+            'loadedmetadata',
+            () => {
+              video.currentTime = currentTime;
+              if (!paused) video.play().catch(() => {});
+            },
+            { once: true },
+          );
+        }
+        playable.forEach((other) => other.setAttribute('aria-pressed', String(other === button)));
+      });
+    }
+  }
 </script>
 
 <style>
@@ -83,5 +178,52 @@ const still = await getImage({ src: poster, format: 'webp', width: Math.min(post
 
   .figure--full .video__clip {
     border-radius: 0;
+  }
+
+  .video__qualities {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3xs);
+    margin-top: var(--space-2xs);
+  }
+
+  .figure--full .video__qualities {
+    padding-inline: var(--gutter);
+  }
+
+  .video__qualities[hidden] {
+    display: none;
+  }
+
+  .video__quality {
+    padding: var(--space-3xs) var(--space-xs);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    line-height: 1.4;
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .video__quality:hover {
+    border-color: var(--line-bright);
+    color: var(--text);
+  }
+
+  .video__quality[aria-pressed='true'] {
+    border-color: transparent;
+    background: var(--text);
+    color: var(--ink-1);
+  }
+
+  .video__quality:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 </style>

@@ -44,6 +44,8 @@ export const UI = {
     readIn: 'Read in English',
     /** Says the entry was written in English, on a translation. */
     translatedFrom: '',
+    /** The group of quality buttons under a video, for screen readers. */
+    videoQuality: 'Video quality',
   },
   it: {
     skipLink: 'Vai al contenuto',
@@ -62,5 +64,6 @@ export const UI = {
     allEntries: 'Tutti gli articoli del Journal',
     readIn: 'Leggi in italiano',
     translatedFrom: 'Tradotto dall’inglese.',
+    videoQuality: 'Qualità del video',
   },
 } satisfies Record<Lang, Record<string, unknown>>;
