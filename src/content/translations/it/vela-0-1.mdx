@@ -1,0 +1,89 @@
+---
+title: "Vela 0.1 è uscita: la prima beta"
+seoTitle: "Vela 0.1, la prima beta: aggiornamenti da Settings, Bluetooth nativo e pacchetti firmati"
+description: "Vela 0.1 è la prima beta: aggiornamenti da Settings, Bluetooth nativo, app X11 a risoluzione nativa e pacchetti firmati per Arch, Fedora e Ubuntu."
+pubDate: 2026-10-31T21:00:00+01:00
+draft: false
+---
+
+import Aside from '../../../components/mdx/Aside.astro';
+import Video from '../../../components/mdx/Video.astro';
+import trailer from '../../../assets/videos/vela-0-1/trailer-1080p.webm';
+import trailerMp4 from '../../../assets/videos/vela-0-1/trailer-1080p.mp4';
+import trailer4k from '../../../assets/videos/vela-0-1/trailer-2160p.webm';
+import trailer4kMp4 from '../../../assets/videos/vela-0-1/trailer-2160p.mp4';
+import trailerPoster from '../../../assets/videos/vela-0-1/trailer.webp';
+
+Sono davvero felice di annunciarlo: **Vela 0.1, la prima beta, è uscita!** 🎉 È stato faticoso, a volte frustrante, ma maledettamente divertente.
+
+Con la 0.1 Vela smette di essere un esperimento da provare la sera e diventa un desktop da usare tutti i giorni. Su un PC fisso, oggi, la uso e la consiglio come desktop principale. Resta una beta, quindi i bug ci sono e ce ne saranno, ma le fondamenta sono solide e da qui in poi si lavora soprattutto di rifinitura.
+
+<Video webm={trailer} mp4={trailerMp4} codecs="av01.0.09M.08" quality="1080p"
+  qualities={[{ quality: '4K', webm: trailer4k, codecs: 'av01.0.13M.08', mp4: trailer4kMp4, mp4Codecs: 'hvc1.1.6.L153.B0' }]}
+  autoplay={false} poster={trailerPoster} width="wide"
+  label="Il trailer di Vela 0.1: il desktop, Settings e Files, gli snap layout, i colori d'accento e il cartello finale della release."
+  caption="Il trailer di Vela 0.1, registrato dal vivo su Vela." />
+
+## Cosa c'è in Vela 0.1
+
+La 0.1 non è una lista di novità, ma la prima volta che tutto il desktop arriva insieme, con un numero di versione:
+
+- **Le finestre**: snap layout e Snap Assist, gruppi di snap, Visualizzazione attività con i desktop virtuali, Alt+Tab con anteprime dal vivo, angoli arrotondati e ombre disegnati dal compositor.
+- **La shell**: barra delle applicazioni con jump list e anteprime al passaggio del mouse, launcher, impostazioni rapide, centro notifiche, cronologia degli appunti, strumento di cattura, icone sul desktop, tema chiaro e scuro.
+- **Files e Settings**, scritte apposta per Vela: un file manager con schede, riquadro di anteprima, copie sicure, archivi e unità, e un'app di impostazioni che copre schermi (con ripristino automatico se qualcosa va storto), audio, Bluetooth, energia, input, personalizzazione e accessibilità.
+- **Grafica e giochi**: il [renderer Vulkan 1.4](/blog/own-renderer/) di Vela, animazioni agganciate ai veri vblank, sfocatura dal vivo, direct scanout, VRR, controllo del tearing ed explicit sync.
+- **Una sessione affidabile**: se il compositor va in crash riparte e le app si ricollegano, lo schermo torna bloccato se lo era, se si perde la GPU il desktop non resta bloccato, e le richieste di amministratore oscurano tutto il desktop.
+- **Inglese e italiano**, da cambiare al volo.
+
+## Le novità dall'ultima alpha
+
+Dopo il feature freeze il lavoro è andato soprattutto in correzioni, ma sono arrivate anche alcune cose che fanno la differenza:
+
+- **La pagina Aggiornamenti in Settings.** Mostra la versione installata e quella più recente, le novità e il canale (Beta o Sperimentale). Vela controlla da sola una volta al giorno, mai su una connessione a consumo, e manda una notifica quando c'è qualcosa di nuovo.
+- **Abbinamento Bluetooth nativo.** Vela ha il suo servizio Bluetooth, e PIN, passkey e conferme arrivano dalla shell. Per abbinare un dispositivo non servono più BlueDevil o blueman.
+- **App X11 a risoluzione nativa.** Le app e i giochi X11 girano 1:1 con i pixel del monitor anche con il ridimensionamento frazionario, e i giochi a schermo intero vanno in direct scanout.
+- **Cattura dello schermo più veloce su NVIDIA.** La lettura del frame non blocca più la presentazione.
+- **Recupero dalla perdita della GPU.** Se il driver Vulkan perde il dispositivo, il compositor se ne accorge, si ferma e riparte invece di restare appeso.
+- **Una sfocatura più nitida** dello sfondo nella schermata di blocco.
+- **Sempre meno KDE.** Plasma Workspace e il portale KDE non sono più necessari. Le app KDE restano benvenute, e Konsole resta il terminale predefinito.
+- **Release numerate e firmate**, sui due canali di cui parlo più sotto.
+
+## PC fisso sì, portatile con un piano B
+
+Il mio PC principale ha una Radeon RX 9070 XT e ci uso Vela tutti i giorni. Le suite di test sulla GPU girano anche su una NVIDIA RTX 4070 Laptop. Su un PC fisso con una GPU Vulkan 1.4 potete usare Vela come sessione principale.
+
+Sui portatili sono meno tranquillo: GPU ibride, sospensione e ripresa e retroilluminazione hanno avuto molti meno test, e i touchscreen arriveranno solo con la 0.2. Usatela pure, ma tenete installato un altro desktop da scegliere al login, per i giorni in cui qualcosa non va.
+
+Il supporto a Ubuntu 26.10 è il più giovane: i pacchetti passano i test di installazione, ma sull'hardware vero è stato provato poco.
+
+<Aside title="Cosa serve">
+  Arch Linux e derivate (CachyOS, EndeavourOS), Fedora 44 o Ubuntu 26.10, su x86_64. Una GPU con Vulkan 1.4: AMD o Intel con Mesa 25.0 o più recente, NVIDIA con il driver proprietario 570 o più recente, oppure NVK. PipeWire e WirePlumber per l'audio. La [copertura hardware](https://github.com/vela-desktop/vela/blob/main/docs/hardware.md) dice esattamente cosa è stato verificato e dove.
+</Aside>
+
+## Come installarla
+
+Il canale Beta installa la release numerata più recente: un pacchetto nativo già compilato e firmato, che `vela-update` verifica con Cosign prima di installarlo. Se la verifica fallisce, non installa niente. Installate Cosign (i passaggi per ogni distribuzione sono nella [guida all'installazione](/install/)), poi:
+
+```sh
+git clone https://github.com/vela-desktop/vela.git
+sh vela/packaging/vela-update --channel beta
+```
+
+Poi scegliete Vela nella schermata di login. Da lì in avanti gli aggiornamenti arrivano da *Settings → Sistema → Aggiornamenti*.
+
+Se usate già il pacchetto Sperimentale (`vela-git`), potete passare alla Beta dalla stessa pagina oppure con `vela-update --channel beta`. Le vostre impostazioni restano.
+
+## Cosa vuol dire "beta"
+
+Le alpha erano una build per ogni commit su `main`. Ora ci sono due canali:
+
+- **Beta** (`vela`): release numerate `v0.x.y`, compilate da un tag protetto e firmate. È quello che consiglio.
+- **Sperimentale** (`vela-git`): segue l'ultimo commit su `main` e si compila sul vostro computer. Riceve ogni novità appena arriva, e ogni regressione insieme.
+
+La prossima tappa è la 0.2, dedicata al tocco e alla penna, a una tastiera su schermo di Vela e ai metodi di input (fcitx5, IBus). Il resto è nella [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md).
+
+## Se qualcosa non va
+
+Lanciate `vela-report`: prepara un file ZIP con la descrizione del problema e le informazioni diagnostiche che scegliete voi, vi mostra ogni file prima di esportarlo e non carica niente da nessuna parte. Poi [aprite una issue](https://github.com/vela-desktop/vela/issues) e allegatelo. Mi servono soprattutto le segnalazioni da hardware che non ho: GPU Intel, portatili, configurazioni con più monitor.
+
+Vela è software libero, con licenza GPL-3.0-or-later. Provatela e fatemi sapere com'è andata!

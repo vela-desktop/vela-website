@@ -1,0 +1,90 @@
+---
+title: "Vela 0.1 is out: the first beta"
+seoTitle: "Vela 0.1, the first beta: updates from Settings, native Bluetooth and signed packages"
+description: "Vela 0.1 is the first beta: updates from Settings, native Bluetooth, X11 apps at native resolution, and signed packages for Arch, Fedora and Ubuntu."
+pubDate: 2026-10-31T21:00:00+01:00
+draft: false
+tags: ["Release"]
+---
+
+import Aside from '../../components/mdx/Aside.astro';
+import Video from '../../components/mdx/Video.astro';
+import trailer from '../../assets/videos/vela-0-1/trailer-1080p.webm';
+import trailerMp4 from '../../assets/videos/vela-0-1/trailer-1080p.mp4';
+import trailer4k from '../../assets/videos/vela-0-1/trailer-2160p.webm';
+import trailer4kMp4 from '../../assets/videos/vela-0-1/trailer-2160p.mp4';
+import trailerPoster from '../../assets/videos/vela-0-1/trailer.webp';
+
+I'm really happy to say it: **Vela 0.1, the first beta, is out!** 🎉 It's been hard work, sometimes frustrating, but damn good fun.
+
+With 0.1, Vela stops being something to try out in the evening and becomes a desktop to use every day. On a desktop PC, it's my daily driver, and I recommend it as yours. It's still a beta, so there are bugs and there will be more, but the foundations are solid, and from here on the work is mostly polish.
+
+<Video webm={trailer} mp4={trailerMp4} codecs="av01.0.09M.08" quality="1080p"
+  qualities={[{ quality: '4K', webm: trailer4k, codecs: 'av01.0.13M.08', mp4: trailer4kMp4, mp4Codecs: 'hvc1.1.6.L153.B0' }]}
+  autoplay={false} poster={trailerPoster} width="wide"
+  label="The Vela 0.1 trailer: the desktop, Settings and Files, snap layouts, accent colors, and the release's closing card."
+  caption="The Vela 0.1 trailer, recorded live on Vela." />
+
+## What's in Vela 0.1
+
+0.1 isn't about a list of new features. It's the first time the whole desktop comes together under a version number:
+
+- **Windows**: snap layouts and Snap Assist, snap groups, Task View with virtual desktops, Alt+Tab with live previews, rounded corners and shadows drawn by the compositor.
+- **The shell**: a taskbar with jump lists and hover previews, a launcher, quick settings, a notification center, clipboard history, a snipping tool, desktop icons, light and dark modes.
+- **Files and Settings**, built for Vela: a file manager with tabs, a preview pane, safe copies, archives and drives, and a settings app that covers displays (with an automatic revert if something goes wrong), sound, Bluetooth, power, input, personalization and accessibility.
+- **Graphics and gaming**: Vela's own [Vulkan 1.4 renderer](/blog/own-renderer/), animations tied to real vblanks, live blur, direct scanout, VRR, tearing control and explicit sync.
+- **A session you can rely on**: if the compositor crashes it restarts and apps reconnect, the screen comes back locked if it was locked, a lost GPU no longer freezes the desktop, and administrator prompts dim the whole desktop.
+- **English and Italian**, switchable on the fly.
+
+## New since the last alpha
+
+After the feature freeze, most of the work went into fixes, but a few things arrived that make a real difference:
+
+- **The Updates page in Settings.** It shows the installed and newest versions, what's new, and the channel (Beta or Experimental). Vela checks on its own once a day, never on a metered connection, and sends a notification when there's something new.
+- **Native Bluetooth pairing.** Vela has its own Bluetooth service, and PIN, passkey and confirmation prompts come from the shell. Pairing a device no longer needs BlueDevil or blueman.
+- **X11 apps at native resolution.** X11 apps and games run 1:1 in the monitor's pixels, even at fractional scales, and fullscreen games go through direct scanout.
+- **Faster screen capture on NVIDIA.** Reading the frame back no longer blocks presentation.
+- **Recovery from GPU loss.** If the Vulkan driver loses the device, the compositor notices, stops and restarts instead of hanging.
+- **A sharper blurred wallpaper** on the lock screen.
+- **Less and less KDE.** Plasma Workspace and the KDE portal are no longer needed. KDE apps remain welcome, and Konsole remains the default terminal.
+- **Numbered, signed releases**, on the two channels I talk about below.
+
+## Desktops yes, laptops with a plan B
+
+My main PC has a Radeon RX 9070 XT, and I use Vela on it every day. The GPU test suites also run on an NVIDIA RTX 4070 Laptop. On a desktop PC with a Vulkan 1.4 GPU, you can use Vela as your main session.
+
+On laptops I'm less confident: hybrid GPUs, suspend and resume, and backlight have had far less testing, and touchscreens only arrive with 0.2. Go ahead and use it, but keep another desktop installed that you can pick at the login screen, for the days when something goes wrong.
+
+Ubuntu 26.10 support is the newest: the packages pass the installation tests, but they haven't seen much real hardware yet.
+
+<Aside title="What you need">
+  Arch Linux and derivatives (CachyOS, EndeavourOS), Fedora 44 or Ubuntu 26.10, on x86_64. A GPU with Vulkan 1.4: AMD or Intel with Mesa 25.0 or newer, NVIDIA with the proprietary driver 570 or newer, or NVK. PipeWire and WirePlumber for sound. The [hardware coverage](https://github.com/vela-desktop/vela/blob/main/docs/hardware.md) page says exactly what has been verified and where.
+</Aside>
+
+## How to install it
+
+The Beta channel installs the newest numbered release: a prebuilt, signed native package, which `vela-update` verifies with Cosign before installing it. If verification fails, it installs nothing. Install Cosign (the steps for each distribution are in the [installation guide](/install/)), then:
+
+```sh
+git clone https://github.com/vela-desktop/vela.git
+sh vela/packaging/vela-update --channel beta
+```
+
+Then pick Vela at the login screen. From then on, updates arrive from *Settings → System → Updates*.
+
+If you already use the Experimental package (`vela-git`), you can switch to the Beta from the same page, or with `vela-update --channel beta`. Your settings are kept.
+
+## What "beta" means
+
+The alphas were a build for every commit on `main`. Now there are two channels:
+
+- **Beta** (`vela`): numbered `v0.x.y` releases, built from a protected tag and signed. It's the one I recommend.
+- **Experimental** (`vela-git`): follows the latest commit on `main` and is built on your computer. It gets every change as soon as it lands, and every regression along with it.
+
+Next up is 0.2, which focuses on touch and pen input, Vela's own on-screen keyboard, and input methods (fcitx5, IBus). The rest is in the [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md).
+
+## If something goes wrong
+
+Run `vela-report`: it builds a ZIP file with your description of the problem and the diagnostics you choose, shows you every file before exporting it, and uploads nothing anywhere. Then [open an issue](https://github.com/vela-desktop/vela/issues) and attach it. I especially need reports from hardware I don't have: Intel GPUs, laptops, multi-monitor setups.
+
+Vela is free software, licensed under GPL-3.0-or-later. Try it and let me know how it went!
