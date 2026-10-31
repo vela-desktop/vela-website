@@ -44,8 +44,15 @@ export const UI = {
     readIn: 'Read in English',
     /** Says the entry was written in English, on a translation. */
     translatedFrom: '',
-    /** The group of quality buttons under a video, for screen readers. */
-    videoQuality: 'Video quality',
+    /** The controls of a journal video's player, for screen readers. */
+    player: {
+      play: 'Play',
+      pause: 'Pause',
+      seek: 'Seek',
+      quality: 'Quality',
+      fullscreen: 'Full screen',
+      exitFullscreen: 'Exit full screen',
+    },
   },
   it: {
     skipLink: 'Vai al contenuto',
@@ -64,6 +71,13 @@ export const UI = {
     allEntries: 'Tutti gli articoli del Journal',
     readIn: 'Leggi in italiano',
     translatedFrom: 'Tradotto dall’inglese.',
-    videoQuality: 'Qualità del video',
+    player: {
+      play: 'Riproduci',
+      pause: 'Pausa',
+      seek: 'Posizione',
+      quality: 'Qualità',
+      fullscreen: 'Schermo intero',
+      exitFullscreen: 'Esci da schermo intero',
+    },
   },
 } satisfies Record<Lang, Record<string, unknown>>;

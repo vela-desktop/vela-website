@@ -1,8 +1,13 @@
 ---
-// A short muted clip with an optional caption, for MDX journal entries: a
-// before/after recording, a demo. It plays in a loop while it's on screen,
-// unless the reader prefers reduced motion; then it waits on its poster for
-// the play button.
+// A muted video with an optional caption, for MDX journal entries: a short
+// before/after recording, a demo, a trailer. It plays in Vela's own player:
+// a big play button, then a bar with play/pause, time, seeking, quality and
+// full screen, which fades out while the video plays. Without JavaScript the
+// browser's own controls take over. Its styles live in src/styles/prose.css,
+// since the CSP doesn't let this component's inline <style> through.
+//
+// By default it plays in a loop while it's on screen, unless the reader
+// prefers reduced motion; then it waits on its poster for the play button.
 //
 //   import Video from '../../components/mdx/Video.astro';
 //   import maximize from './maximize.webm';
@@ -21,7 +26,7 @@ import type { ImageMetadata } from 'astro';
 import { isLang, UI } from '../../lib/i18n';
 
 export interface Quality {
-  /** Its name on the button: "1080p", "4K". */
+  /** Its name in the quality menu: "1080p", "4K". */
   quality: string;
   webm: string;
   mp4?: string;
@@ -37,9 +42,9 @@ export interface Props {
   mp4?: string;
   /** The WebM's codecs, when they aren't VP9 (AV1: "av01.…"), so that browsers that can't decode them skip it. */
   codecs?: string;
-  /** Shown before the clip plays and with reduced motion; also gives the clip its size. */
+  /** Shown before the video plays and with reduced motion; also gives the video its size. */
   poster: ImageMetadata;
-  /** What the clip shows, for screen readers. */
+  /** What the video shows, for screen readers. */
   label: string;
   caption?: string;
   /** content (default) · wide · full */
@@ -66,46 +71,81 @@ const {
 } = Astro.props;
 const still = await getImage({ src: poster, format: 'webp', width: Math.min(poster.width, 1920) });
 const param = Astro.params.lang ?? '';
-const lang = isLang(param) ? param : 'en';
+const words = UI[isLang(param) ? param : 'en'].player;
 const webmType = (codecs?: string) => (codecs ? `video/webm; codecs="${codecs}"` : 'video/webm');
 const mp4Type = (codecs?: string) => (codecs ? `video/mp4; codecs="${codecs}"` : 'video/mp4');
 const choices: Quality[] = qualities.length ? [{ quality, webm, mp4, codecs }, ...qualities] : [];
 ---
 
 <figure class:list={['figure', 'video', `figure--${width}`]}>
-  <video
-    class="video__clip"
-    controls
-    muted
-    loop={autoplay}
-    playsinline
-    preload="none"
-    poster={still.src}
-    width={poster.width}
-    height={poster.height}
-    aria-label={label}
-    data-clip={autoplay ? '' : undefined}
+  <div
+    class="player"
+    data-player
+    data-play={words.play}
+    data-pause={words.pause}
+    data-fullscreen={words.fullscreen}
+    data-exit-fullscreen={words.exitFullscreen}
   >
-    <source src={webm} type={webmType(codecs)} />
-    {mp4 && <source src={mp4} type="video/mp4" />}
-  </video>
-  {choices.length > 0 && (
-    <div class="video__qualities" role="group" aria-label={UI[lang].videoQuality} hidden data-qualities>
-      {choices.map((choice, i) => (
-        <button
-          type="button"
-          class="video__quality"
-          aria-pressed={i === 0 ? 'true' : 'false'}
-          data-webm={choice.webm}
-          data-webm-type={webmType(choice.codecs)}
-          data-mp4={choice.mp4}
-          data-mp4-type={choice.mp4 && mp4Type(choice.mp4Codecs)}
-        >
-          {choice.quality}
-        </button>
-      ))}
+    <video
+      class="player__video"
+      controls
+      muted
+      loop={autoplay}
+      playsinline
+      preload={autoplay ? 'none' : 'metadata'}
+      poster={still.src}
+      width={poster.width}
+      height={poster.height}
+      aria-label={label}
+      data-clip={autoplay ? '' : undefined}
+    >
+      <source src={webm} type={webmType(codecs)} />
+      {mp4 && <source src={mp4} type="video/mp4" />}
+    </video>
+
+    <button type="button" class="player__big" aria-label={words.play} hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" /></svg>
+    </button>
+    <span class="player__spinner" aria-hidden="true"></span>
+
+    <div class="player__bar" hidden>
+      <button type="button" class="player__button" data-action="play" aria-label={words.play}>
+        <svg class="player__icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" /></svg>
+        <svg class="player__icon-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+      </button>
+      <span class="player__time"><span data-current>0:00</span><span class="player__total"> / <span data-duration>0:00</span></span></span>
+      <input class="player__seek" type="range" min="0" max="1000" step="1" value="0" aria-label={words.seek} />
+      {choices.length > 0 && (
+        <div class="player__quality" data-qualities>
+          <button type="button" class="player__quality-button" aria-haspopup="menu" aria-expanded="false" aria-label={words.quality}>
+            <span data-quality-label>{choices[0].quality}</span>
+          </button>
+          <div class="player__menu" role="menu" aria-label={words.quality} hidden>
+            {choices.map((choice, i) => (
+              <button
+                type="button"
+                class="player__menu-item"
+                role="menuitemradio"
+                aria-checked={i === 0 ? 'true' : 'false'}
+                data-quality={choice.quality}
+                data-webm={choice.webm}
+                data-webm-type={webmType(choice.codecs)}
+                data-mp4={choice.mp4}
+                data-mp4-type={choice.mp4 && mp4Type(choice.mp4Codecs)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+                {choice.quality}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <button type="button" class="player__button" data-action="fullscreen" aria-label={words.fullscreen}>
+        <svg class="player__icon-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" /></svg>
+        <svg class="player__icon-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v4a1 1 0 0 1-1 1H4M20 9h-4a1 1 0 0 1-1-1V4M15 20v-4a1 1 0 0 1 1-1h4M4 15h4a1 1 0 0 1 1 1v4" /></svg>
+      </button>
     </div>
-  )}
+  </div>
   {(caption || Astro.slots.has('default')) && (
     <figcaption>
       {caption}
@@ -115,10 +155,9 @@ const choices: Quality[] = qualities.length ? [{ quality, webm, mp4, codecs }, .
 </figure>
 
 <script>
-  // Play each clip while at least half of it is on screen, and only if the
-  // reader hasn't asked for less motion. The controls stay, to pause it.
+  // Play each looping clip while at least half of it is on screen, and only
+  // if the reader hasn't asked for less motion.
   const still = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const clips = document.querySelectorAll<HTMLVideoElement>('video[data-clip]');
   const observer = new IntersectionObserver(
     (entries) => {
       for (const { target, isIntersecting } of entries) {
@@ -129,101 +168,205 @@ const choices: Quality[] = qualities.length ? [{ quality, webm, mp4, codecs }, .
     },
     { threshold: 0.5 },
   );
-  clips.forEach((clip) => observer.observe(clip));
+  document.querySelectorAll<HTMLVideoElement>('video[data-clip]').forEach((clip) => observer.observe(clip));
 
-  // Quality buttons: only the qualities this browser can play, and only if
-  // that leaves a choice. Switching keeps the position and whether it plays.
-  for (const group of document.querySelectorAll<HTMLElement>('[data-qualities]')) {
-    const video = group.closest('figure')!.querySelector('video')!;
-    const buttons = [...group.querySelectorAll<HTMLButtonElement>('button')];
-    const playable = buttons.filter(
-      ({ dataset }) => video.canPlayType(dataset.webmType!) !== '' || (dataset.mp4 && video.canPlayType(dataset.mp4Type!) !== ''),
-    );
-    buttons.filter((button) => !playable.includes(button)).forEach((button) => button.remove());
-    if (playable.length < 2) continue;
-    group.hidden = false;
+  type Fullscreen = Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => void };
+  const doc = document as Fullscreen;
+  const fullscreenElement = () => doc.fullscreenElement ?? doc.webkitFullscreenElement ?? null;
+  const time = (seconds: number) => {
+    if (!Number.isFinite(seconds)) return '0:00';
+    const s = Math.floor(seconds);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  };
 
-    for (const button of playable) {
-      button.addEventListener('click', () => {
-        if (button.getAttribute('aria-pressed') === 'true') return;
-        const { currentTime, paused } = video;
-        const sources = [Object.assign(document.createElement('source'), { src: button.dataset.webm, type: button.dataset.webmType })];
-        if (button.dataset.mp4) sources.push(Object.assign(document.createElement('source'), { src: button.dataset.mp4, type: button.dataset.mp4Type }));
-        video.replaceChildren(...sources);
-        video.load();
-        if (currentTime > 0 || !paused) {
-          video.addEventListener(
-            'loadedmetadata',
-            () => {
-              video.currentTime = currentTime;
-              if (!paused) video.play().catch(() => {});
-            },
-            { once: true },
-          );
+  for (const player of document.querySelectorAll<HTMLElement>('[data-player]')) {
+    const video = player.querySelector('video')!;
+    const bar = player.querySelector<HTMLElement>('.player__bar')!;
+    const big = player.querySelector<HTMLButtonElement>('.player__big')!;
+    const playButton = player.querySelector<HTMLButtonElement>('[data-action="play"]')!;
+    const fullscreenButton = player.querySelector<HTMLButtonElement>('[data-action="fullscreen"]')!;
+    const seek = player.querySelector<HTMLInputElement>('.player__seek')!;
+    const current = player.querySelector<HTMLElement>('[data-current]')!;
+    const total = player.querySelector<HTMLElement>('[data-duration]')!;
+    const words = player.dataset;
+
+    // Take over from the browser's controls.
+    video.controls = false;
+    bar.hidden = false;
+    big.hidden = false;
+    player.classList.add('is-ready');
+
+    const toggle = () => {
+      if (video.paused || video.ended) video.play().catch(() => {});
+      else video.pause();
+    };
+
+    // The bar fades out after a while of playing untouched, and comes back
+    // with the pointer or the keyboard.
+    let idle = 0;
+    const wake = () => {
+      player.classList.remove('is-idle');
+      window.clearTimeout(idle);
+      idle = window.setTimeout(() => {
+        const busy = bar.matches(':hover') || !!player.querySelector(':focus-visible') || !menu?.hidden;
+        if (!video.paused && !busy) player.classList.add('is-idle');
+      }, 2500);
+    };
+
+    const sync = () => {
+      const playing = !video.paused && !video.ended;
+      player.classList.toggle('is-playing', playing);
+      player.classList.toggle('is-ended', video.ended);
+      playButton.setAttribute('aria-label', playing ? words.pause! : words.play!);
+      if (!playing) player.classList.remove('is-idle', 'is-waiting');
+    };
+
+    let dragging = false;
+    const progress = () => {
+      const { duration, currentTime, buffered } = video;
+      const known = Number.isFinite(duration) && duration > 0;
+      if (!dragging && known) seek.value = String(Math.round((currentTime / duration) * 1000));
+      let loaded = 0;
+      for (let i = 0; i < buffered.length; i++) {
+        if (buffered.start(i) <= currentTime) loaded = Math.max(loaded, buffered.end(i));
+      }
+      seek.style.setProperty('--progress', `${Number(seek.value) / 10}%`);
+      seek.style.setProperty('--buffered', known ? `${(loaded / duration) * 100}%` : '0%');
+      current.textContent = time(dragging && known ? (Number(seek.value) / 1000) * duration : currentTime);
+      if (known) total.textContent = time(duration);
+    };
+
+    video.addEventListener('play', () => {
+      player.classList.add('is-started');
+      sync();
+      // A looping clip that starts on its own keeps its picture clear.
+      if (video.loop && !player.matches(':hover')) player.classList.add('is-idle');
+      else wake();
+    });
+    video.addEventListener('pause', sync);
+    video.addEventListener('ended', sync);
+    video.addEventListener('waiting', () => player.classList.add('is-waiting'));
+    video.addEventListener('playing', () => player.classList.remove('is-waiting'));
+    for (const event of ['timeupdate', 'progress', 'durationchange', 'loadedmetadata', 'seeked']) {
+      video.addEventListener(event, progress);
+    }
+
+    // A click on the picture plays or pauses; a tap on a faded bar only
+    // brings it back. A double click goes full screen.
+    let pointer = 'mouse';
+    player.addEventListener('pointerdown', (event) => (pointer = event.pointerType));
+    video.addEventListener('click', () => {
+      const faded = player.classList.contains('is-idle');
+      wake();
+      if (pointer === 'mouse' || !faded) toggle();
+    });
+    video.addEventListener('dblclick', () => fullscreenButton.click());
+    big.addEventListener('click', toggle);
+    playButton.addEventListener('click', toggle);
+    player.addEventListener('pointermove', wake);
+    player.addEventListener('pointerleave', () => {
+      if (!video.paused && menu?.hidden !== false) player.classList.add('is-idle');
+    });
+
+    seek.addEventListener('input', () => {
+      dragging = true;
+      progress();
+    });
+    seek.addEventListener('change', () => {
+      dragging = false;
+      if (Number.isFinite(video.duration)) video.currentTime = (Number(seek.value) / 1000) * video.duration;
+    });
+
+    fullscreenButton.addEventListener('click', () => {
+      const target = player as HTMLElement & { webkitRequestFullscreen?: () => void };
+      const ios = video as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
+      if (fullscreenElement()) (doc.exitFullscreen ?? doc.webkitExitFullscreen)?.call(doc);
+      else if (target.requestFullscreen) target.requestFullscreen().catch(() => {});
+      else if (target.webkitRequestFullscreen) target.webkitRequestFullscreen();
+      else ios.webkitEnterFullscreen?.();
+    });
+    const onFullscreen = () => {
+      const full = fullscreenElement() === player;
+      player.classList.toggle('is-fullscreen', full);
+      fullscreenButton.setAttribute('aria-label', full ? words.exitFullscreen! : words.fullscreen!);
+    };
+    document.addEventListener('fullscreenchange', onFullscreen);
+    document.addEventListener('webkitfullscreenchange', onFullscreen);
+
+    // Keyboard: Space or K plays and pauses, F goes full screen, the arrows
+    // move five seconds, wherever the focus is inside the player.
+    player.addEventListener('keydown', (event) => {
+      const target = event.target as HTMLElement;
+      const control = target.closest('button, input');
+      wake();
+      if ((event.key === ' ' && !control) || event.key === 'k') toggle();
+      else if (event.key === 'f') fullscreenButton.click();
+      else if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && target !== seek && !menu?.contains(target)) {
+        video.currentTime = Math.max(0, video.currentTime + (event.key === 'ArrowLeft' ? -5 : 5));
+      } else return;
+      event.preventDefault();
+    });
+
+    // Quality menu: only the qualities this browser can play, and only if
+    // that leaves a choice. Switching keeps the position and whether it plays.
+    const box = player.querySelector<HTMLElement>('[data-qualities]');
+    const menu = box?.querySelector<HTMLElement>('.player__menu');
+    if (box && menu) {
+      const opener = box.querySelector<HTMLButtonElement>('.player__quality-button')!;
+      const name = box.querySelector<HTMLElement>('[data-quality-label]')!;
+      const items = [...menu.querySelectorAll<HTMLButtonElement>('.player__menu-item')];
+      const playable = items.filter(
+        ({ dataset }) => video.canPlayType(dataset.webmType!) !== '' || (!!dataset.mp4 && video.canPlayType(dataset.mp4Type!) !== ''),
+      );
+      items.filter((item) => !playable.includes(item)).forEach((item) => item.remove());
+
+      if (playable.length < 2) box.remove();
+      else {
+        const open = (show: boolean) => {
+          menu.hidden = !show;
+          opener.setAttribute('aria-expanded', String(show));
+          if (show) (playable.find((item) => item.getAttribute('aria-checked') === 'true') ?? playable[0]).focus();
+        };
+        opener.addEventListener('click', () => open(!!menu.hidden));
+        document.addEventListener('pointerdown', (event) => {
+          if (!menu.hidden && !box.contains(event.target as Node)) open(false);
+        });
+        menu.addEventListener('keydown', (event) => {
+          const at = playable.indexOf(document.activeElement as HTMLButtonElement);
+          if (event.key === 'Escape') {
+            open(false);
+            opener.focus();
+          } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            playable[(at + (event.key === 'ArrowDown' ? 1 : -1) + playable.length) % playable.length].focus();
+          } else return;
+          event.preventDefault();
+          event.stopPropagation();
+        });
+
+        for (const item of playable) {
+          item.addEventListener('click', () => {
+            open(false);
+            opener.focus();
+            if (item.getAttribute('aria-checked') === 'true') return;
+            const { currentTime, paused } = video;
+            const source = (src: string, type: string) => Object.assign(document.createElement('source'), { src, type });
+            const sources = [source(item.dataset.webm!, item.dataset.webmType!)];
+            if (item.dataset.mp4) sources.push(source(item.dataset.mp4, item.dataset.mp4Type!));
+            video.replaceChildren(...sources);
+            video.load();
+            video.addEventListener(
+              'loadedmetadata',
+              () => {
+                video.currentTime = currentTime;
+                if (!paused) video.play().catch(() => {});
+              },
+              { once: true },
+            );
+            playable.forEach((other) => other.setAttribute('aria-checked', String(other === item)));
+            name.textContent = item.dataset.quality!;
+          });
         }
-        playable.forEach((other) => other.setAttribute('aria-pressed', String(other === button)));
-      });
+      }
     }
   }
 </script>
-
-<style>
-  .video__clip {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: var(--radius-m);
-    background: var(--line);
-  }
-
-  .figure--full .video__clip {
-    border-radius: 0;
-  }
-
-  .video__qualities {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--space-3xs);
-    margin-top: var(--space-2xs);
-  }
-
-  .figure--full .video__qualities {
-    padding-inline: var(--gutter);
-  }
-
-  .video__qualities[hidden] {
-    display: none;
-  }
-
-  .video__quality {
-    padding: var(--space-3xs) var(--space-xs);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--text-muted);
-    font-family: var(--font-body);
-    font-size: var(--step--1);
-    line-height: 1.4;
-    cursor: pointer;
-    transition:
-      background-color var(--duration-fast) var(--ease-standard),
-      color var(--duration-fast) var(--ease-standard),
-      border-color var(--duration-fast) var(--ease-standard);
-  }
-
-  .video__quality:hover {
-    border-color: var(--line-bright);
-    color: var(--text);
-  }
-
-  .video__quality[aria-pressed='true'] {
-    border-color: transparent;
-    background: var(--text);
-    color: var(--ink-1);
-  }
-
-  .video__quality:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-</style>
