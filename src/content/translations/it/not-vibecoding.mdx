@@ -1,0 +1,256 @@
+---
+title: "Vela non è vibecoding"
+seoTitle: "Vela non è vibecoding: come nasce un desktop Linux scritto dall'AI"
+description: "Il codice di Vela lo scrive l'AI al 100%, le decisioni no: design document, una catena di revisioni e scelte di prodotto, con la storia del Bluetooth come esempio."
+pubDate: 2026-11-07T17:35:00+01:00
+draft: false
+---
+
+import Aside from '../../../components/mdx/Aside.astro';
+import Checks from '../../../components/mdx/Checks.astro';
+import Column from '../../../components/mdx/Column.astro';
+import Columns from '../../../components/mdx/Columns.astro';
+import CommitList from '../../../components/mdx/CommitList.astro';
+import PullQuote from '../../../components/mdx/PullQuote.astro';
+import ReviewComment from '../../../components/mdx/ReviewComment.astro';
+import Stats from '../../../components/mdx/Stats.astro';
+import Steps from '../../../components/mdx/Steps.astro';
+
+<Aside title="In breve">
+
+- Il 100% del codice di Vela lo scrive l'AI. Le scelte no: cosa costruire, come e cosa scartare lo decido io, quasi sempre prima che il modello scriva una riga.
+- Ogni modifica passa da test, CI, analisi statica e almeno una revisione di un modello, e alla fine da me.
+- Il lavoro è pubblico: commit, PR, design document e test. Potete verificarlo.
+
+</Aside>
+
+## "È solo AI slop"
+
+Ogni volta che Vela finisce su un forum, arriva una sfilza di commenti: è AI slop.
+
+Onestamente, lo capisco. Negli ultimi mesi soprattutto c'è un bombardamento di progetti vibecoded per davvero, cioè fatti da gente che ha un'idea, a volte nemmeno particolarmente originale, prende un agente, scrive un prompt e la realizza. Poi fa scrivere un post allo stesso agente e pretende attenzione sul suo repository GitHub.
+
+E quando dico che il 100% del codice di Vela è scritto da AI (l'ho scritto anche in [Why Vela isn't written in Rust](https://velade.org/blog/why-not-rust/)), il rischio di essere messi nello stesso calderone di chi scrive "ok Claude, fammi un desktop environment figo come piace a me" è alto.
+Però vi chiedo di fare lo sforzo di leggere questo articolo, per capire perché credo che sia davvero molto diverso da come può sembrare a una prima impressione.
+
+Io sto cercando di fare qualcosa di stabile, con fondamenta solide, che possa davvero sostituire i grandi desktop environment come Plasma. È una grande ambizione, e non è minimamente possibile pensare di arrivarci facendo vibecoding.
+
+## Visione di prodotto
+
+Prendiamo come esempio il primo fork di Vela, quello di Lowell137. In poche settimane ha sviluppato un sacco di feature e ha cambiato molto Vela, soprattutto nell'aspetto, in un modo che esteticamente apprezzo anche. Allora perché molte delle sue pull request non le ho accettate, altre le ho riscritte, e tante feature del suo fork non sono mai arrivate upstream?
+
+Non fraintendetemi: con Lowell siamo rimasti in contatto e il suo aiuto l'ho apprezzato molto. Diverse sue idee sono entrate in Vela, con il suo nome nei commit: il formato dei temi, gli stili della taskbar, del menu Start e delle impostazioni rapide, il vetro di Window Glass ([#207](https://github.com/vela-desktop/vela/pull/207)). Ma quasi mai così com'erano. Le idee erano buone; l'implementazione andava adattata alla filosofia di Vela. Il formato è rimasto il suo, ma l'elenco di ciò che un tema può cambiare ora è generato direttamente da `Theme.qml`. Gli stili che portavano i nomi di prodotti di altre aziende sono stati rinominati. E il blur di Window Glass è entrato senza le eccezioni per singolo pannello.
+
+Il motivo è semplice: a un fork manca una visione di prodotto, e non per colpa di chi lo cura. Chi gestisce un fork per sé fa modifiche pensate per il proprio uso e il proprio gusto, e punta dritto all'obiettivo. Anch'io ho iniziato Vela perché Plasma non mi piaceva, ma il mio obiettivo è fare qualcosa che possano usare tutti. Quindi, quando penso a un problema, penso a risolverlo a livello di architettura: dalle fondamenta, e nel modo migliore possibile.
+
+Per modificare qualcosa, l'approccio del fork funziona benissimo. Ma se vuoi costruire un prodotto da zero con quel modus operandi, finisce in vacca dopo davvero poco.
+
+## Prima del codice c'è molto lavoro
+
+Le decisioni le prendo io: cosa costruire, come deve comportarsi, cosa scartare. Gran parte del lavoro su Vela avviene prima che il modello scriva una sola riga di codice.
+
+Qualche esempio:
+
+- **Il renderer.** Vela non usa `wlr_scene` né il renderer di wlroots. Ha un proprio scene graph e un renderer Vulkan 1.4, senza fallback OpenGL. È una scelta che restringe l'hardware supportato, presa apposta per avere live blur, frame pacing sul vblank reale e scaling frazionario esatto al pixel. Mi ricordo che GPT lo sconsigliava esplicitamente.
+- **La riscrittura in C.** A inizio ottobre il compositor era circa 18.000 righe di C++, con un oggetto `Server` che sapeva tutto di tutti. L'ho fatto riscrivere in C17, un sottosistema alla volta, con una regola: il comportamento osservabile da utenti e test resta identico. Le regole del nuovo codice sono scritte in [docs/c-core.md](https://github.com/vela-desktop/vela/blob/main/docs/c-core.md): chi crea e chi distrugge ogni struttura, niente stato globale, allocazioni visibili. È stata una scelta che ha rallentato lo sviluppo per un po', come ogni riscrittura. Ma l'ho fatta per una questione di *gusto*: credo che il codice C sia molto più pulito del C++, e credo che di questa pulizia benefici anche l'AI (lo dico perché qualcuno potrebbe obiettare che non importa, visto che il codice non lo scrivo io). In Vela cerco di scrivere in C tutto il possibile.
+- **Il redesign.** Lo sto discutendo con un amico da settimane, a voce e su carta, prima che diventi codice. Ne ho raccontato le fondamenta in [Visual coherence in Vela](https://velade.org/blog/major-redesign-1/), comprese le idee che ho scartato. Da fuori non si vede quasi niente, ma dietro le quinte c'è tanto lavoro: sul logo, sull'interfaccia grafica, sul nome.
+
+Nella cartella `docs/` del repository ci sono oltre 10.000 righe di documentazione di progetto: renderer, audio, Bluetooth, sistema dei temi, test e molto altro. Non sono lì per caso. Sono il posto dove una decisione viene messa per iscritto prima di diventare codice, e dove il modello la ritrova la volta dopo. E anche lì, prima di scrivere ogni documento, c'è una ricerca, del brainstorming, delle decisioni che a volte richiedono giorni.
+
+## Studiare prima di costruire: la X di 10 pixel
+
+A metà ottobre mi viene un'idea: un bruteforce di risoluzione sull'interfaccia, cioè il supersampling dell'intero desktop, in linea con il **"modern, fluid and sharp"** di Vela. Non ho ancora implementato nulla: fa parte della ricerca per il redesign.
+
+Se ci pensate, è più o meno quello che fa [Apple](https://en.wikipedia.org/wiki/Retina_display). Da un lato monta schermi con densità di pixel ([PPI](https://en.wikipedia.org/wiki/Display_resolution)) altissime su diagonali ridotte. Dall'altro, quando scegli una risoluzione "scalata", macOS disegna l'interfaccia al doppio della risoluzione e poi la riduce a quella del pannello: è supersampling vero e proprio. Sui computer moderni il costo in risorse è assolutamente accettabile. Un compositor non può cambiare i pixel fisici del tuo monitor, ma può fare lo stesso trucco: disegnare a risoluzione molto più alta e poi ridurre. Un modello, se glielo chiedi, lo implementa senza battere ciglio.
+
+Non gliel'ho chiesto. Prima ho studiato il problema. Vela tiene molto a uno scaling frazionario fatto come Dio comanda, quindi ho subito pensato a quello. Con lo scaling frazionario, un buffer legato alla dimensione logica dà una densità di campioni diversa a 125%, 150% e 175%: la nitidezza cambierebbe con la scala. Un pulsante da 46 pixel diventa 57,5 pixel fisici, e arrotondare ogni pulsante da solo crea buchi o sovrapposizioni.
+
+Poi ho guardato da vicino la X di chiusura, un glifo di 10 pixel. Il problema non erano i campioni. Il glifo veniva arrotondato a una texture di 13 pixel e poi ricampionato dal compositor con un filtro bilineare: sfocato due volte. E le estremità arrotondate andavano bene per la X, ma ammorbidivano gli angoli di minimizza e massimizza.
+
+Risultato: il supersampling globale l'ho scartato. Non perché fosse troppo costoso computazionalmente, ma semplicemente perché non risolve il problema che volevo risolvere. Al suo posto probabilmente (la ricerca non è ancora finita) ci sarà un micro-renderer per i glifi dei controlli finestra, con regole diverse per ogni simbolo, da confrontare con un riferimento misurato a 8×. Tutto il ragionamento è in [I wanted to brute-force a crisper UI](https://velade.org/blog/supersampling/).
+
+<PullQuote>
+
+È questo il punto: la parte difficile non era scrivere il codice. È distinguere cosa fare e cosa non fare, cioè fare le scelte di prodotto.
+
+</PullQuote>
+
+## Nessuno si fida da solo: la catena di revisione
+
+Il codice generato dai modelli viene controllato molte volte, e da controlli diversi: i test, la CI (CodeQL, analisi statica di clang, clang-tidy, cppcheck, sanitizer, copertura), le suite GPU su AMD e su NVIDIA, quest'ultima su un container noleggiato apposta, i revisori automatici e infine io. SonarCloud, per dire, blocca il merge se il codice nuovo è duplicato oltre il 3%. Come si incastrano in una giornata di lavoro lo racconto più avanti.
+
+<Checks
+  title="#216 · controlli sull'ultimo commit"
+  href="https://github.com/vela-desktop/vela/pull/216/checks"
+  caption="I controlli della #216, senza i job di servizio. La suite GPU su AMD si lancia a mano: qui c'è l'ultima esecuzione sul ramo della PR."
+  items={[
+    { name: 'Compile and test (Ubuntu 26.10)', status: 'success', group: 'Build e test' },
+    { name: 'fedora-tests / Fedora 44', status: 'success', group: 'Build e test' },
+    { name: 'asan-ubsan', status: 'success', group: 'Build e test' },
+    { name: 'coverage', status: 'success', group: 'Build e test' },
+    { name: 'codecov/patch', status: 'success', group: 'Build e test' },
+    { name: 'GPU CI – AMD', status: 'success', group: 'Build e test', note: 'a mano' },
+    { name: 'static-analysis', status: 'success', group: 'Analisi statica' },
+    { name: 'CodeQL', status: 'success', group: 'Analisi statica' },
+    { name: 'C/C++ security analysis', status: 'success', group: 'Analisi statica' },
+    { name: 'Python security analysis', status: 'success', group: 'Analisi statica' },
+    { name: 'SonarCloud Code Analysis', status: 'success', group: 'Analisi statica' },
+    { name: 'osv-scanner', status: 'success', group: 'Dipendenze e workflow' },
+    { name: 'GitHub Actions security analysis', status: 'success', group: 'Dipendenze e workflow' },
+    { name: 'zizmor', status: 'success', group: 'Dipendenze e workflow' },
+    { name: 'documentation', status: 'success', group: 'Dipendenze e workflow' },
+    { name: 'packaging-tests', status: 'success', group: 'Pacchetti' },
+    { name: 'package-smoke', status: 'success', group: 'Pacchetti' },
+    { name: 'Install DEB (clean Ubuntu 26.10)', status: 'success', group: 'Pacchetti' },
+    { name: 'fedora-package-smoke', status: 'success', group: 'Pacchetti' },
+  ]}
+/>
+
+Nei commit dell'ultima settimana CodeRabbit è citato una dozzina di volte, SonarCloud altrettante. Un esempio dalla PR del 6 novembre sulle impostazioni: CodeRabbit ha notato che un colore d'accento personalizzato, bianco o giallo, rendeva illeggibile il testo bianco sopra. La correzione sceglie il colore del testo con il rapporto di contrasto 3:1 di WCAG.
+
+<ReviewComment
+  author="CodeRabbit"
+  where="settings/qml/AccentCard.qml · riga 231"
+  label="Minor · Functional Correctness"
+  href="https://github.com/vela-desktop/vela/pull/216#discussion_r4486789944"
+  date="2026-11-05"
+  resolution="Corretto in 468ead5, con i test per Theme.readableOn"
+  resolutionHref="https://github.com/vela-desktop/vela/commit/468ead5"
+>
+
+**Add contrast handling for light custom accents.**
+
+When the user selects `#FFFFFF` without a theme accent override, `Theme.accent` remains white. The notification badge and today's calendar cell also use fixed white text, so their count or day number becomes invisible. Use a contrast-aware accent fill and foreground for both consumers.
+
+</ReviewComment>
+
+Un altro esempio: il test dei secondi nell'orologio fermava l'orologio, quindi sarebbe passato anche con un orologio rotto. Ora ce n'è uno che lo fa girare davvero. È fondamentale: un test che passa anche col bug non è un test valido.
+
+Nessuno di questi strumenti è infallibile, me compreso. Ma nemmeno il codice scritto da persone lo è. Il 5 novembre è stato reso pubblico [sshhole](https://news.ycombinator.com/item?id=50379704), un bug che su Alpine Linux e su altri sistemi basati su musl permetteva di entrare via SSH con una qualsiasi password più lunga di 256 caratteri. Codice scritto da persone, trovato da un ricercatore che usava agenti AI ([fonte](https://sshhole.com/)).
+
+Non lo racconto per dire che le persone sbagliano più degli LLM. Lo racconto perché la questione non è più chi ha scritto il codice, ma con che criterio è stato scritto, con che impegno e che studio c'è stato dietro, e bisogna comunque accettare che qualche bug purtroppo ci sarà sempre.
+
+## Una giornata tipo (e come è nato il Bluetooth)
+
+Quando mi metto al PC, la prima cosa che faccio è aprire il repository: nuove issue, nuovi bug, nuove pull request, notifiche via email. Poi mi metto a lavorare. Se dal giorno prima ho lasciato qualcosa in sospeso, riparto da lì; altrimenti vado avanti.
+
+C'è una [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md), ma la roadmap dice soprattutto cosa sicuramente verrà fatto, non cosa non si può fare. Niente è escluso a priori: decido io, man mano. Questo non vuol dire che il progetto vada alla deriva. Vela ha dei capisaldi: il motto, *modern, fluid and sharp*; l'architettura che si è costruita nel tempo; gli articoli già pubblicati su questo blog.
+
+E poi ci sono le idee. Mi arrivano ogni giorno: da X, da Reddit, o anche solo usando Vela e pensandoci su. Ogni tanto mi viene voglia di implementarne una. E cosa vuol dire, implementarla?
+
+### Le cose piccole
+
+Per le mini feature e i mini bugfix il giro è corto, e faccio tutto con GPT 6.1 Sol:
+
+<Steps>
+
+1. descrivo il problema;
+2. un breve brainstorming;
+3. gli faccio aprire una PR in draft con l'implementazione;
+4. apro una **nuova** chat, con GPT o con Claude, e chiedo una revisione di quella PR;
+5. quando i test e SonarCloud passano, merge.
+
+</Steps>
+
+CodeRabbit ha dei limiti di utilizzo, quindi lo uso per tutte le PR, tranne le più piccole. Ma una revisione c'è sempre, e SonarCloud gira su ogni PR.
+
+### Le cose grandi
+
+Per le feature vere e i bugfix importanti è tutta un'altra storia. Il Bluetooth è partito da quello che sembrava un bug da poco, è finito in una riscrittura e mi ha preso diversi giorni. Secondo me già questo dovrebbe far capire la differenza tra il vibecoding e quello che faccio io.
+
+Tutto è nato da un mouse. Ho provato ad associare il mio Logitech MX Vertical e non ci sono riuscito. Logout da Vela, login su Plasma: associato al primo colpo. Come sospettavo.
+
+Ecco cosa intendo quando dico che Vela si usa tutti i giorni, ma tenete un piano B. È stato un problema bloccante? Assolutamente no, l'ho risolto in due minuti. Ma se non avessi avuto Plasma già installato, sarebbe stato tutto un altro discorso.
+
+Quando succedono queste cose, il mio istinto non è il bugfix al volo. È andare a scrutare ogni angolo del codice per capire cosa sta succedendo davvero. E di problemi ne ho trovati parecchi: l'implementazione era precaria, c'erano dipendenze che si potevano eliminare e mancavano feature abbastanza importanti. Il pairing non funzionava non tanto per un bug: mancava quasi del tutto l'implementazione.
+
+Quindi sono andato su GPT e ho cominciato il brainstorming. Com'è implementato oggi il Bluetooth in Vela? Come funziona? Cosa manca? Come si potrebbe fare meglio? E soprattutto: cosa fa KDE? Cosa fa GNOME? Lo stesso ho fatto per i temi della [#212](https://github.com/vela-desktop/vela/pull/212), ispirandomi in parte a KDE, e per le opzioni di personalizzazione della [#216](https://github.com/vela-desktop/vela/pull/216), che risponde anche a una delle prime richieste arrivate dalla community: poter cambiare l'icona del pulsante Start con il logo della propria distribuzione o con un'immagine ([#210](https://github.com/vela-desktop/vela/issues/210)). Il panorama del desktop Linux è enorme, pieno di implementazioni e soprattutto di lamentele nei forum. Sarebbe uno spreco non leggerle!
+
+Questo è solo il primo passo. Poi si passa all'implementazione.
+
+No! Poi si passa al **design document**. Prima una bozza, scritta da Opus 5.5, che nel frattempo mi fa una serie di domande: quali decisioni prendere, che linguaggio usare, quali complessità affrontare, se fare un daemon oppure no, D-Bus sì o no. Poi la revisione del design document. Eh sì, si rivede anche quello. Questo rimpallo lo faccio due o tre volte; di più non ha senso, i [rendimenti sono decrescenti](https://it.wikipedia.org/wiki/Legge_dei_rendimenti_decrescenti).
+
+Nella [#146](https://github.com/vela-desktop/vela/pull/146) questa fase si vede benissimo: i primi sei commit sono solo documentazione, senza una riga di codice.
+
+<CommitList
+  title="#146 · i primi commit"
+  href="https://github.com/vela-desktop/vela/pull/146/commits"
+  more="+ altri 51 commit"
+  caption="I primi commit della #146, senza i merge da main: sei di sola documentazione, poi il codice."
+  commits={[
+    { sha: 'ad6d872', message: 'docs: describe draft native BlueZ pairing and device lifecycle redesign', date: '2026-10-26', highlight: true },
+    { sha: '1e76352', message: 'docs(bluetooth): redesign Bluetooth around a vela-bluetooth daemon', date: '2026-10-27', highlight: true },
+    { sha: '07b672a', message: 'docs(bluetooth): turn on BlueZ experimental features only on request', date: '2026-10-27', highlight: true },
+    { sha: 'd54164d', message: 'docs(bluetooth): write vela-bluetooth in C with sd-bus', date: '2026-10-27', highlight: true },
+    { sha: 'dcab6ae', message: 'docs(bluetooth): drop nearby pairing and diagnostics, leave other sessions alone', date: '2026-10-27', highlight: true },
+    { sha: 'ef8d86c', message: 'docs(bluetooth): concurrency, visibility, question contract, authorization, rfkill', date: '2026-10-27', highlight: true },
+    { sha: '3183223', message: "feat(bluetooth): remove BlueDevil and unblock only the adapter's rfkill switch (B0)", date: '2026-10-27' },
+    { sha: '4f5adc3', message: 'feat(bluetooth): vela-bluetooth daemon with model, operations and rfkill (B1)', date: '2026-10-27' },
+  ]}
+/>
+
+Lì il progetto passa da un semplice pairing nativo a un daemon di sessione, `vela-bluetooth`, unico client di BlueZ. Lì si decide che il daemon, che gira tutto il giorno, è in C con sd-bus e linka solo libc e libsystemd. Lì si buttano via cose prima di scriverle: lo Swift Pair, l'attivazione delle feature sperimentali di BlueZ, la diagnostica con correzioni automatiche. E lì nasce una regola che per me è sacra: **Vela non deve mai interferire con un altro desktop installato sullo stesso PC.** Ogni comportamento di BlueZ su cui il progetto si appoggia è verificato sui sorgenti di BlueZ 5.86 e 5.87. Oggi [docs/bluetooth.md](https://github.com/vela-desktop/vela/blob/main/docs/bluetooth.md) è lungo quasi 950 righe.
+
+Solo a quel punto si passa all'implementazione vera e propria, a stadi:
+
+<Steps variant="row" marker="dot">
+
+1. **B0** · via BlueDevil
+2. **B1** · il daemon
+3. **B2** · l'agente che finalmente gestisce il pairing
+4. **B3** · la pagina di Settings
+
+</Steps>
+
+Poi, in fila:
+
+<Steps>
+
+1. la CI su CPU;
+2. la CI su GPU;
+3. il test umano, sulla mia macchina (con il mio MX Vertical, ovviamente);
+4. la revisione di CodeRabbit.
+
+</Steps>
+
+Su CodeRabbit ve lo confesso: non ho idea di quale modello ci sia dietro, ma funziona da Dio. È calibrato davvero bene. Spesso trova diversi bug, ma ci sono anche PR in cui non ne trova, e per me è il segno di un sistema che funziona.
+
+<PullQuote>
+
+Un revisore che trova sempre qualcosa non sta revisionando: sta riempiendo un modulo.
+
+</PullQuote>
+
+Solo dopo aver corretto quello che trova CodeRabbit (e su una PR di feature qualcosa c'è sempre) si fa merge in `main`. Che, tra l'altro, è il ramo sperimentale: la Beta arriva molto dopo.
+
+<Stats caption="La #146, alla fine." items={[
+  { value: '59', label: 'commit' },
+  { value: '75', label: 'file' },
+  { value: '11.299', label: 'righe aggiunte' },
+]} />
+
+Più o meno metà dei commit sono correzioni e test arrivati dopo la prima implementazione: retry quando BlueZ o logind non rispondono, niente richieste di pairing accettate se non c'è un'interfaccia per mostrarle, il blocco schermo comunicato a logind. I test fanno girare il daemon vero contro un BlueZ finto, e dopo ogni caso controllano che non sia rimasta aperta nessuna operazione.
+
+## Cosa fa l'AI, e cosa no
+
+Per essere chiaro fino in fondo:
+
+<Columns>
+  <Column title="Cosa fa il modello">
+    Scrive il codice, i test e buona parte della documentazione; propone soluzioni; trova bug quando gli chiedo di rileggere.
+  </Column>
+  <Column title="Cosa non fa" tone="muted">
+    Non decide che Vela richiede Vulkan 1.4, che il compositor va riscritto in C, che il supersampling globale non serve. Non sceglie cosa entra in `main`.
+  </Column>
+  <Column title="Cosa faccio io" tone="accent">
+    Studio i problemi, prendo le decisioni di architettura e di design, uso Vela ogni giorno come desktop principale.
+  </Column>
+</Columns>
+
+Un modo di lavorare così un nome vero e proprio non ce l'ha. Il codice resta scritto al 100% dall'AI, quindi non mi sembra onesto chiamarlo "AI assisted". Simon Willison ha proposto "vibe engineering" proprio per questo, cioè usare gli agenti restando responsabili del codice che ne esce, ma come termine non sembra aver attecchito molto.
+
+"AI slop" descrive bene una cosa precisa: contenuti generati in quantità, senza giudizio e senza nessuno che risponda di ciò che c'è dentro. Vela è l'opposto, per scelta. Ogni merge passa da me, e se qualcosa si rompe la responsabilità è mia, non del modello. Prendo questo progetto molto sul serio, lo uso ogni giorno e non ho alcuna intenzione di lasciarlo a metà.
+
+Non fidatevi sulla parola. Il lavoro è pubblico: i commit, le PR con i commenti dei revisori, i documenti di progetto, i test. Se pensate che Vela sia slop, aprite una PR a caso e leggetela. Se trovate qualcosa che non va, aprite una issue: è esattamente il tipo di revisione in più che cerco.
+
+Insomma: questo, a voi, sembra vibecoding? A me, sinceramente, no.
