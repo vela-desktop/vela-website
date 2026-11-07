@@ -1,0 +1,167 @@
+---
+// A review comment from a pull request, quoted with a link to the original,
+// for MDX journal entries. The text is the slot; resolution says what was
+// done about it, and resolutionHref where (a commit, usually).
+//
+//   import ReviewComment from '../../components/mdx/ReviewComment.astro';
+//   <ReviewComment
+//     author="CodeRabbit"
+//     where="settings/qml/AccentCard.qml · line 231"
+//     label="Minor · Functional correctness"
+//     href="https://github.com/vela-desktop/vela/pull/216#discussion_r4486789944"
+//     date="2026-11-05"
+//     resolution="Fixed in 468ead5, with tests"
+//     resolutionHref="https://github.com/vela-desktop/vela/commit/468ead5"
+//   >
+//     **Add contrast handling for light custom accents.** …
+//   </ReviewComment>
+import { isLang, LOCALES } from '../../lib/i18n';
+
+export interface Props {
+  author: string;
+  /** The file and line, or the PR, the comment is on. */
+  where?: string;
+  label?: string;
+  href: string;
+  date?: string;
+  resolution?: string;
+  resolutionHref?: string;
+}
+
+const { author, where, label, href, date, resolution, resolutionHref } = Astro.props;
+const param = Astro.params.lang ?? '';
+const locale = LOCALES[isLang(param) ? param : 'en'].dateLocale;
+const day = date && new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(date));
+---
+
+<figure class="review">
+  <div class="review__head">
+    <span class="review__avatar" aria-hidden="true">{author.slice(0, 1)}</span>
+    <a class="review__author" href={href}>{author}</a>
+    {date && <time class="review__date" datetime={date}>{day}</time>}
+    {where && <code class="review__where">{where}</code>}
+  </div>
+  <blockquote class="review__body" cite={href}>
+    {label && <p class="review__label">{label}</p>}
+    <slot />
+  </blockquote>
+  {
+    resolution && (
+      <p class="review__resolution">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />
+        </svg>
+        {resolutionHref ? <a href={resolutionHref}>{resolution}</a> : resolution}
+      </p>
+    )
+  }
+</figure>
+
+<style>
+  .review {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: rgb(5 11 21 / 0.6);
+    font-family: var(--font-body);
+    font-size: 0.84em;
+    line-height: 1.6;
+  }
+
+  .review__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.6rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.85em;
+    color: var(--text-faint);
+  }
+
+  .review__avatar {
+    display: grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: rgb(255 145 88 / 0.18);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--coral);
+  }
+
+  .review__author {
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .review__author:hover {
+    color: var(--accent);
+  }
+
+  .review__where {
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 0.9em;
+    color: var(--text-faint);
+  }
+
+  /* Undo the journal's own quote style. */
+  .review__body {
+    margin: 0;
+    padding: 0.95rem 1rem 1rem;
+    border: 0;
+    font-size: 1em;
+    font-style: normal;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  .review__body :global(p + p) {
+    margin-top: 0.6em;
+  }
+
+  .review__body :global(strong) {
+    color: var(--text);
+  }
+
+  .review__label {
+    margin-bottom: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffc46b;
+  }
+
+  .review__resolution {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid var(--line);
+    background: rgb(91 222 202 / 0.05);
+    font-size: 0.85em;
+    color: var(--mint);
+  }
+
+  .review__resolution a {
+    color: inherit;
+    text-decoration-color: rgb(91 222 202 / 0.4);
+  }
+
+  .review__resolution svg {
+    flex: none;
+    width: 0.95rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>

@@ -85,7 +85,7 @@
   --width-page: 90rem;      /* 1440px */
   --width-content: 76rem;   /* 1216px */
   --width-narrow: 52rem;
-  --measure: 40rem;         /* ~68 characters of prose */
+  --measure: 42rem;         /* ~72 characters of prose */
   --header-height: 4rem;
 
   /* ── Shape ─────────────────────────────────────────────────────────── */

@@ -70,7 +70,8 @@ export function articleSchema(post: Entry, image?: string, translations: Entry[]
     url: absolute(postUrl(other)),
     inLanguage: other.lang ?? DEFAULT_LANG,
   });
-  const original = translations.find((other) => (other.lang ?? DEFAULT_LANG) === DEFAULT_LANG);
+  const writtenIn = post.data.writtenIn;
+  const original = translations.find((other) => (other.lang ?? DEFAULT_LANG) === writtenIn);
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -82,8 +83,8 @@ export function articleSchema(post: Entry, image?: string, translations: Entry[]
     datePublished: pubDate.toISOString(),
     dateModified: (updatedDate ?? pubDate).toISOString(),
     inLanguage: lang,
-    translationOfWork: lang !== DEFAULT_LANG && original ? reference(original) : undefined,
-    workTranslation: lang === DEFAULT_LANG && translations.length > 0 ? translations.map(reference) : undefined,
+    translationOfWork: lang !== writtenIn && original ? reference(original) : undefined,
+    workTranslation: lang === writtenIn && translations.length > 0 ? translations.map(reference) : undefined,
     keywords: tags.length > 0 ? tags.join(', ') : undefined,
     author,
     publisher: vela,

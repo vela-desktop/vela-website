@@ -1,0 +1,190 @@
+---
+// The checks a pull request went through, as GitHub shows them, for MDX
+// journal entries. Copy the names and results from the PR; link the PR.
+//
+//   import Checks from '../../components/mdx/Checks.astro';
+//   <Checks
+//     title="Checks on the last commit of #216"
+//     href="https://github.com/vela-desktop/vela/pull/216/checks"
+//     items={[
+//       { name: 'Compile and test (Ubuntu 26.10)', status: 'success', group: 'Build and tests' },
+//       { name: 'SonarCloud Code Analysis', status: 'success', group: 'Static analysis' },
+//     ]}
+//   />
+//
+// Items with the same group are listed together, in the order they come.
+import { isLang } from '../../lib/i18n';
+
+type Status = 'success' | 'failure' | 'skipped' | 'pending';
+
+export interface Props {
+  items: { name: string; status: Status; group?: string; note?: string }[];
+  title?: string;
+  href?: string;
+  caption?: string;
+}
+
+const { items, title, href, caption } = Astro.props;
+const param = Astro.params.lang ?? '';
+const lang = isLang(param) ? param : 'en';
+const words: Record<string, Record<Status, string>> = {
+  en: { success: 'passed', failure: 'failed', skipped: 'skipped', pending: 'running' },
+  it: { success: 'superato', failure: 'fallito', skipped: 'saltato', pending: 'in corso' },
+};
+const status = words[lang] ?? words.en;
+
+const groups: { name?: string; items: Props['items'] }[] = [];
+for (const item of items) {
+  const last = groups.at(-1);
+  if (last && last.name === item.group) last.items.push(item);
+  else groups.push({ name: item.group, items: [item] });
+}
+const passed = items.filter((item) => item.status === 'success').length;
+---
+
+<figure class="checks">
+  <div class="checks__box">
+    {
+      title && (
+        <p class="checks__title">
+          {href ? <a href={href}>{title}</a> : title}
+          <span class="checks__count">
+            {passed}/{items.length}
+          </span>
+        </p>
+      )
+    }
+    <div class="checks__groups">
+      {
+        groups.map((group) => (
+          <div class="checks__group">
+            {group.name && <p class="checks__group-name">{group.name}</p>}
+            <ul class="checks__list">
+              {group.items.map((item) => (
+                <li class:list={['checks__item', `is-${item.status}`]}>
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    {item.status === 'success' && <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />}
+                    {item.status === 'failure' && <path d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5" />}
+                    {item.status === 'skipped' && <path d="M4 8h8" />}
+                    {item.status === 'pending' && <circle cx="8" cy="8" r="3" />}
+                  </svg>
+                  <span class="checks__name">{item.name}</span>
+                  {item.note && <span class="checks__note">{item.note}</span>}
+                  <span class="visually-hidden">: {status[item.status]}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .checks {
+    grid-column: wide;
+  }
+
+  .checks__box {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: rgb(5 11 21 / 0.6);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .checks__title {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+  }
+
+  .checks__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .checks__title a:hover {
+    color: var(--accent);
+  }
+
+  .checks__count {
+    color: var(--mint);
+  }
+
+  .checks__groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    gap: 0.25rem 1.5rem;
+    padding: 0.8rem 1rem 0.9rem;
+  }
+
+  .checks__group-name {
+    margin: 0.35rem 0 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .checks__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .checks__item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.2rem 0;
+    color: var(--text-muted);
+  }
+
+  .checks__item + .checks__item {
+    margin-top: 0;
+  }
+
+  .checks__item svg {
+    flex: none;
+    align-self: center;
+    width: 0.9rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .is-success svg { color: var(--mint); }
+  .is-failure svg { color: var(--coral); }
+  .is-skipped svg,
+  .is-pending svg { color: var(--text-faint); }
+
+  .checks__note {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-faint);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

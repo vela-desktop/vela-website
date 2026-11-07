@@ -1,0 +1,66 @@
+---
+// One column of <Columns>. tone="accent" sets it apart from the others,
+// tone="muted" pushes it back.
+export interface Props {
+  title?: string;
+  tone?: 'default' | 'accent' | 'muted';
+}
+
+const { title, tone = 'default' } = Astro.props;
+---
+
+<section class:list={['column', `column--${tone}`]}>
+  {title && <p class="column__title">{title}</p>}
+  <div class="column__body"><slot /></div>
+</section>
+
+<style>
+  .column {
+    padding: 1.15rem 1.3rem 1.25rem;
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--line-strong);
+    border-radius: 0 0 var(--radius-m) var(--radius-m);
+    background: rgb(140 200 255 / 0.025);
+    font-family: var(--font-body);
+    font-size: 0.86em;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  .column--accent {
+    border-top-color: var(--teal);
+    background: rgb(70 214 224 / 0.045);
+  }
+
+  .column--muted {
+    border-top-color: var(--line);
+    background: none;
+  }
+
+  .column__title {
+    margin-bottom: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .column--accent .column__title {
+    color: var(--teal);
+  }
+
+  .column__body :global(p + p),
+  .column__body :global(p + ul),
+  .column__body :global(ul + p) {
+    margin-top: 0.6em;
+  }
+
+  .column__body :global(ul) {
+    padding-left: 1.1em;
+  }
+
+  .column__body :global(strong) {
+    color: var(--text);
+  }
+</style>

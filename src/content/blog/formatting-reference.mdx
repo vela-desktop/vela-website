@@ -8,6 +8,14 @@ tags: ["Reference"]
 
 import Figure from '../../components/mdx/Figure.astro';
 import Aside from '../../components/mdx/Aside.astro';
+import Checks from '../../components/mdx/Checks.astro';
+import Column from '../../components/mdx/Column.astro';
+import Columns from '../../components/mdx/Columns.astro';
+import CommitList from '../../components/mdx/CommitList.astro';
+import PullQuote from '../../components/mdx/PullQuote.astro';
+import ReviewComment from '../../components/mdx/ReviewComment.astro';
+import Stats from '../../components/mdx/Stats.astro';
+import Steps from '../../components/mdx/Steps.astro';
 import snap from '../../assets/screenshots/snap.webp';
 
 This entry is a draft, so it only appears when running `npm run dev`. It exists to show how each Markdown and MDX element looks in the journal. Copy what you need, then delete what you don't. The first paragraph of an entry is set slightly larger, as an introduction.
@@ -72,6 +80,87 @@ Plain Markdown images also work: `![Alt text](./image.webp)`, with the file next
 <Aside title="Note">
   An aside sets a short note apart from the running text. Use `tone="caution"` for warnings.
 </Aside>
+
+## Steps
+
+<Steps>
+
+1. **Design document**, reviewed two or three times;
+2. **CI on CPU**, then on GPU;
+3. **The human test**, on real hardware.
+
+</Steps>
+
+With `variant="row"` and `marker="dot"`, short named stages sit side by side:
+
+<Steps variant="row" marker="dot">
+
+1. **B0** · the old code goes
+2. **B1** · the daemon
+3. **B2** · the agent
+4. **B3** · the Settings page
+
+</Steps>
+
+## Figures
+
+<Stats caption="A row of figures, with an optional caption." items={[
+  { value: '59', label: 'commits' },
+  { value: '1.1–1.9', label: 'ms of latency', note: 'at any rate' },
+  { value: '0', label: 'missed refreshes' },
+]} />
+
+## Columns
+
+<Columns>
+  <Column title="Before" tone="muted">A column pushed back with `tone="muted"`.</Column>
+  <Column title="After" tone="accent">A column set apart with `tone="accent"`. Two or three columns; they stack on narrow screens.</Column>
+</Columns>
+
+## A pull quote
+
+Use it in place of a sentence of the text, never as a copy of it.
+
+<PullQuote>A reviewer that always finds something isn't reviewing: it's filling in a form.</PullQuote>
+
+## From GitHub
+
+Real commits, checks and review comments, each linked to the original.
+
+<CommitList
+  title="#146 · the first commits"
+  href="https://github.com/vela-desktop/vela/pull/146/commits"
+  more="+ 57 more commits"
+  commits={[
+    { sha: 'ad6d872', message: 'docs: describe draft native BlueZ pairing and device lifecycle redesign', date: '2026-10-26', highlight: true },
+    { sha: '3183223', message: "feat(bluetooth): remove BlueDevil and unblock only the adapter's rfkill switch (B0)", date: '2026-10-27' },
+  ]}
+/>
+
+<Checks
+  title="#216 · checks"
+  href="https://github.com/vela-desktop/vela/pull/216/checks"
+  items={[
+    { name: 'Compile and test (Ubuntu 26.10)', status: 'success', group: 'Build and tests' },
+    { name: 'GPU CI – AMD', status: 'success', group: 'Build and tests', note: 'by hand' },
+    { name: 'SonarCloud Code Analysis', status: 'success', group: 'Static analysis' },
+    { name: 'publish-beta', status: 'skipped', group: 'Static analysis' },
+  ]}
+/>
+
+<ReviewComment
+  author="CodeRabbit"
+  where="settings/qml/AccentCard.qml · line 231"
+  label="Minor · Functional Correctness"
+  href="https://github.com/vela-desktop/vela/pull/216#discussion_r4486789944"
+  date="2026-11-05"
+  resolution="Fixed in 468ead5"
+  resolutionHref="https://github.com/vela-desktop/vela/commit/468ead5"
+>
+
+**Add contrast handling for light custom accents.** The comment's text goes in the slot, as Markdown.
+
+</ReviewComment>
 
 ---
 

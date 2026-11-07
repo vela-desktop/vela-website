@@ -42,8 +42,10 @@ export const UI = {
     allEntries: 'All journal entries',
     /** Offers this entry in another language, in that language. */
     readIn: 'Read in English',
-    /** Says the entry was written in English, on a translation. */
-    translatedFrom: '',
+    /** On a translation, the language the entry was written in. */
+    translatedFrom: { en: '', it: 'Translated from Italian.' } as Record<Lang, string>,
+    /** The heading of the list of sections beside a long entry. */
+    contents: 'In this entry',
     /** The controls of a journal video's player, for screen readers. */
     player: {
       play: 'Play',
@@ -70,7 +72,8 @@ export const UI = {
     next: 'Articolo successivo',
     allEntries: 'Tutti gli articoli del Journal',
     readIn: 'Leggi in italiano',
-    translatedFrom: 'Tradotto dall’inglese.',
+    translatedFrom: { en: 'Tradotto dall’inglese.', it: '' } as Record<Lang, string>,
+    contents: 'In questo articolo',
     player: {
       play: 'Riproduci',
       pause: 'Pausa',

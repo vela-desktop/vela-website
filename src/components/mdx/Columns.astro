@@ -1,0 +1,23 @@
+---
+// Two or three columns side by side, for MDX journal entries: a comparison,
+// who does what, before and after. Each column is a <Column>; they stack on
+// narrow screens.
+//
+//   import Columns from '../../components/mdx/Columns.astro';
+//   import Column from '../../components/mdx/Column.astro';
+//   <Columns>
+//     <Column title="Before">…</Column>
+//     <Column title="After" tone="accent">…</Column>
+//   </Columns>
+---
+
+<div class="columns"><slot /></div>
+
+<style>
+  .columns {
+    grid-column: wide;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    gap: 1rem;
+  }
+</style>

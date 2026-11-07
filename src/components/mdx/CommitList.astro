@@ -1,0 +1,180 @@
+---
+// Real commits from the repository, each linked to GitHub, for MDX journal
+// entries: the history of a pull request, told by its commits. highlight
+// marks the ones the text is about.
+//
+//   import CommitList from '../../components/mdx/CommitList.astro';
+//   <CommitList
+//     title="Pull request #146, the first commits"
+//     href="https://github.com/vela-desktop/vela/pull/146/commits"
+//     more="+ 51 more commits"
+//     commits={[
+//       { sha: 'ad6d872', message: 'docs: describe draft native BlueZ pairing…', date: '2026-10-26', highlight: true },
+//     ]}
+//   />
+import { isLang, LOCALES } from '../../lib/i18n';
+
+export interface Props {
+  commits: { sha: string; message: string; date?: string; highlight?: boolean }[];
+  /** owner/name on GitHub */
+  repo?: string;
+  title?: string;
+  /** Where the title and the "more" line lead, e.g. the PR's commits tab. */
+  href?: string;
+  /** A last line for the commits left out, e.g. "+ 51 more commits". */
+  more?: string;
+  caption?: string;
+}
+
+const { commits, repo = 'vela-desktop/vela', title, href, more, caption } = Astro.props;
+const param = Astro.params.lang ?? '';
+const locale = LOCALES[isLang(param) ? param : 'en'].dateLocale;
+const day = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' });
+---
+
+<figure class="commits">
+  <div class="commits__box">
+    {
+      title && (
+        <p class="commits__title">
+          {href ? <a href={href}>{title}</a> : title}
+        </p>
+      )
+    }
+    <ol class="commits__list">
+      {
+        commits.map(({ sha, message, date, highlight }) => (
+          <li class:list={['commits__item', { 'is-highlight': highlight }]}>
+            <span class="commits__dot" aria-hidden="true" />
+            <span class="commits__message">{message}</span>
+            {date && (
+              <time class="commits__date" datetime={date}>
+                {day.format(new Date(date))}
+              </time>
+            )}
+            <a class="commits__sha" href={`https://github.com/${repo}/commit/${sha}`}>
+              {sha.slice(0, 7)}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+    {more && <p class="commits__more">{href ? <a href={href}>{more}</a> : more}</p>}
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .commits {
+    grid-column: wide;
+  }
+
+  .commits__box {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: rgb(5 11 21 / 0.6);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .commits__title,
+  .commits__more {
+    padding: 0.7rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+  }
+
+  .commits__title {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .commits__more {
+    border-top: 1px solid var(--line);
+  }
+
+  .commits a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .commits__title a:hover,
+  .commits__more a:hover {
+    color: var(--accent);
+  }
+
+  .commits__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .commits__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0.6rem 1rem;
+    color: var(--text-muted);
+  }
+
+  .commits__item + .commits__item {
+    margin-top: 0;
+    border-top: 1px solid rgb(170 205 255 / 0.06);
+  }
+
+  .commits__item.is-highlight {
+    background: rgb(70 214 224 / 0.05);
+    color: var(--text);
+  }
+
+  .commits__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1px solid var(--line-bright);
+    border-radius: 50%;
+  }
+
+  .is-highlight .commits__dot {
+    border-color: var(--teal);
+    background: var(--teal);
+  }
+
+  .commits__message {
+    overflow-wrap: anywhere;
+  }
+
+  .commits__date {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  .commits__sha {
+    padding: 0.05rem 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xs);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent) !important;
+  }
+
+  .commits__sha:hover {
+    border-color: var(--line-bright);
+  }
+
+  @media (max-width: 34rem) {
+    .commits__item {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .commits__date {
+      display: none;
+    }
+  }
+</style>

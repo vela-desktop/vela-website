@@ -1,0 +1,84 @@
+---
+// A row of figures, for MDX journal entries: the size of a pull request,
+// a before and after, the numbers a section is about.
+//
+//   import Stats from '../../components/mdx/Stats.astro';
+//   <Stats items={[
+//     { value: '59', label: 'commits' },
+//     { value: '11,300', label: 'lines added', note: 'about' },
+//   ]} caption="Pull request #146." />
+export interface Props {
+  items: { value: string; label: string; note?: string }[];
+  caption?: string;
+}
+
+const { items, caption } = Astro.props;
+---
+
+<figure class="stats">
+  <dl class="stats__list">
+    {
+      items.map(({ value, label, note }) => (
+        <div class="stats__item">
+          <dt class="stats__label">{label}</dt>
+          <dd class="stats__value">
+            {note && <span class="stats__note">{note}</span>}
+            {value}
+          </dd>
+        </div>
+      ))
+    }
+  </dl>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .stats {
+    grid-column: wide;
+  }
+
+  .stats__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr));
+    margin: 0;
+    border-top: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stats__item {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    padding: 1.1rem 1rem 1.15rem 0;
+  }
+
+  .stats__value {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.6rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: var(--tracking-tight);
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+
+  .stats__note {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .stats__label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--teal);
+  }
+</style>

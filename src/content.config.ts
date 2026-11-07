@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { DEFAULT_LANG, LANGS } from './lib/i18n';
 
 /**
  * The development journal.
@@ -23,6 +24,8 @@ const blog = defineCollection({
         cover: image().optional(),
         coverAlt: z.string().optional(),
         tags: z.array(z.string().min(1)).default([]),
+        /** The language the entry was first written in; the others are translations of it. */
+        writtenIn: z.enum(LANGS).default(DEFAULT_LANG),
       })
       .refine((post) => !post.cover || typeof post.coverAlt === 'string', {
         message: 'coverAlt is required when a cover image is set (use "" only for purely decorative covers).',
@@ -35,7 +38,7 @@ const blog = defineCollection({
  *
  * src/content/translations/<lang>/<entry>.md(x), where <entry> is the id of
  * the original in src/content/blog/: it/frame-clock.mdx → /it/blog/frame-clock/.
- * Tags and cover come from the original; the rest is the translation's own.
+ * Tags, cover and writtenIn come from the original; the rest is the translation's own.
  */
 const translations = defineCollection({
   loader: glob({ pattern: '*/**/[^_]*.{md,mdx}', base: './src/content/translations' }),
