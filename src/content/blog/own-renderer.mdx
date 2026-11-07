@@ -7,6 +7,9 @@ tags: ["Renderer"]
 ---
 
 import Aside from '../../components/mdx/Aside.astro';
+import PullQuote from '../../components/mdx/PullQuote.astro';
+import Stats from '../../components/mdx/Stats.astro';
+import Steps from '../../components/mdx/Steps.astro';
 
 Most compositors built on wlroots use `wlr_scene`: a ready-made scene graph that handles what has changed on screen, which windows are visible, when apps may draw again, and when a fullscreen game can go straight to the display. It's good. Vela used it too, at the beginning.
 
@@ -22,11 +25,15 @@ What Vela took over is everything between an app handing over a frame and a pixe
 
 Vela has five goals for its renderer, in this order:
 
+<Steps>
+
 1. **Perfect sharpness at any scale**, from 100% to 200%.
 2. **Fluidity at any refresh rate**, from 60 to 360 Hz, and with VRR.
 3. **Minimal latency**, from your hand to the screen.
 4. **Lightness**: only what changes is drawn; with no changes, the GPU sleeps.
 5. **Effects**: live blur, rounded corners and shadows, sharp at every scale.
+
+</Steps>
 
 Each of them needs control over something a general-purpose scene graph decides for you.
 
@@ -35,7 +42,17 @@ Each of them needs control over something a general-purpose scene graph decides 
 - **Effects** mean every element of the scene can carry a rounded clip, a shadow and a blurred background, and that the area to redraw grows where blur needs it.
 - **Robustness** means keeping each app's last *ready* frame, so a late app never holds the screen back. More in [A slow app can't freeze your desktop](/blog/slow-apps/).
 
+<Stats caption="A centered window at 150%, before the sharpness work and today." items={[
+  { value: '134,000', label: 'pixels that differed', note: 'before, up to' },
+  { value: '0', label: 'differing pixels allowed', note: 'today' },
+  { value: '6', label: 'scales checked, 100–225%' },
+]} />
+
+<PullQuote>
+
 You can bolt some of this onto someone else's scene. You can't make all of it the foundation.
+
+</PullQuote>
 
 ## Vulkan, and nothing else
 

@@ -7,6 +7,7 @@ tags: ["Renderer"]
 ---
 
 import Aside from '../../components/mdx/Aside.astro';
+import Stats from '../../components/mdx/Stats.astro';
 
 You have probably seen this: one app gets busy, and suddenly the whole desktop hitches. The cursor stutters, an animation skips, windows that have nothing to do with it stop being smooth.
 
@@ -56,7 +57,11 @@ The test uses a deliberately slow app whose GPU work finishes about **150 ms** a
 | Implicit sync, holding updates only | 36 | 19 |
 | Implicit sync, now | **0** | **58** |
 
-From 8 frames in a second to 59, with an app that is 150 ms late on every frame.
+<Stats caption="With an app that is 150 ms late on every frame." items={[
+  { value: '59', label: 'frames in a second', note: 'from 8' },
+  { value: '0', label: 'missed refreshes', note: 'from 47' },
+  { value: '9 µs', label: 'to import a buffer again', note: 'median' },
+]} />
 
 <Aside title="A test that proves itself">
   This measurement runs in Vela's functional tests on every run. The test also turns the waiting off and checks that the output really does stall, so it can't pass by accident.

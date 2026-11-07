@@ -7,6 +7,10 @@ draft: false
 tags: ["Design"]
 ---
 
+import Column from '../../components/mdx/Column.astro';
+import Columns from '../../components/mdx/Columns.astro';
+import PullQuote from '../../components/mdx/PullQuote.astro';
+
 Over the last few years I tried to switch from Windows to Linux more times than I can count. And every time, I liked almost everything about it.
 
 Linux is fantastic. I love the power of the terminal, Btrfs and its snapshots, living on the leading edge of software. None of that was ever the problem.
@@ -35,11 +39,27 @@ You can't get there by painting new icons on an old foundation. Much of what mak
 
 So Vela owns the whole pipeline. It has its own Wayland compositor and Vulkan renderer, a Qt Quick shell, and a file manager and settings app built to match. In practice:
 
-- **Fluid.** Every animation advances on your monitor's real refreshes, never on an arbitrary timer: at 180 Hz, it can take 180 steps per second. A slow app can't hold the screen back; the cursor, the animations and every other window stay on time.
-- **Sharp.** Fractional scaling is designed around physical pixels. When an app renders at the screen's scale, its pixels reach the display one to one, even at 125% or 175%, and an automated test checks it bit for bit.
-- **Coherent.** Taskbar, Start menu, Snap layouts, Task View, quick settings, notifications, Files and Settings are designed as one desktop, not a collection of unrelated utilities. More are on the way.
+<Columns>
+  <Column title="Fluid">
+    Every animation advances on your monitor's real refreshes, never on an arbitrary timer: at 180 Hz, it can take 180 steps per second. A slow app can't hold the screen back; the cursor, the animations and every other window stay on time.
+  </Column>
+  <Column title="Sharp">
+    Fractional scaling is designed around physical pixels. When an app renders at the screen's scale, its pixels reach the display one to one, even at 125% or 175%, and an automated test checks it bit for bit.
+  </Column>
+  <Column title="Coherent">
+    Taskbar, Start menu, Snap layouts, Task View, quick settings, notifications, Files and Settings are designed as one desktop, not a collection of unrelated utilities. More are on the way.
+  </Column>
+</Columns>
 
-None of this costs efficiency. On my main development machine, the compositor idles at 17 MiB and 0.1% CPU. Use the hardware when it improves the experience; avoid overhead when it doesn't. That's the whole idea.
+None of this costs efficiency. On my main development machine, the compositor idles at 17 MiB and 0.1% CPU.
+
+<PullQuote>
+
+Use the hardware when it improves the experience; avoid overhead when it doesn't.
+
+</PullQuote>
+
+That's the whole idea.
 
 ## Where it is today
 

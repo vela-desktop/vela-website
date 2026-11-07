@@ -8,6 +8,8 @@ tags: ["Audio"]
 ---
 
 import Aside from '../../components/mdx/Aside.astro';
+import Column from '../../components/mdx/Column.astro';
+import Columns from '../../components/mdx/Columns.astro';
 
 Until a few days ago, sound in Vela worked. You could change the volume, pick an output, set each app's volume from the taskbar.
 
@@ -37,9 +39,17 @@ The trade-off: PulseAudio without PipeWire is not supported. Apps that still spe
 
 Settings has three pages for sound:
 
-- **Sound**: the output and the input, their volume, and the input level, the bar that moves when you speak.
-- **Device properties**: the profile (on a Bluetooth headset that's also the codec: SBC, SBC XQ, LDAC, whatever it offers), turning a device off, balance, a test sound, its name and its format.
-- **Volume mixer**: every app with its volume, level, output and input, and a button to reset them all.
+<Columns>
+  <Column title="Sound">
+    The output and the input, their volume, and the input level, the bar that moves when you speak.
+  </Column>
+  <Column title="Device properties">
+    The profile (on a Bluetooth headset that's also the codec: SBC, SBC XQ, LDAC, whatever it offers), turning a device off, balance, a test sound, its name and its format.
+  </Column>
+  <Column title="Volume mixer">
+    Every app with its volume, level, output and input, and a button to reset them all.
+  </Column>
+</Columns>
 
 The quick settings mixer got level bars too, and an app that records can now pick its input there.
 

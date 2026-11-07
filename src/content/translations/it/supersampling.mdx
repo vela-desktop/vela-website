@@ -6,6 +6,9 @@ pubDate: 2026-10-15T19:00:00+02:00
 draft: false
 ---
 
+import PullQuote from '../../../components/mdx/PullQuote.astro';
+import Steps from '../../../components/mdx/Steps.astro';
+
 Quando noto un bordo leggermente sfocato, uno stroke dallo spessore incostante o un’icona fuori griglia di mezzo pixel, non riesco più a ignorarlo. È una fissazione parecchio scomoda quando stai scrivendo un desktop environment da zero.
 
 In queste settimane sto lavorando al redesign di Vela. Stanno cambiando icone, controlli e superfici, ma andando avanti con i mockup mi sono accorto che non mi bastava disegnare forme migliori: volevo che arrivassero a schermo nel modo più nitido possibile.
@@ -166,10 +169,19 @@ All'inizio pensavo di implementare questo micro-renderer facendo supersampling 4
 Questo è l'**antialiasing analitico**: intersechi direttamente il poligono geometrico con il quadrato di ogni singolo pixel di output e calcoli l'area dell'intersezione. Il codice attuale in `decoration.c` ci va vicino usando la distanza dal centro del pixel, che però fallisce proprio sugli spigoli vivi, sui tagli netti e sugli incroci diagonali.
 
 Il prossimo passo sarà quindi un test comparativo diretto sulla stessa identica geometria:
+
+<Steps>
+
 1. **Il rasterizer attuale basato sulla distanza** (ma con l'allineamento a schermo corretto per evitare il filtro bilineare).
 2. **Un riferimento SSAA a forza bruta** a 4× e 8× per asse fisico.
 3. **Un rasterizer analitico** che calcola l'intersezione esatta con il box del pixel.
 
+</Steps>
+
 Se il calcolo analitico pareggia la resa del riferimento SSAA 8× senza sprecare memoria e senza passaggi di downsampling, andrà dritto nel compositor di Vela.
 
+<PullQuote>
+
 Alla fine, una `X` da 10 pixel ha smontato la mia idea iniziale nel modo migliore possibile: la nitidezza di una UI non si ottiene buttando più sample sulla GPU, ma rispettando la griglia fisica, mantenendo continua la geometria fino all'ultimo istante e facendo i conti giusti sui pixel che hai davvero.
+
+</PullQuote>

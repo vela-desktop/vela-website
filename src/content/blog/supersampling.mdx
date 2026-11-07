@@ -7,6 +7,9 @@ draft: false
 tags: ["Renderer"]
 ---
 
+import PullQuote from '../../components/mdx/PullQuote.astro';
+import Steps from '../../components/mdx/Steps.astro';
+
 Once I notice a slightly blurry edge, an uneven stroke weight, or an icon sitting half a pixel off-grid, I can’t unsee it. That is an inconvenient personality trait when you are building a desktop environment from scratch.
 
 Lately I’ve been overhauling Vela’s visual identity for a major redesign. Icons, controls, and surfaces are all changing, and the further I got into the mockups, the more I realized I didn’t just want nicer shapes—I wanted those shapes to land on the monitor as cleanly as physically possible.
@@ -171,10 +174,19 @@ My original plan for the prototype was a 4×-per-axis CPU supersampler. Then it 
 That is **analytical antialiasing**: intersecting the geometric primitive directly against each output pixel’s box and integrating the exact covered area. The existing code in `decoration.c` is already halfway there with a signed-distance approximation from the pixel center, which falls short right at corners, flat caps, and diagonal crossings.
 
 So my next step for Vela’s window controls is a three-way showdown using the exact same glyph geometry:
+
+<Steps>
+
 1. **The current segment-distance rasterizer** (with the 13-pixel alignment mismatch fixed).
 2. **A brute-force SSAA reference** at 4× and 8× per physical axis.
 3. **A specialized analytical coverage rasterizer** computing exact pixel-box intersections for strokes, miters, and crossings.
 
+</Steps>
+
 If the analytical rasterizer visually matches the 8× SSAA reference while using less memory and zero downsampling passes, it earns its spot in Vela’s production compositor.
 
+<PullQuote>
+
 I started out looking for an excuse to throw sixteen times more GPU samples at the entire desktop. Instead, a 10-pixel `X` taught me that a genuinely crisp UI doesn't come from brute-forcing more pixels—it comes from respecting the physical grid, keeping geometry continuous until the last possible microsecond, and doing the right math on the pixels you actually have.
+
+</PullQuote>
