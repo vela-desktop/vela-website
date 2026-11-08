@@ -22,6 +22,15 @@ export function unprefixed(path: string): string {
   return isLang(first) && first !== DEFAULT_LANG ? `/${rest.join('/')}` : path;
 }
 
+/**
+ * The copy button on code blocks (src/scripts/enhance.ts). Kept apart from UI
+ * so the page's script carries only these words.
+ */
+export const COPY: Record<Lang, { label: string; copy: string; copied: string; failed: string }> = {
+  en: { label: 'Copy code to clipboard', copy: 'Copy', copied: 'Copied', failed: 'Couldn’t copy' },
+  it: { label: 'Copia il codice negli appunti', copy: 'Copia', copied: 'Copiato', failed: 'Copia non riuscita' },
+};
+
 /** The words around a journal entry. */
 export const UI = {
   en: {
@@ -52,6 +61,8 @@ export const UI = {
     translatedFrom: { en: '', it: 'Translated from Italian.' } as Record<Lang, string>,
     /** The heading of the list of sections beside a long entry. */
     contents: 'In this entry',
+    /** The self-link after each heading, for screen readers. */
+    sectionLink: (heading: string) => `Link to section: ${heading}`,
     /** The controls of a journal video's player, for screen readers. */
     player: {
       play: 'Play',
@@ -86,6 +97,7 @@ export const UI = {
     readIn: 'Leggi in italiano',
     translatedFrom: { en: 'Tradotto dall’inglese.', it: '' } as Record<Lang, string>,
     contents: 'In questo articolo',
+    sectionLink: (heading: string) => `Link alla sezione: ${heading}`,
     player: {
       play: 'Riproduci',
       pause: 'Pausa',

@@ -1,9 +1,10 @@
 ---
 import SectionLabel from '../SectionLabel.astro';
 import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
-import { LINKS } from '../../consts';
+import { DISTROS, LINKS, SITE, SUPPORT, listOf } from '../../consts';
+import { cloneCommand as clone } from '../../lib/vela';
 
-const cloneCommand = `git clone ${LINKS.repo}.git`;
+const cloneCommand = await clone();
 const repoDisplay = LINKS.repo.replace('https://', '');
 ---
 
@@ -24,7 +25,7 @@ const repoDisplay = LINKS.repo.replace('https://', '');
     </div>
 
     <div class="open__status" data-reveal>
-      <p class="open__status-badge"><span class="dot" aria-hidden="true"></span> Beta</p>
+      <p class="open__status-badge"><span class="dot" aria-hidden="true"></span> {SITE.status}</p>
       <div class="open__status-text">
         <p>
           Pick Vela at the login screen and use it every day: compositor, shell, file manager,
@@ -35,8 +36,7 @@ const repoDisplay = LINKS.repo.replace('https://', '');
         </p>
         <p class="open__requirements">
           <span class="label">Requires</span>
-          A GPU with Vulkan 1.4 — AMD or Intel with Mesa 25.0 or newer, or NVIDIA with the
-          proprietary driver 570 or newer, or NVK.
+          A GPU with {SUPPORT.vulkan} — {SUPPORT.drivers}.
         </p>
       </div>
     </div>
@@ -46,11 +46,12 @@ const repoDisplay = LINKS.repo.replace('https://', '');
         <span class="path__index">01</span>
         <h3 class="path__title">Try it</h3>
         <p>
-          On Arch Linux, CachyOS, EndeavourOS, Fedora 44 and Ubuntu 26.10, Vela installs as a
+          On {listOf(DISTROS)}, Vela installs as a
           signed <code>vela</code> package from its Beta releases, updated with{' '}
           <code>vela-update</code>. Other distributions can build from source.
         </p>
-        <pre class="terminal" aria-label="Install commands for Arch Linux, Fedora 44 and Ubuntu 26.10"><code><span class="terminal__prompt">$</span> {cloneCommand}
+        <p class="visually-hidden">The commands that install the Beta:</p>
+        <pre class="terminal"><code><span class="terminal__prompt">$</span> {cloneCommand}
 <span class="terminal__prompt">$</span> sh vela/packaging/vela-update --channel beta</code></pre>
         <a class="link" href={LINKS.install}>Installation guide <span class="arrow" aria-hidden="true">→</span></a>
       </li>

@@ -7,6 +7,8 @@ updated: 2026-10-31
 schema: faq
 ---
 
+import { DISTROS, LINKS, SUPPORT, listOf } from '../consts';
+
 Short answers to the questions that come up most. Each one links to where the full story lives.
 
 ## About Vela
@@ -37,15 +39,15 @@ Yes. Vela is free software under the [GPL‑3.0‑or‑later](https://github.com
 
 ### Which distributions are supported?
 
-Today, Arch Linux, CachyOS, EndeavourOS, Fedora 44 and Ubuntu 26.10, with signed Beta packages and an updater, `vela-update`. Fedora and Ubuntu support are newer and have had less testing on real hardware. Other distributions will be supported in the future. In the meantime, you can build and install Vela on any distribution that ships wlroots 0.20, although it isn't officially supported there yet. The [install page](/install/) covers both.
+Today, {listOf(DISTROS)}, with signed Beta packages and an updater, `vela-update`. Fedora and Ubuntu support are newer and have had less testing on real hardware. Other distributions will be supported in the future. In the meantime, you can build and install Vela on any distribution that ships {SUPPORT.wlroots}, although it isn't officially supported there yet. The [install page](/install/) covers both.
 
 ### Which GPUs does it work with?
 
-Any GPU with a Vulkan 1.4 driver: AMD or Intel with Mesa 25.0 or newer, NVIDIA with the proprietary driver 570 or newer, or NVK. Vela is developed on an AMD Radeon RX 9070 XT, and that's where it's tested the most; its GPU test suites also run on an NVIDIA GeForce RTX 4070 Laptop GPU. The [hardware coverage](https://github.com/vela-desktop/vela/blob/main/docs/hardware.md) page says exactly what has been verified on the others.
+Any GPU with a {SUPPORT.vulkan} driver: {SUPPORT.drivers}. Vela is developed on an AMD Radeon RX 9070 XT, and that's where it's tested the most; its GPU test suites also run on an NVIDIA GeForce RTX 4070 Laptop GPU. The <a href={LINKS.hardware}>hardware coverage</a> page says exactly what has been verified on the others.
 
 ### Does it work with NVIDIA?
 
-Yes, with the proprietary driver 570 or newer. Vela has NVIDIA-specific handling, its GPU tests run on an NVIDIA machine too, and it gets reports from testers. Real sessions on NVIDIA have had less testing than on AMD, though, especially screen sharing and suspend. Reports are very welcome.
+Yes, with {SUPPORT.nvidiaDriver}. Vela has NVIDIA-specific handling, its GPU tests run on an NVIDIA machine too, and it gets reports from testers. Real sessions on NVIDIA have had less testing than on AMD, though, especially screen sharing and suspend. Reports are very welcome.
 
 ### Can I run it in a virtual machine?
 

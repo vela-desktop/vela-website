@@ -1,6 +1,6 @@
 version: 2
 
-# Keeps the pinned actions in .github/workflows current, as in the Vela repository.
+# Keeps the pinned actions in .github/workflows and the npm dependencies current.
 updates:
   - package-ecosystem: github-actions
     directory: /
@@ -12,3 +12,19 @@ updates:
     open-pull-requests-limit: 5
     cooldown:
       default-days: 7
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:30"
+      timezone: Europe/Rome
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    # One pull request for the routine updates; security fixes still come one by one.
+    groups:
+      npm:
+        patterns: ["*"]
+        update-types: [minor, patch]

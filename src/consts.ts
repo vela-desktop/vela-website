@@ -37,6 +37,43 @@ export const AUTHOR = {
 
 const REPO = 'https://github.com/vela-desktop/vela';
 
+/**
+ * What Vela runs on, for every page that says it: the homepage, Install and
+ * the FAQ. Keep it in sync with the Vela README and docs/hardware.md.
+ */
+const NVIDIA_DRIVER = 'the proprietary driver 570 or newer';
+export const SUPPORT = {
+  vulkan: 'Vulkan 1.4',
+  /** The drivers that provide it, as a phrase: "AMD or Intel with …, or NVK". */
+  drivers: `AMD or Intel with Mesa 25.0 or newer, NVIDIA with ${NVIDIA_DRIVER}, or NVK`,
+  nvidiaDriver: NVIDIA_DRIVER,
+  /** Building from source works on any distribution that ships it. */
+  wlroots: 'wlroots 0.20',
+  /** Distributions with signed Beta packages and vela-update. */
+  arch: ['Arch Linux', 'CachyOS', 'EndeavourOS'],
+  fedora: 'Fedora 44',
+  ubuntu: 'Ubuntu 26.10',
+} as const;
+
+export const DISTROS = [...SUPPORT.arch, SUPPORT.fedora, SUPPORT.ubuntu];
+
+/**
+ * The Cosign release Install tells Fedora and Ubuntu users to install, with
+ * the SHA-256 of each package from its cosign_checksums.txt. vela-update
+ * trusts Cosign to verify everything else, so the version is pinned and
+ * checked, not "latest". Update all three together.
+ */
+export const COSIGN = {
+  version: '3.1.4',
+  rpm: { file: 'cosign-3.1.4-1.x86_64.rpm', sha256: '02fd4fe524932ccba09f7762fce76be35e5570d2023a1093cce776eefc6b62df' },
+  deb: { file: 'cosign_3.1.4_amd64.deb', sha256: '6db74c0ad58e69fca184bf0c6c4be40304aa12ab81b4b672042f91979934d547' },
+} as const;
+
+/** "A, B and C". */
+export function listOf(items: readonly string[], conjunction = 'and'): string {
+  return items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} ${conjunction} ${items.at(-1)}`;
+}
+
 export const LINKS = {
   repo: REPO,
   readme: `${REPO}#readme`,
@@ -49,6 +86,7 @@ export const LINKS = {
   docs: `${REPO}/tree/main/docs`,
   rendererDoc: `${REPO}/blob/main/docs/renderer.md`,
   license: `${REPO}/blob/main/LICENSE`,
+  hardware: `${REPO}/blob/main/docs/hardware.md`,
   website: 'https://github.com/vela-desktop/vela-website',
   rss: '/rss.xml',
   faq: '/faq/',

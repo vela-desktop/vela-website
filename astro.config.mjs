@@ -13,7 +13,10 @@ const lastmod = lastModified();
 export default defineConfig({
   site: 'https://velade.org',
   trailingSlash: 'always',
-  build: { format: 'directory' },
+  // Stylesheets are always files, never inline <style>: Astro doesn't hash the
+  // styles of components used only inside MDX entries, so the CSP below would
+  // block them if they were inlined. Files are covered by 'self'.
+  build: { format: 'directory', inlineStylesheets: 'never' },
   // Typefaces. Each family is registered once here and exposed as a CSS
   // variable; src/styles/tokens.css maps those variables to the design roles
   // (--font-display, --font-body, --font-serif, --font-mono). To change a

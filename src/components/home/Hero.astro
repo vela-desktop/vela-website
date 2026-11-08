@@ -3,8 +3,8 @@ import start from '../../assets/screenshots/start.webp';
 import startCrop from '../../assets/screenshots/start-menu-crop.webp';
 import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
 import { pictureSources, fallbackSrc } from '../../lib/images';
-import { LINKS } from '../../consts';
-import { stars, formatStars } from '../../lib/vela';
+import { LINKS, SITE, SUPPORT, listOf } from '../../consts';
+import { latestBeta, stars, formatStars } from '../../lib/vela';
 
 const mobileQuery = '(max-width: 40rem)';
 const sources = [
@@ -13,13 +13,14 @@ const sources = [
 ];
 const fallback = await fallbackSrc(start, 1600);
 const starCount = await stars();
+const release = await latestBeta();
 
 const specs = [
   { term: 'Compositor', detail: 'Wayland, own scene graph on wlroots' },
-  { term: 'Renderer', detail: 'Vulkan 1.4, no GL fallback' },
+  { term: 'Renderer', detail: `${SUPPORT.vulkan}, no GL fallback` },
   { term: 'Shell', detail: 'Qt 6 and Qt Quick' },
   { term: 'License', detail: 'GPL-3.0-or-later' },
-  { term: 'Status', detail: 'Beta, usable every day' },
+  { term: 'Status', detail: `${SITE.status}, usable every day` },
 ];
 ---
 
@@ -47,11 +48,17 @@ const specs = [
         Vela is an independent desktop for Linux, with its own Wayland compositor and Vulkan
         renderer, a Qt Quick shell, and a file manager and settings app built to match.
       </p>
+      <div class="hero__cta">
       <div class="hero__actions">
-        <a class="button button--primary" href="#desktop">
-          Explore the desktop <span class="arrow" aria-hidden="true">↓</span>
+        <a class="button button--primary" href={LINKS.install}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 4v11m-5-5 5 5 5-5M5 20h14"></path>
+          </svg>
+          Install Vela
         </a>
-        <a class="button" href="/blog/">Read the journal</a>
+        <a class="button" href="#desktop">
+          Explore the desktop <span class="arrow arrow--down" aria-hidden="true">↓</span>
+        </a>
         <a class="button button--ghost" href={LINKS.repo} rel="noopener">
           Star on GitHub
           {
@@ -64,6 +71,10 @@ const specs = [
           }
           <span class="arrow arrow--ne" aria-hidden="true">↗</span>
         </a>
+      </div>
+      <p class="hero__release">
+        {release ? `${SITE.status} ${release.version}` : SITE.status}<span aria-hidden="true">{' · '}</span><span class="visually-hidden">. </span>Signed packages for {listOf([SUPPORT.arch[0], SUPPORT.fedora, SUPPORT.ubuntu])}
+      </p>
       </div>
     </div>
   </div>
@@ -249,11 +260,24 @@ const specs = [
     font-variant-numeric: tabular-nums;
   }
 
+  .hero__cta {
+    margin-top: var(--space-l);
+  }
+
   .hero__actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: var(--space-l);
+  }
+
+  .hero__release {
+    max-width: 30rem;
+    margin-top: var(--space-s);
+    padding-left: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
   }
 
   /* ── The stage ── */
@@ -409,7 +433,7 @@ const specs = [
       margin-top: var(--space-xl);
     }
 
-    .hero__actions {
+    .hero__cta {
       margin-top: 0;
     }
 

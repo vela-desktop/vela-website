@@ -10,10 +10,18 @@
 import GithubSlugger from 'github-slugger';
 import katex from 'katex';
 import { htmlToHast } from 'satteri';
+import { DEFAULT_LANG, UI, isLang } from './i18n.ts';
+
+/** The language of a document: a translation's folder, or the site's own. */
+function languageOf(fileURL) {
+  const lang = fileURL?.pathname.match(/\/content\/translations\/([^/]+)\//)?.[1];
+  return lang && isLang(lang) ? lang : DEFAULT_LANG;
+}
 
 /** @type {import('satteri').HastPluginEntry} */
-export const headingAnchors = () => {
+export const headingAnchors = (/** @type {import('satteri').PluginFactoryContext} */ doc) => {
   const slugger = new GithubSlugger();
+  const label = UI[languageOf(doc.fileURL)].sectionLink;
   return {
     name: 'vela-heading-anchors',
     element: {
@@ -32,7 +40,7 @@ export const headingAnchors = () => {
           properties: {
             href: `#${id}`,
             className: ['heading-anchor'],
-            ariaLabel: `Link to section: ${text}`,
+            ariaLabel: label(text),
           },
           children: [],
         });

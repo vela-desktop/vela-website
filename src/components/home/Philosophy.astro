@@ -1,6 +1,6 @@
 ---
 import SectionLabel from '../SectionLabel.astro';
-import { LINKS } from '../../consts';
+import { LINKS, SUPPORT } from '../../consts';
 
 // ── Sharp: what a row of alternating one-pixel lines becomes ──
 // Left: copied 1:1. Right: the same buffer resampled to 125% with bilinear
@@ -33,7 +33,7 @@ const stack = [
   { name: 'Apps', detail: 'Files · Settings' },
   { name: 'Shell', detail: 'Qt Quick, blurred panels' },
   { name: 'Compositor', detail: 'Scene graph · damage · frame clock' },
-  { name: 'Renderer', detail: 'Vulkan 1.4' },
+  { name: 'Renderer', detail: SUPPORT.vulkan },
   { name: 'Display', detail: 'Direct scanout · VRR · tearing control' },
 ];
 
@@ -89,7 +89,7 @@ const measures = [
             renderer written for them. Vela targets current hardware and modern displays on purpose.
           </p>
           <p>
-            It asks for a GPU with Vulkan 1.4, and in return the compositor draws live acrylic blur
+            It asks for a GPU with {SUPPORT.vulkan}, and in return the compositor draws live acrylic blur
             behind the shell, and rounded corners and soft shadows around windows — sharp at every
             scale.
           </p>

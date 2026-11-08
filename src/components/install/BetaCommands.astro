@@ -1,0 +1,18 @@
+---
+// The commands that install the Beta: `before` (the distribution's own
+// prerequisites), then a clone of Vela at its latest Beta release and
+// vela-update. Cloning the release tag, not main, means the updater that
+// checks every signature is itself the released one. Without GitHub at build
+// time, the clone falls back to main.
+import { Code } from 'astro:components';
+import { cloneCommand } from '../../lib/vela';
+
+interface Props {
+  before?: string[];
+}
+
+const { before = [] } = Astro.props;
+const lines = [...before, await cloneCommand(), 'sh vela/packaging/vela-update --channel beta'];
+---
+
+<Code code={lines.join('\n')} lang="sh" theme="css-variables" />

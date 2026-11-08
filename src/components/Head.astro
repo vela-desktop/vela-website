@@ -99,7 +99,15 @@ const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 <Font cssVariable="--font-family-serif" />
 <Font cssVariable="--font-family-mono" />
 
-<script is:inline>document.documentElement.classList.add('js');</script>
+<script is:inline>
+  // "js" lets CSS hide what scripts/enhance.ts reveals on scroll. Modules run
+  // before DOMContentLoaded, so if it hasn't marked the page by then, it
+  // failed to load: drop "js" and show everything as it is without scripts.
+  document.documentElement.classList.add('js');
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!document.documentElement.classList.contains('enhanced')) document.documentElement.classList.remove('js');
+  });
+</script>
 {import.meta.env.PROD && UMAMI.websiteId && (
   <script is:inline define:vars={{ umami: UMAMI }}>
     // Visitors who ask not to be tracked, with Do Not Track or Global Privacy

@@ -4,11 +4,14 @@ title: "Install Vela"
 seoTitle: "Install Vela, a modern Linux desktop environment"
 description: "Try Vela in a window on your current desktop, or install it and pick it at the login screen."
 label: "Get started"
-updated: 2026-10-31
+updated: 2026-11-08
 ---
 
 import Aside from '../components/mdx/Aside.astro';
 import LatestBeta from '../components/LatestBeta.astro';
+import BetaCommands from '../components/install/BetaCommands.astro';
+import CosignCommands from '../components/install/CosignCommands.astro';
+import { COSIGN, SUPPORT, LINKS } from '../consts';
 
 Vela is beta software. You can use it every day, and every release passes the full GPU test suites on AMD and NVIDIA before it's published, but it isn't a stable release yet, and it hasn't been tested on every GPU and driver. Read this page before installing. It takes five minutes, and it can save you an evening.
 
@@ -18,11 +21,11 @@ Vela is beta software. You can use it every day, and every release passes the fu
 
 ## What you need
 
-- **A GPU with Vulkan 1.4.** AMD or Intel with Mesa 25.0 or newer, or NVIDIA with the proprietary driver 570 or newer, or NVK.
+- **A GPU with {SUPPORT.vulkan}.** {SUPPORT.drivers}.
 - **A login screen that lists Wayland sessions**, such as SDDM or Plasma Login.
 - **The usual Linux services** for the features that need them: NetworkManager for Wi‑Fi, BlueZ for Bluetooth, PipeWire and WirePlumber for sound, UDisks2 for drives, xdg-desktop-portal for screen sharing, and Xwayland for X11 apps and games.
 
-Vela is developed and tested daily on an AMD Radeon RX 9070 XT with Mesa/RADV. NVIDIA, Intel, NVK, virtual machines and hybrid-GPU laptops are supported paths, but have had less testing. The [hardware coverage](https://github.com/vela-desktop/vela/blob/main/docs/hardware.md) page lists exactly what has been verified and where.
+Vela is developed and tested daily on an AMD Radeon RX 9070 XT with Mesa/RADV. NVIDIA, Intel, NVK, virtual machines and hybrid-GPU laptops are supported paths, but have had less testing. The <a href={LINKS.hardware}>hardware coverage</a> page lists exactly what has been verified and where.
 
 ## Try it without logging out
 
@@ -42,12 +45,12 @@ A nested session is great for exploring, but it can't tell you whether Vela work
 
 ## Beta or Experimental
 
-`vela-update` installs Vela on Arch, Fedora 44 and Ubuntu 26.10 as a native package, and keeps it updated. It offers two channels:
+`vela-update` installs Vela on Arch, {SUPPORT.fedora} and {SUPPORT.ubuntu} as a native package, and keeps it updated. It offers two channels:
 
 - **Beta**, the `vela` package, is the one to pick. It installs the newest numbered [release](https://github.com/vela-desktop/vela/releases): prebuilt, signed, and verified with Cosign before it's installed. If a package can't be verified, `vela-update` stops without installing anything.
 - **Experimental**, the `vela-git` package, follows the latest commit on `main`, and `vela-update` builds it on your machine. It gets every change as soon as it lands, and every regression too.
 
-The commands below install the Beta. Without `--channel beta`, the first installation is Experimental. After that, the installed package decides the channel, and *Settings → System → Updates* can switch it.
+The commands below install the Beta. They clone Vela at its latest release, so the `vela-update` that checks every signature is the released one too; Git will say the checkout is a "detached HEAD", which is expected. Without `--channel beta`, the first installation is Experimental. After that, the installed package decides the channel, and *Settings → System → Updates* can switch it.
 
 <LatestBeta more="changes" />
 
@@ -55,11 +58,7 @@ The commands below install the Beta. Without `--channel beta`, the first install
 
 Run:
 
-```sh
-sudo pacman -S --needed git curl base-devel cosign
-git clone https://github.com/vela-desktop/vela.git
-sh vela/packaging/vela-update --channel beta
-```
+<BetaCommands before={['sudo pacman -S --needed git curl base-devel cosign']} />
 
 `vela-update` handles the first installation too. It downloads the release's `vela` package, checks its SHA-256 checksum and its signed build provenance with Cosign, and installs it with pacman. You don't need a GitHub account or the GitHub CLI.
 
@@ -67,53 +66,32 @@ For Experimental, run `sh vela/packaging/vela-update` instead: it builds `vela-g
 
 ## Fedora 44
 
-On Fedora 44 (x86_64), Vela installs as a native `vela` RPM, with the same updater. Fedora 44 doesn't ship Cosign in its repositories, and the Beta can't be installed without it, so install the official Cosign RPM from Sigstore first:
+On {SUPPORT.fedora} (x86_64), Vela installs as a native `vela` RPM, with the same updater. {SUPPORT.fedora} doesn't ship Cosign in its repositories, and the Beta can't be installed without it, so install the official Cosign {COSIGN.version} RPM from Sigstore first. The second line checks the download against the checksum Sigstore published, and stops if it doesn't match:
 
-```sh
-version=$(curl -fsSL https://api.github.com/repos/sigstore/cosign/releases/latest |
-    python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"].removeprefix("v"))')
-curl -fL -o cosign.rpm "https://github.com/sigstore/cosign/releases/download/v${version}/cosign-${version}-1.x86_64.rpm"
-sudo dnf install ./cosign.rpm
-rm cosign.rpm
-```
+<CosignCommands format="rpm" />
 
 Only get Cosign from the official Sigstore releases: Vela trusts it to check everything else. Then install Vela:
 
-```sh
-sudo dnf install git curl rpm-build dnf5-plugins
-git clone https://github.com/vela-desktop/vela.git
-sh vela/packaging/vela-update --channel beta
-```
+<BetaCommands before={['sudo dnf install git curl rpm-build dnf5-plugins']} />
 
 <Aside title="Fedora support is new">
-  The RPMs are built and test-installed in a fresh Fedora 44 container before every release, but they've had little testing on real hardware so far. Other Fedora releases, other DNF-based distributions and the immutable variants, such as Silverblue and Kinoite, aren't supported by the installer. There you can [build from source](#other-distributions).
+  The RPMs are built and test-installed in a fresh {SUPPORT.fedora} container before every release, but they've had little testing on real hardware so far. Other Fedora releases, other DNF-based distributions and the immutable variants, such as Silverblue and Kinoite, aren't supported by the installer. There you can [build from source](#other-distributions).
 </Aside>
 
 ## Ubuntu 26.10
 
-On Ubuntu 26.10, Vela installs as a native `vela` DEB, again with `vela-update`. Enable the *universe* repository first. The Beta needs Cosign here too; install the official DEB from Sigstore:
+On {SUPPORT.ubuntu}, Vela installs as a native `vela` DEB, again with `vela-update`. Enable the *universe* repository first. The Beta needs Cosign here too; install the official Cosign {COSIGN.version} DEB from Sigstore, checked against its published checksum:
 
-```sh
-sudo apt update
-sudo apt install git ca-certificates curl python3 sudo
-version=$(curl -fsSL https://api.github.com/repos/sigstore/cosign/releases/latest |
-    python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"].removeprefix("v"))')
-curl -fL -o cosign.deb "https://github.com/sigstore/cosign/releases/download/v${version}/cosign_${version}_amd64.deb"
-sudo apt install ./cosign.deb
-rm cosign.deb
-```
+<CosignCommands format="deb" before={['sudo apt update', 'sudo apt install git ca-certificates curl python3 sudo']} />
 
 Then install Vela:
 
-```sh
-git clone https://github.com/vela-desktop/vela.git
-sh vela/packaging/vela-update --channel beta
-```
+<BetaCommands />
 
 On Ubuntu, Experimental always builds Vela on your machine: `vela-update` installs the build dependencies with APT, compiles the selected commit, and installs the result as a DEB. It takes a while; `--jobs` sets how many parallel jobs the build uses.
 
 <Aside title="Ubuntu support is the newest">
-  CI builds the DEB and test-installs it in a fresh Ubuntu 26.10 container, and it has been tried in a virtual machine with GPU passthrough, but real hardware hasn't been tested much yet. Other Ubuntu releases aren't supported.
+  CI builds the DEB and test-installs it in a fresh {SUPPORT.ubuntu} container, and it has been tried in a virtual machine with GPU passthrough, but real hardware hasn't been tested much yet. Other Ubuntu releases aren't supported.
 </Aside>
 
 ## Updating
@@ -142,7 +120,7 @@ sudo apt-get install --allow-downgrades --reinstall ~/.cache/vela-update/package
 
 ## Other distributions
 
-Other distributions will be supported in the future. Until then, you can build Vela from source on any distribution that ships wlroots 0.20, although it isn't officially supported there yet, and there's no updater: you rebuild by hand. You need CMake 3.22 or newer, Ninja, a C17 and C++20 compiler, wlroots 0.20, Qt 6.7 or newer with its Linguist tools, LayerShellQt, Vulkan headers and loader, `glslc`, GBM, libdrm, FreeType, HarfBuzz, Fontconfig and PAM. librsvg is optional: it draws app icons in the title bar.
+Other distributions will be supported in the future. Until then, you can build Vela from source on any distribution that ships {SUPPORT.wlroots}, although it isn't officially supported there yet, and there's no updater: you rebuild by hand. You need CMake 3.22 or newer, Ninja, a C17 and C++20 compiler, {SUPPORT.wlroots}, Qt 6.7 or newer with its Linguist tools, LayerShellQt, Vulkan headers and loader, `glslc`, GBM, libdrm, FreeType, HarfBuzz, Fontconfig and PAM. librsvg is optional: it draws app icons in the title bar.
 
 On other **Fedora** releases, for example:
 

@@ -126,7 +126,7 @@ npm run build        # type-checks, then writes the site to dist/
 DEPLOY_HOST=deploy@<VM_IP> scripts/deploy.sh
 ```
 
-It runs `npm ci` and `npm run build`, uploads `dist/` to a new release directory
+It runs `npm ci --ignore-scripts` and `npm run build`, uploads `dist/` to a new release directory
 with `rsync` (unchanged files are hard-linked to the previous release), then
 switches `current` with an atomic rename. Visitors never see a half-uploaded site,
 and Apache needs no reload. The five most recent releases are kept.
@@ -160,6 +160,12 @@ cp /var/lib/velade/vela-website/deploy/systemd/velade-autodeploy.* /etc/systemd/
 systemctl daemon-reload
 systemctl enable --now velade-autodeploy.timer
 ```
+
+The service runs in a tight systemd sandbox: it can write only to its clone
+and the site directory, and reach only the network. Like the Apache
+configuration, the unit files are not updated by the deploys themselves: when
+`deploy/systemd/` changes, copy them again and run `systemctl daemon-reload`.
+`systemd-analyze security velade-autodeploy.service` shows what it is allowed.
 
 Then:
 

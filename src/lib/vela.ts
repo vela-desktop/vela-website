@@ -7,13 +7,17 @@
 // return null or an empty list, and the pages point to GitHub instead.
 // GITHUB_TOKEN, when set (as in CI), raises the rate limit.
 
+import { LINKS, SUPPORT } from '../consts';
+
 const API = 'https://api.github.com/repos/vela-desktop/vela';
 
 export interface BetaRelease {
   /** Version from the tag, e.g. "0.1.0" for v0.1.0. */
   version: string;
+  /** The tag itself, e.g. "v0.1.0". */
+  tag: string;
   published: Date;
-  /** The packages the release has, in bytes: Arch, Fedora 44, Ubuntu 26.10. */
+  /** The packages the release has, in bytes: Arch, Fedora, Ubuntu. */
   packages: { label: string; size: number }[];
   url: string;
 }
@@ -64,8 +68,8 @@ interface GitHubRelease {
 // Release assets of the Beta channel (the `vela` package), by distribution.
 const PACKAGES = [
   { label: 'Arch Linux package', name: /^vela-\d[^/]*-x86_64\.pkg\.tar\.zst$/ },
-  { label: 'Fedora 44 RPM', name: /^vela-\d[^/]*\.x86_64\.rpm$/ },
-  { label: 'Ubuntu 26.10 DEB', name: /^vela_\d[^/]*_amd64\.deb$/ },
+  { label: `${SUPPORT.fedora} RPM`, name: /^vela-\d[^/]*\.x86_64\.rpm$/ },
+  { label: `${SUPPORT.ubuntu} DEB`, name: /^vela_\d[^/]*_amd64\.deb$/ },
 ];
 
 /** The newest numbered Beta release, as installed by `vela-update --channel beta`. */
@@ -81,6 +85,7 @@ export async function latestBeta(): Promise<BetaRelease | null> {
     if (packages.length === 0) continue;
     return {
       version,
+      tag: release.tag_name,
       published: new Date(release.published_at),
       packages,
       url: release.html_url,
@@ -154,4 +159,13 @@ export function formatStars(count: number): string {
   if (count < 1000) return String(count);
   const thousands = count / 1000;
   return `${thousands < 10 ? Math.floor(thousands * 10) / 10 : Math.floor(thousands)}k`;
+}
+
+/**
+ * `git clone` of Vela at its latest Beta release, so that the vela-update it
+ * runs is the released one; of main when the build couldn't read the release.
+ */
+export async function cloneCommand(): Promise<string> {
+  const release = await latestBeta();
+  return release ? `git clone --branch ${release.tag} ${LINKS.repo}.git` : `git clone ${LINKS.repo}.git`;
 }
