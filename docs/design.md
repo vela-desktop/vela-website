@@ -15,7 +15,7 @@ voice, not a change of site.
 3. **Diagrams explain mechanisms.** The vblank timeline, the pixel grid (its
    "resampled" half is computed with real bilinear filtering at 125%) and the stack
    illustrate documented behaviour; nothing decorative pretends to be data.
-4. **Efficiency through architecture.** Static HTML, ~1.4 KB of inline JavaScript, AVIF/WebP
+4. **Efficiency through architecture.** Static HTML, ~3.5 KB of inline JavaScript (the analytics loader included), AVIF/WebP
    at responsive widths, self-hosted fonts with metric-matched fallbacks (CLS 0).
    Richness comes from composition and type, not from runtime weight.
 5. **Honest states.** Beta status is visible in the header, hero, status block and

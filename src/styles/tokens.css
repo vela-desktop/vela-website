@@ -23,7 +23,7 @@
 
   --text: #e8eef6;
   --text-muted: #a2b0c3;
-  --text-faint: #7d8ca1;  /* ≥ 4.5:1 on --ink-1; metadata only */
+  --text-faint: #8292a7;  /* ≥ 4.9:1 on every ink, --ink-4 included; metadata only */
 
   --accent: #8cc8ff;          /* restrained blue: links, focus */
   --accent-strong: #4da3ff;
