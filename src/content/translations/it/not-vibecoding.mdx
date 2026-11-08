@@ -1,7 +1,7 @@
 ---
 title: "Vela non è vibecoding"
-seoTitle: "Vela non è vibecoding: come nasce un desktop Linux scritto dall'AI"
-description: "Il codice di Vela lo scrive l'AI al 100%, le decisioni no: design document, una catena di revisioni e scelte di prodotto, con la storia del Bluetooth come esempio."
+seoTitle: "Vela non è vibecoding: come nasce un desktop Linux scritto dall’AI"
+description: "Il codice di Vela lo scrive l’AI al 100%, le decisioni no: design document, revisioni e scelte di prodotto, con la storia del Bluetooth come esempio."
 pubDate: 2026-11-07T17:35:00+01:00
 draft: false
 ---
@@ -30,7 +30,7 @@ Ogni volta che Vela finisce su un forum, arriva una sfilza di commenti: è AI sl
 
 Onestamente, lo capisco. Negli ultimi mesi soprattutto c'è un bombardamento di progetti vibecoded per davvero, cioè fatti da gente che ha un'idea, a volte nemmeno particolarmente originale, prende un agente, scrive un prompt e la realizza. Poi fa scrivere un post allo stesso agente e pretende attenzione sul suo repository GitHub.
 
-E quando dico che il 100% del codice di Vela è scritto da AI (l'ho scritto anche in [Why Vela isn't written in Rust](https://velade.org/blog/why-not-rust/)), il rischio di essere messi nello stesso calderone di chi scrive "ok Claude, fammi un desktop environment figo come piace a me" è alto.
+E quando dico che il 100% del codice di Vela è scritto da AI (l'ho scritto anche in [Perché Vela non è scritta in Rust](/it/blog/why-not-rust/)), il rischio di essere messi nello stesso calderone di chi scrive "ok Claude, fammi un desktop environment figo come piace a me" è alto.
 Però vi chiedo di fare lo sforzo di leggere questo articolo, per capire perché credo che sia davvero molto diverso da come può sembrare a una prima impressione.
 
 Io sto cercando di fare qualcosa di stabile, con fondamenta solide, che possa davvero sostituire i grandi desktop environment come Plasma. È una grande ambizione, e non è minimamente possibile pensare di arrivarci facendo vibecoding.
@@ -53,7 +53,7 @@ Qualche esempio:
 
 - **Il renderer.** Vela non usa `wlr_scene` né il renderer di wlroots. Ha un proprio scene graph e un renderer Vulkan 1.4, senza fallback OpenGL. È una scelta che restringe l'hardware supportato, presa apposta per avere live blur, frame pacing sul vblank reale e scaling frazionario esatto al pixel. Mi ricordo che GPT lo sconsigliava esplicitamente.
 - **La riscrittura in C.** A inizio ottobre il compositor era circa 18.000 righe di C++, con un oggetto `Server` che sapeva tutto di tutti. L'ho fatto riscrivere in C17, un sottosistema alla volta, con una regola: il comportamento osservabile da utenti e test resta identico. Le regole del nuovo codice sono scritte in [docs/c-core.md](https://github.com/vela-desktop/vela/blob/main/docs/c-core.md): chi crea e chi distrugge ogni struttura, niente stato globale, allocazioni visibili. È stata una scelta che ha rallentato lo sviluppo per un po', come ogni riscrittura. Ma l'ho fatta per una questione di *gusto*: credo che il codice C sia molto più pulito del C++, e credo che di questa pulizia benefici anche l'AI (lo dico perché qualcuno potrebbe obiettare che non importa, visto che il codice non lo scrivo io). In Vela cerco di scrivere in C tutto il possibile.
-- **Il redesign.** Lo sto discutendo con un amico da settimane, a voce e su carta, prima che diventi codice. Ne ho raccontato le fondamenta in [Visual coherence in Vela](https://velade.org/blog/major-redesign-1/), comprese le idee che ho scartato. Da fuori non si vede quasi niente, ma dietro le quinte c'è tanto lavoro: sul logo, sull'interfaccia grafica, sul nome.
+- **Il redesign.** Lo sto discutendo con un amico da settimane, a voce e su carta, prima che diventi codice. Ne ho raccontato le fondamenta in [Coerenza visiva in Vela](/it/blog/major-redesign-1/), comprese le idee che ho scartato. Da fuori non si vede quasi niente, ma dietro le quinte c'è tanto lavoro: sul logo, sull'interfaccia grafica, sul nome.
 
 Nella cartella `docs/` del repository ci sono oltre 10.000 righe di documentazione di progetto: renderer, audio, Bluetooth, sistema dei temi, test e molto altro. Non sono lì per caso. Sono il posto dove una decisione viene messa per iscritto prima di diventare codice, e dove il modello la ritrova la volta dopo. E anche lì, prima di scrivere ogni documento, c'è una ricerca, del brainstorming, delle decisioni che a volte richiedono giorni.
 
@@ -67,7 +67,7 @@ Non gliel'ho chiesto. Prima ho studiato il problema. Vela tiene molto a uno scal
 
 Poi ho guardato da vicino la X di chiusura, un glifo di 10 pixel. Il problema non erano i campioni. Il glifo veniva arrotondato a una texture di 13 pixel e poi ricampionato dal compositor con un filtro bilineare: sfocato due volte. E le estremità arrotondate andavano bene per la X, ma ammorbidivano gli angoli di minimizza e massimizza.
 
-Risultato: il supersampling globale l'ho scartato. Non perché fosse troppo costoso computazionalmente, ma semplicemente perché non risolve il problema che volevo risolvere. Al suo posto probabilmente (la ricerca non è ancora finita) ci sarà un micro-renderer per i glifi dei controlli finestra, con regole diverse per ogni simbolo, da confrontare con un riferimento misurato a 8×. Tutto il ragionamento è in [I wanted to brute-force a crisper UI](https://velade.org/blog/supersampling/).
+Risultato: il supersampling globale l'ho scartato. Non perché fosse troppo costoso computazionalmente, ma semplicemente perché non risolve il problema che volevo risolvere. Al suo posto probabilmente (la ricerca non è ancora finita) ci sarà un micro-renderer per i glifi dei controlli finestra, con regole diverse per ogni simbolo, da confrontare con un riferimento misurato a 8×. Tutto il ragionamento è in [Volevo una UI più nitida a forza bruta](/it/blog/supersampling/).
 
 <PullQuote>
 

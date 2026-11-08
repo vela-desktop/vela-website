@@ -113,9 +113,15 @@ export function formatShortDate(date: Date): string {
   return shortDateFormat.format(date);
 }
 
-/** Minutes to read, from the raw Markdown body (~230 words per minute). */
+/**
+ * Minutes to read, from the raw Markdown body (~230 words per minute). MDX
+ * imports and exports, and the props of components, aren't read: a
+ * component's text is, but its `items={[…]}` and the like are not.
+ */
 export function readingTime(post: { body?: string }): number {
   const text = (post.body ?? '')
+    .replace(/^(import|export)\s.*$/gm, ' ')
+    .replace(/\s[\w-]+=\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/g, ' ')
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/[#>*_`\[\]()!-]/g, ' ');
