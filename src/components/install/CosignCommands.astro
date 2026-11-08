@@ -1,0 +1,24 @@
+---
+// Installs the pinned Cosign release (src/consts.ts) from Sigstore, and checks
+// its SHA-256 before the package manager sees it.
+import { Code } from 'astro:components';
+import { COSIGN } from '../../consts';
+
+interface Props {
+  format: 'rpm' | 'deb';
+  before?: string[];
+}
+
+const { format, before = [] } = Astro.props;
+const { file, sha256 } = COSIGN[format];
+const install = format === 'rpm' ? 'sudo dnf install' : 'sudo apt install';
+const lines = [
+  ...before,
+  `curl -fLO https://github.com/sigstore/cosign/releases/download/v${COSIGN.version}/${file}`,
+  `echo "${sha256}  ${file}" | sha256sum -c`,
+  `${install} ./${file}`,
+  `rm ${file}`,
+];
+---
+
+<Code code={lines.join('\n')} lang="sh" theme="css-variables" />

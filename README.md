@@ -95,7 +95,8 @@ there, or of an entry that doesn't exist, fails the build. A draft translation
 
 ```
 astro.config.mjs        site URL, fonts, Markdown pipeline, integrations
-src/consts.ts           site metadata, links, roadmap list
+src/consts.ts           site metadata, links, supported GPUs and distributions,
+                        the pinned Cosign release, roadmap list
 src/lib/i18n.ts         journal languages and the words around an entry in each
 src/styles/             tokens.css (design tokens), global.css, prose.css
 src/components/home/    the five homepage chapters
@@ -105,7 +106,8 @@ src/pages/              routes: /, /blog/, /blog/<entry>/, /<lang>/blog/<entry>/
                         /blog/topics/<tag>/, /changes/, /install/, /faq/, /privacy/,
                         /rss.xml, /robots.txt, 404
 src/assets/             screenshots, brand artwork, fonts
-.github/workflows/      CI: type-check, build, link check, Lighthouse (lighthouserc.json)
+.github/workflows/      CI: type-check, build, link check, Lighthouse on desktop and
+                        mobile (lighthouserc.json, lighthouserc.mobile.json)
 deploy/apache/          production Apache virtual host
 deploy/nginx/           equivalent Nginx configuration (alternative)
 scripts/deploy.sh       build and publish a release
