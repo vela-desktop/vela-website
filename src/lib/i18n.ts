@@ -34,8 +34,14 @@ export const UI = {
     updated: 'Updated',
     published: (date: string) => `Published ${date} in the Vela Journal.`,
     lastUpdated: (date: string) => `Last updated ${date}.`,
-    // "Follow along by RSS, or watch the repository on GitHub."
-    follow: ['Follow along by ', 'RSS', ', or watch the ', 'repository on GitHub', '.'],
+    // "Follow along by RSS. If you liked this entry, a star on GitHub helps others find Vela."
+    follow: [
+      'Follow along by ',
+      'RSS',
+      '. If you liked this entry, a ',
+      'star on GitHub',
+      ' helps others find Vela.',
+    ],
     moreEntries: 'More entries',
     previous: 'Previous entry',
     next: 'Next entry',
@@ -66,7 +72,13 @@ export const UI = {
     updated: 'Aggiornato il',
     published: (date: string) => `Pubblicato il ${date} nel Vela Journal.`,
     lastUpdated: (date: string) => `Ultimo aggiornamento: ${date}.`,
-    follow: ['Segui il progetto via ', 'RSS', ' o sul ', 'repository GitHub', '.'],
+    follow: [
+      'Segui il progetto via ',
+      'RSS',
+      '. Se l’articolo ti è piaciuto, una ',
+      'stella su GitHub',
+      ' aiuta altre persone a trovare Vela.',
+    ],
     moreEntries: 'Altri articoli',
     previous: 'Articolo precedente',
     next: 'Articolo successivo',

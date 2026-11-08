@@ -4,6 +4,7 @@ import startCrop from '../../assets/screenshots/start-menu-crop.webp';
 import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
 import { pictureSources, fallbackSrc } from '../../lib/images';
 import { LINKS } from '../../consts';
+import { stars, formatStars } from '../../lib/vela';
 
 const mobileQuery = '(max-width: 40rem)';
 const sources = [
@@ -11,6 +12,7 @@ const sources = [
   ...(await pictureSources(start, [960, 1280, 1600, 1920])),
 ];
 const fallback = await fallbackSrc(start, 1600);
+const starCount = await stars();
 
 const specs = [
   { term: 'Compositor', detail: 'Wayland, own scene graph on wlroots' },
@@ -51,7 +53,16 @@ const specs = [
         </a>
         <a class="button" href="/blog/">Read the journal</a>
         <a class="button button--ghost" href={LINKS.repo} rel="noopener">
-          GitHub <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+          Star on GitHub
+          {
+            starCount !== null && (
+              <span class="hero__stars">
+                <span aria-hidden="true">★</span> {formatStars(starCount)}{' '}
+                <span class="visually-hidden">stars</span>
+              </span>
+            )
+          }
+          <span class="arrow arrow--ne" aria-hidden="true">↗</span>
         </a>
       </div>
     </div>
@@ -231,6 +242,11 @@ const specs = [
     line-height: 1.5;
     color: var(--text-muted);
     max-width: 30rem;
+  }
+
+  .hero__stars {
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
   }
 
   .hero__actions {
