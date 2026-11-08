@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import JournalLayout from '../../components/journal/JournalLayout.astro';
-import { getPosts } from '../../lib/posts';
+import { formatDate, getPosts } from '../../lib/posts';
 import { LINKS } from '../../consts';
 
 const posts = await getPosts();
@@ -35,9 +35,7 @@ const latest = posts[0]?.data.pubDate;
             latest && (
               <li class="masthead__updated">
                 Last entry{' '}
-                <time datetime={latest.toISOString()}>
-                  {latest.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}
-                </time>
+                <time datetime={latest.toISOString()}>{formatDate(latest)}</time>
               </li>
             )
           }
@@ -52,8 +50,10 @@ const latest = posts[0]?.data.pubDate;
 </Base>
 
 <style>
+  /* The masthead stays compact, so the latest entry starts on the first
+   * screen instead of below it. */
   .journal-page {
-    padding-top: calc(var(--header-height) + var(--space-2xl));
+    padding-top: calc(var(--header-height) + var(--space-xl));
     padding-bottom: var(--space-section);
     background:
       radial-gradient(60rem 30rem at 85% 0%, rgb(70 214 224 / 0.07), transparent 70%),
@@ -74,9 +74,9 @@ const latest = posts[0]?.data.pubDate;
   }
 
   .masthead__title {
-    margin-top: var(--space-l);
+    margin-top: var(--space-m);
     font-family: var(--font-serif);
-    font-size: clamp(4rem, 1rem + 13vw, 13rem);
+    font-size: clamp(3.5rem, 1rem + 7.5vw, 8rem);
     font-weight: 360;
     line-height: 0.85;
     letter-spacing: -0.045em;
@@ -94,14 +94,14 @@ const latest = posts[0]?.data.pubDate;
     column-gap: var(--gutter);
     row-gap: var(--space-m);
     align-items: end;
-    margin-top: var(--space-xl);
-    padding-bottom: var(--space-l);
+    margin-top: var(--space-l);
+    padding-bottom: var(--space-m);
     border-bottom: 1px solid var(--line-strong);
   }
 
   .masthead__intro {
     grid-column: 1 / span 6;
-    font-size: var(--step-1);
+    font-size: var(--step-0);
     line-height: 1.5;
     color: var(--text-muted);
   }
@@ -127,7 +127,7 @@ const latest = posts[0]?.data.pubDate;
   }
 
   .journal-page__body {
-    margin-top: var(--space-3xl);
+    margin-top: var(--space-xl);
   }
 
   @media (prefers-reduced-motion: no-preference) {

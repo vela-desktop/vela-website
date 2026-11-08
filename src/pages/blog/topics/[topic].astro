@@ -44,7 +44,7 @@ const count = `${posts.length} ${posts.length === 1 ? 'entry' : 'entries'}`;
       </div>
       <h1 class="topic__title">{tag}</h1>
       <p class="topic__foot">
-        <span>{count} about {tag.toLowerCase()}, newest first.</span>
+        <span>{count} tagged “{tag}”, newest first.</span>
         <a class="link" href="/blog/"><span class="arrow arrow--back" aria-hidden="true">←</span> All entries</a>
       </p>
     </header>
@@ -106,7 +106,7 @@ const count = `${posts.length} ${posts.length === 1 ? 'entry' : 'entries'}`;
   }
 
   .topic-page__body {
-    margin-top: var(--space-3xl);
+    margin-top: var(--space-xl);
   }
 
   @media (max-width: 40rem) {
