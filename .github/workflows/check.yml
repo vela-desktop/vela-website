@@ -2,7 +2,8 @@ name: Check
 
 # Type-checks and builds the site, then checks the built pages: links (internal
 # on every run, external once a week, since other sites come and go) and
-# Lighthouse, whose accessibility audits are axe-core's. Deploys don't depend
+# Lighthouse on desktop and mobile, whose accessibility audits are axe-core's;
+# a console error, such as a style the CSP blocks, fails it too. Deploys don't depend
 # on this workflow (see docs/deployment.md); it catches mistakes before or
 # right after they reach main.
 
@@ -55,5 +56,8 @@ jobs:
             --no-progress
             'dist/**/*.html'
 
-      - name: Lighthouse
+      - name: Lighthouse, desktop
         run: npx --yes @lhci/cli@0.15.1 autorun
+
+      - name: Lighthouse, mobile
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.mobile.json
