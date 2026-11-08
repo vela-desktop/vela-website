@@ -18,7 +18,9 @@ SKIP_BUILD="${SKIP_BUILD:-0}"
 cd "$(dirname "$0")/.."
 
 if [ "$SKIP_BUILD" != "1" ]; then
-  npm ci
+  # No dependency needs an install script (sharp ships prebuilt binaries), and
+  # skipping them keeps a compromised package from running code on install.
+  npm ci --ignore-scripts
   npm run build
 fi
 
