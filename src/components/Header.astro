@@ -2,6 +2,7 @@
 import Logo from './Logo.astro';
 import { LINKS, NAV } from '../consts';
 import { unprefixed } from '../lib/i18n';
+import { stars, formatStars } from '../lib/vela';
 
 interface Props {
   /** Set on pages in another language, since the header is in English. */
@@ -10,6 +11,7 @@ interface Props {
 
 const path = Astro.url.pathname;
 const isJournal = unprefixed(path).startsWith('/blog');
+const starCount = await stars();
 ---
 
 <header class="site-header" data-header lang={Astro.props.lang}>
@@ -35,7 +37,12 @@ const isJournal = unprefixed(path).startsWith('/blog');
           })
         }
         <li>
-          <a class="nav__github" href={LINKS.repo} rel="noopener">
+          <a
+            class="nav__github"
+            href={LINKS.repo}
+            rel="noopener"
+            aria-label={starCount === null ? undefined : `GitHub, ${starCount} stars`}
+          >
             <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
               <path
                 fill="currentColor"
@@ -43,6 +50,13 @@ const isJournal = unprefixed(path).startsWith('/blog');
               ></path>
             </svg>
             <span>GitHub</span>
+            {
+              starCount !== null && (
+                <span class="nav__stars" aria-hidden="true">
+                  ★ {formatStars(starCount)}
+                </span>
+              )
+            }
           </a>
         </li>
       </ul>
@@ -182,6 +196,17 @@ const isJournal = unprefixed(path).startsWith('/blog');
   .nav__github:hover {
     border-color: var(--line-bright);
     background: rgb(255 255 255 / 0.05);
+  }
+
+  .nav__stars {
+    padding-left: 0.6rem;
+    border-left: 1px solid var(--line-strong);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nav__github:hover .nav__stars {
+    color: var(--text);
   }
 
   .nav__github svg {

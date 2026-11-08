@@ -142,3 +142,16 @@ export async function recentChanges(): Promise<Change[]> {
   }
   return changes;
 }
+
+/** How many people starred the Vela repository, or null without the API. */
+export async function stars(): Promise<number | null> {
+  const repo = await get<{ stargazers_count: number }>('');
+  return repo?.stargazers_count ?? null;
+}
+
+/** A star count as short as GitHub shows it: 102, 1.2k, 12k. */
+export function formatStars(count: number): string {
+  if (count < 1000) return String(count);
+  const thousands = count / 1000;
+  return `${thousands < 10 ? Math.floor(thousands * 10) / 10 : Math.floor(thousands)}k`;
+}
