@@ -1,0 +1,68 @@
+---
+title: "I built a Linux desktop. Then I forgot I was using it"
+seoTitle: "Vela as a daily driver: six weeks without going back to Plasma"
+description: "Since early October Vela has been my only desktop: work, music and games, no compositor crashes, and a few bugs that remain. Here's how it went."
+pubDate: 2026-11-09T22:30:00+01:00
+draft: false
+tags: ["Daily use"]
+writtenIn: it
+---
+
+import Figure from '../../components/mdx/Figure.astro';
+import PullQuote from '../../components/mdx/PullQuote.astro';
+import Stats from '../../components/mdx/Stats.astro';
+import writing from '../../assets/screenshots/daily-driver-writing.png';
+
+When I started designing Vela, on September 26, I felt something that's hard to describe. After a few hours of work I already had an interface with a taskbar, and that taskbar could open windows.
+
+It may not sound like much. To me it was huge: I hadn't remotely expected to get there in a single night.
+
+That was six weeks ago, and it feels like an eternity. Since then I've worked on Vela almost every day, practically all day. It's taken all the free time I had, and then some. But I'm glad to do it, and it shows.
+
+## I never had to go back
+
+I think it was October 6 when I started using Vela as my main desktop. Since then, **I've never had to go back to Plasma**.
+
+Sure, I've started it for a few minutes now and then: to sort out small problems, like the Bluetooth pairing I wrote about in [another post](/blog/not-vibecoding/), or to check that certain bugs really were Vela's and not the apps'. But I've never been forced to leave Vela to keep using my computer. And since 0.1 pairing is native, so that reason is gone too.
+
+Then there's something that still amazes me: in more than a month of use, often for over twelve hours a day, **I haven't had a single compositor or shell crash** in my daily sessions.
+
+Not one.
+
+<Stats caption="Since October 6, on my desktop PC." items={[
+  { value: '0', label: 'compositor or shell crashes' },
+  { value: '12+', label: 'hours a day, often' },
+  { value: '0', label: 'times I had to go back to Plasma' },
+]} />
+
+## The surprisingly boring part
+
+The most incredible thing is how quickly Vela became normal.
+
+There I was, with my browser, VS Code and my music, programming and doing the same things I used to do on Windows and on Plasma. I've also played quite a few games, on Steam and off it, without running into anything that stopped me from carrying on.
+
+At some point I simply stopped thinking about it.
+
+<PullQuote>
+
+I wasn't *trying* Vela anymore. I was using it.
+
+</PullQuote>
+
+## Is Vela perfect?
+
+Of course not, and it would make no sense to claim it is.
+
+Before 0.1, the first beta, I ran into plenty of glitches and flaws, especially with XWayland, along with some rendering problems and small graphical artifacts. But there's an important distinction: however annoying they were, none of these problems stopped me from working or playing. And the graphical ones I'd found were fixed before the beta.
+
+That doesn't mean there are no other bugs. Now and then, for example, I run into popup windows I can't close the normal way, and remote control with RustDesk still has trouble. And of course my experience on a single computer can't stand for every possible hardware configuration.
+
+But if you're curious about Vela and think it's still too early, it might surprise you. It surprised me.
+
+Six weeks ago I was excited because I'd managed to open a window from my taskbar. Today I'm writing this post on that same desktop.
+
+<Figure src={writing} width="wide" alt="Vela's desktop: a browser playing Blondie's Atomic on YouTube on the left, VS Code on the right with this post open, and Vela's taskbar along the bottom." caption="This post, being written. In Vela, of course." />
+
+And the best part is that, most of the time, I even forget I made it.
+
+**[Try it](/install/) and let me know how it goes. :)**

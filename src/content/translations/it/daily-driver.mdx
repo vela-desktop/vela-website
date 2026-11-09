@@ -1,0 +1,66 @@
+---
+title: "Ho creato un desktop Linux. Poi ho dimenticato che lo stavo usando"
+seoTitle: "Vela come desktop principale: un mese e mezzo senza tornare a Plasma"
+description: "Da inizio ottobre Vela è il mio unico desktop: lavoro, musica e giochi, nessun crash del compositor, e qualche bug che resta. Com'è andata."
+pubDate: 2026-11-09T22:30:00+01:00
+draft: false
+---
+
+import Figure from '../../../components/mdx/Figure.astro';
+import PullQuote from '../../../components/mdx/PullQuote.astro';
+import Stats from '../../../components/mdx/Stats.astro';
+import writing from '../../../assets/screenshots/daily-driver-writing.png';
+
+Quando ho iniziato a progettare Vela, il 26 settembre, ho provato un'emozione difficile da descrivere. Dopo poche ore di lavoro avevo già un'interfaccia con una taskbar, e quella taskbar era in grado di aprire delle finestre.
+
+Può sembrare una cosa da poco. Per me era tantissimo: non mi aspettavo nemmeno lontanamente di riuscirci in una sola nottata.
+
+È passato un mese e mezzo, eppure mi sembra un'eternità. Da allora ho lavorato a Vela quasi ogni giorno, praticamente per tutto il giorno. Mi ha preso tutto il tempo libero che avevo, e anche qualcosa in più. Ma lo faccio con piacere, e i risultati si vedono.
+
+## Non sono mai dovuto tornare indietro
+
+Credo fosse il 6 ottobre quando ho iniziato a usare Vela come desktop principale. Da allora, **non sono mai dovuto tornare a Plasma**.
+
+Certo, l'ho avviato per qualche minuto in alcune occasioni: per risolvere piccoli problemi, come il pairing Bluetooth di cui ho parlato in [un altro articolo](/it/blog/not-vibecoding/), oppure per verificare che determinati bug fossero effettivamente di Vela e non delle applicazioni. Ma non sono mai stato costretto ad abbandonare Vela per continuare a usare il computer. E dalla 0.1 il pairing è nativo, quindi anche quel motivo non esiste più.
+
+C'è poi una cosa che ancora oggi mi stupisce: in più di un mese di utilizzo, spesso per oltre dodici ore al giorno, **non ho mai avuto un crash del compositor o della shell** durante le mie sessioni quotidiane.
+
+Neanche uno.
+
+<Stats caption="Dal 6 ottobre, sul mio PC fisso." items={[
+  { value: '0', label: 'crash del compositor o della shell' },
+  { value: '12+', label: 'ore al giorno, spesso' },
+  { value: '0', label: 'volte che sono dovuto tornare a Plasma' },
+]} />
+
+## La parte sorprendentemente noiosa
+
+La cosa più incredibile è quanto velocemente Vela sia diventata normale.
+
+Ero lì, con il mio browser, VS Code e la mia musica, a programmare e a fare le stesse cose che facevo prima su Windows e su Plasma. Ho anche giocato a diversi titoli, sia su Steam che fuori da Steam, senza incontrare problemi tali da impedirmi di continuare.
+
+A un certo punto ho semplicemente smesso di pensarci.
+
+<PullQuote>
+
+Non stavo più *provando* Vela. La stavo usando.
+
+</PullQuote>
+
+## Vela è perfetta?
+
+Ovviamente no, e non avrebbe alcun senso sostenerlo.
+
+Prima della 0.1, la prima beta, ho incontrato parecchi glitch e difetti, soprattutto con XWayland, oltre ad alcuni problemi di rendering e piccoli artefatti grafici. Ma c'è una distinzione importante: per quanto fastidiosi potessero essere, nessuno di questi problemi mi ha impedito di continuare a lavorare o giocare. E quelli grafici che avevo identificato sono stati risolti prima della beta.
+
+Questo non significa che non ci siano altri bug. Per esempio, ogni tanto incontro delle finestre popup che non riesco a chiudere normalmente, e il controllo remoto con RustDesk presenta ancora delle difficoltà. E naturalmente la mia esperienza su un solo computer non può rappresentare tutte le configurazioni hardware possibili.
+
+Ma se sei curioso di provare Vela e pensi che sia ancora troppo presto, forse ti sorprenderà. A me è successo.
+
+Un mese e mezzo fa ero emozionato perché ero riuscito ad aprire una finestra dalla mia taskbar. Oggi sto scrivendo questo articolo usando quello stesso desktop.
+
+<Figure src={writing} width="wide" alt="Il desktop di Vela: a sinistra un browser con Atomic dei Blondie su YouTube, a destra VS Code con questo articolo aperto, e in basso la taskbar di Vela." caption="Questo articolo, mentre lo scrivevo. Su Vela, ovviamente." />
+
+E la cosa più bella è che, per la maggior parte del tempo, mi dimentico persino che l'ho fatto io.
+
+**[Provala](/install/) e fammi sapere come va. :)**
