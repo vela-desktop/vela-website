@@ -87,6 +87,16 @@ const repoDisplay = LINKS.repo.replace('https://', '');
       </li>
     </ol>
 
+    <div class="community" data-reveal>
+      <h3 class="community__label label">Community</h3>
+      <p class="community__text">
+        Questions, ideas, or just want to say what works and what doesn’t? Join the Vela Desktop
+        space on Matrix, for discussions, support, announcements and development. Any Matrix
+        account works.
+      </p>
+      <a class="community__link link" href={LINKS.matrix} rel="noopener">Join on Matrix <span class="arrow arrow--ne" aria-hidden="true">↗</span></a>
+    </div>
+
     <a class="repo" href={LINKS.repo} rel="noopener" data-reveal>
       <span class="repo__label label">The source</span>
       <span class="repo__url">{repoDisplay}</span>
@@ -283,6 +293,36 @@ const repoDisplay = LINKS.repo.replace('https://', '');
     -webkit-user-select: none;
   }
 
+  /* ── Community ── */
+  .community {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-s);
+    align-items: baseline;
+    margin-top: var(--space-2xl);
+    padding: var(--space-l) 0;
+    border-block: 1px solid var(--line-strong);
+  }
+
+  .community__label {
+    grid-column: 1 / span 3;
+    color: var(--teal);
+  }
+
+  .community__text {
+    grid-column: 4 / span 6;
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .community__link {
+    grid-column: 10 / -1;
+    justify-self: end;
+    font-weight: 500;
+  }
+
   /* ── The big link ── */
   .repo {
     display: grid;
@@ -326,7 +366,10 @@ const repoDisplay = LINKS.repo.replace('https://', '');
     }
 
     .open__status-badge,
-    .open__status-text {
+    .open__status-text,
+    .community__label,
+    .community__text,
+    .community__link {
       grid-column: 1 / -1;
     }
 
@@ -336,6 +379,10 @@ const repoDisplay = LINKS.repo.replace('https://', '');
 
     .path:first-child {
       grid-column: 1 / -1;
+    }
+
+    .community__link {
+      justify-self: start;
     }
   }
 

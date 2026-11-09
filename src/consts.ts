@@ -82,6 +82,8 @@ export const LINKS = {
   roadmap: `${REPO}/blob/main/docs/roadmap.md`,
   contributing: `${REPO}#contributing`,
   issues: `${REPO}/issues`,
+  /** The Vela Desktop space on Matrix, as in the Vela README's Community section. */
+  matrix: 'https://matrix.to/#/#vela:velade.org',
   commits: `${REPO}/commits/main`,
   docs: `${REPO}/tree/main/docs`,
   rendererDoc: `${REPO}/blob/main/docs/renderer.md`,
