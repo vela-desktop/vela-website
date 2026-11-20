@@ -1,7 +1,9 @@
 name: Check
 
 # Type-checks and builds the site, then checks the built pages: links (internal
-# on every run, external once a week, since other sites come and go) and
+# on every run, external once a week, since other sites come and go; matrix.to
+# and GitHub review-comment anchors are skipped, as their fragments only exist
+# once JavaScript runs, so --include-fragments can't find them) and
 # Lighthouse on desktop and mobile, whose accessibility audits are axe-core's;
 # a console error, such as a style the CSP blocks, fails it too. Deploys don't depend
 # on this workflow (see docs/deployment.md); it catches mistakes before or
@@ -52,6 +54,8 @@ jobs:
             --index-files index.html
             --include-fragments
             --exclude '^https://velade\.org/'
+            --exclude '^https://matrix\.to/'
+            --exclude '^https://github\.com/.*#discussion_r'
             ${{ github.event_name != 'schedule' && '--offline' || '' }}
             --no-progress
             'dist/**/*.html'
