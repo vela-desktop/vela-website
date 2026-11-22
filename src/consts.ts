@@ -51,7 +51,7 @@ export const SUPPORT = {
   wlroots: 'wlroots 0.20',
   /** Distributions with signed Beta packages and vela-update. */
   arch: ['Arch Linux', 'CachyOS', 'EndeavourOS'],
-  fedora: 'Fedora 44',
+  fedora: 'Fedora 44/45',
   ubuntu: 'Ubuntu 26.10',
 } as const;
 
@@ -78,6 +78,8 @@ export const LINKS = {
   repo: REPO,
   readme: `${REPO}#readme`,
   install: '/install/',
+  help: '/help/',
+  trailer: '/trailer/',
   build: `${REPO}#build-from-source`,
   roadmap: `${REPO}/blob/main/docs/roadmap.md`,
   contributing: `${REPO}#contributing`,
@@ -106,11 +108,18 @@ export const LINKS = {
   privacy: '/privacy/',
 } as const;
 
+/**
+ * The header's links. `from` is the narrowest screen a link shows on; on
+ * narrower ones the footer still has it. The homepage's sections go first,
+ * since scrolling reaches them anyway.
+ */
 export const NAV = [
-  { label: 'Desktop', href: '/#desktop' },
-  { label: 'Philosophy', href: '/#philosophy' },
-  { label: 'Install', href: '/install/' },
-  { label: 'Journal', href: '/blog/' },
+  { label: 'Desktop', href: '/#desktop', from: 'desktop' },
+  { label: 'Philosophy', href: '/#philosophy', from: 'desktop' },
+  { label: 'Install', href: '/install/', from: 'phone' },
+  { label: 'Blog', href: '/blog/', from: 'phone' },
+  { label: 'Community', href: '/#community', from: 'tablet' },
+  { label: 'Help Vela', href: '/help/', from: 'tablet' },
 ] as const;
 
 /**

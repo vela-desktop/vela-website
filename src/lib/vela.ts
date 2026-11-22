@@ -68,7 +68,9 @@ interface GitHubRelease {
 // Release assets of the Beta channel (the `vela` package), by distribution.
 const PACKAGES = [
   { label: 'Arch Linux package', name: /^vela-\d[^/]*-x86_64\.pkg\.tar\.zst$/ },
-  { label: `${SUPPORT.fedora} RPM`, name: /^vela-\d[^/]*\.x86_64\.rpm$/ },
+  // One RPM per Fedora release; Fedora 45's starts with 0.1.2.
+  { label: 'Fedora 44 RPM', name: /^vela-\d[^/]*\.fc44\.x86_64\.rpm$/ },
+  { label: 'Fedora 45 RPM', name: /^vela-\d[^/]*\.fc45\.x86_64\.rpm$/ },
   { label: `${SUPPORT.ubuntu} DEB`, name: /^vela_\d[^/]*_amd64\.deb$/ },
 ];
 

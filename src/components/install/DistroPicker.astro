@@ -1,0 +1,106 @@
+---
+// The top of Install: one card per way of installing Vela, each linking to
+// its section further down the page, so a reader skips straight to the
+// commands for their distribution.
+import { SUPPORT, listOf } from '../../consts';
+
+const ways = [
+  {
+    href: '#arch-linux-cachyos-endeavouros',
+    name: listOf(SUPPORT.arch),
+    how: 'Signed package, kept updated by vela\u2011update',
+  },
+  {
+    href: '#fedora-44-and-45',
+    name: SUPPORT.fedora,
+    how: 'Signed RPM, after installing Cosign from Sigstore',
+  },
+  {
+    href: '#ubuntu-2610',
+    name: SUPPORT.ubuntu,
+    how: 'Signed DEB, after installing Cosign from Sigstore',
+  },
+  {
+    href: '#other-distributions',
+    name: 'Another distribution',
+    how: `Build from source, with ${SUPPORT.wlroots}; no updater yet`,
+  },
+];
+---
+
+<ul class="distros" role="list">
+  {
+    ways.map(({ href, name, how }) => (
+      <li>
+        <a class="distros__card" href={href}>
+          <span class="distros__name">{name}</span>
+          <span class="distros__how">{how}</span>
+          <span class="distros__arrow arrow arrow--down" aria-hidden="true">↓</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .distros {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .distros li {
+    margin: 0;
+  }
+
+  .distros__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    height: 100%;
+    padding: 1rem 2.5rem 1.05rem 1.1rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-m);
+    background: rgb(255 255 255 / 0.02);
+    color: var(--text);
+    text-decoration: none;
+    transition:
+      border-color var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .distros__card:hover {
+    border-color: var(--line-bright);
+    background: rgb(255 255 255 / 0.045);
+  }
+
+  .distros__card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .distros__name {
+    font-family: var(--font-body);
+    font-size: var(--step-0);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .distros__how {
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    line-height: 1.45;
+    color: var(--text-muted);
+  }
+
+  .distros__arrow {
+    position: absolute;
+    top: 1rem;
+    right: 1.1rem;
+    color: var(--teal);
+  }
+</style>

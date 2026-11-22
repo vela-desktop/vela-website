@@ -4,11 +4,12 @@ title: "Install Vela"
 seoTitle: "Install Vela, a modern Linux desktop environment"
 description: "Try Vela in a window on your current desktop, or install it and pick it at the login screen."
 label: "Get started"
-updated: 2026-11-08
+updated: 2026-11-22
 ---
 
 import Aside from '../components/mdx/Aside.astro';
 import LatestBeta from '../components/LatestBeta.astro';
+import DistroPicker from '../components/install/DistroPicker.astro';
 import BetaCommands from '../components/install/BetaCommands.astro';
 import CosignCommands from '../components/install/CosignCommands.astro';
 import { COSIGN, SUPPORT, LINKS } from '../consts';
@@ -27,21 +28,11 @@ Vela is beta software. You can use it every day, and every release passes the fu
 
 Vela is developed and tested daily on an AMD Radeon RX 9070 XT with Mesa/RADV. NVIDIA, Intel, NVK, virtual machines and hybrid-GPU laptops are supported paths, but have had less testing. The <a href={LINKS.hardware}>hardware coverage</a> page lists exactly what has been verified and where.
 
-## Try it without logging out
+## Pick your distribution
 
-The safest first look: build Vela and run it in a window inside your current Wayland desktop, like a virtual monitor. Nothing is installed.
+<DistroPicker />
 
-```sh
-git clone https://github.com/vela-desktop/vela.git
-cd vela
-cmake -B build -G Ninja
-cmake --build build
-sh scripts/run-nested.sh
-```
-
-You'll need the build dependencies listed under [Other distributions](#other-distributions) below, or the [lists for every distribution](https://github.com/vela-desktop/vela/blob/main/docs/development.md#distribution-dependencies) in the developer guide. Your host desktop keeps the Super key, so in nested mode many shortcuts also work with Alt; the [shortcut reference](https://github.com/vela-desktop/vela/blob/main/docs/shortcuts.md) lists them.
-
-A nested session is great for exploring, but it can't tell you whether Vela works with your monitor and driver directly. For that, you need a real session.
+Only want a look first? [Try it in a window](#try-it-without-logging-out) inside your current desktop: nothing is installed, but you build it from source.
 
 ## Beta or Experimental
 
@@ -64,9 +55,9 @@ Run:
 
 For Experimental, run `sh vela/packaging/vela-update` instead: it builds `vela-git` from the latest commit on `main`.
 
-## Fedora 44
+## Fedora 44 and 45
 
-On {SUPPORT.fedora} (x86_64), Vela installs as a native `vela` RPM, with the same updater. {SUPPORT.fedora} doesn't ship Cosign in its repositories, and the Beta can't be installed without it, so install the official Cosign {COSIGN.version} RPM from Sigstore first. The second line checks the download against the checksum Sigstore published, and stops if it doesn't match:
+On Fedora 44 and 45 (x86_64), Vela installs as a native `vela` RPM, built separately for each, with the same updater. The Beta can't be installed without Cosign, and Fedora 44 doesn't ship it in its repositories, so install the official Cosign {COSIGN.version} RPM from Sigstore first. The second line checks the download against the checksum Sigstore published, and stops if it doesn't match:
 
 <CosignCommands format="rpm" />
 
@@ -75,8 +66,20 @@ Only get Cosign from the official Sigstore releases: Vela trusts it to check eve
 <BetaCommands before={['sudo dnf install git curl rpm-build dnf5-plugins']} />
 
 <Aside title="Fedora support is new">
-  The RPMs are built and test-installed in a fresh {SUPPORT.fedora} container before every release, but they've had little testing on real hardware so far. Other Fedora releases, other DNF-based distributions and the immutable variants, such as Silverblue and Kinoite, aren't supported by the installer. There you can [build from source](#other-distributions).
+  The RPMs are built and test-installed in fresh Fedora 44 and 45 containers before every release, but they've had little testing on real hardware so far. Fedora 45 RPMs start with Vela 0.1.2: on Fedora 45, `vela-update` can't install or go back to an earlier release. Other Fedora releases, other DNF-based distributions and the immutable variants, such as Silverblue and Kinoite, aren't supported by the installer. There you can [build from source](#other-distributions).
 </Aside>
+
+### After upgrading from Fedora 44 to 45
+
+A `vela-update` installed from a Fedora 44 RPM may refuse Fedora 45 before it can fetch the new package. Run the updater from a fresh checkout of Vela instead, once, with the channel you already have:
+
+```sh
+git clone https://github.com/vela-desktop/vela.git vela-fedora-45
+sh vela-fedora-45/packaging/vela-update --channel beta           # if you have vela (Beta)
+sh vela-fedora-45/packaging/vela-update --channel experimental   # if you have vela-git (Experimental)
+```
+
+Run only the line for your package. Never install a Fedora 44 RPM on Fedora 45.
 
 ## Ubuntu 26.10
 
@@ -93,6 +96,14 @@ On Ubuntu, Experimental always builds Vela on your machine: `vela-update` instal
 <Aside title="Ubuntu support is the newest">
   CI builds the DEB and test-installs it in a fresh {SUPPORT.ubuntu} container, and it has been tried in a virtual machine with GPU passthrough, but real hardware hasn't been tested much yet. Other Ubuntu releases aren't supported.
 </Aside>
+
+## First login
+
+Log out, pick **Vela** on the login screen, and log in. A few things to know:
+
+- **Super** opens Start, **Super+Tab** opens Task View, **Super+arrows** snap windows, and **Super+A**, **Super+N** and **Super+V** open quick settings, notifications and clipboard history.
+- The interface speaks **English and Italian**. Switch it in *Settings → Time & language*. It changes right away.
+- If the compositor crashes, it restarts on its own and your apps reconnect. If the screen was locked, it comes back locked.
 
 ## Updating
 
@@ -117,6 +128,28 @@ sudo dnf install ~/.cache/vela-update/packages/<package>.x86_64.rpm
 # Ubuntu
 sudo apt-get install --allow-downgrades --reinstall ~/.cache/vela-update/packages/<package>_amd64.deb
 ```
+
+## If something goes wrong
+
+Run `vela-report`. It builds a ZIP with your description and the diagnostics you choose to include, shows you every file before exporting, and uploads nothing. Then [open an issue](https://github.com/vela-desktop/vela/issues) and attach it. From a TTY or over SSH, use `vela-report --cli`.
+
+Every report helps, especially from hardware other than the development machine.
+
+## Try it without logging out
+
+The safest first look: build Vela and run it in a window inside your current Wayland desktop, like a virtual monitor. Nothing is installed.
+
+```sh
+git clone https://github.com/vela-desktop/vela.git
+cd vela
+cmake -B build -G Ninja
+cmake --build build
+sh scripts/run-nested.sh
+```
+
+You'll need the build dependencies listed under [Other distributions](#other-distributions) below, or the [lists for every distribution](https://github.com/vela-desktop/vela/blob/main/docs/development.md#distribution-dependencies) in the developer guide. Your host desktop keeps the Super key, so in nested mode many shortcuts also work with Alt; the [shortcut reference](https://github.com/vela-desktop/vela/blob/main/docs/shortcuts.md) lists them.
+
+A nested session is great for exploring, but it can't tell you whether Vela works with your monitor and driver directly. For that, you need a real session.
 
 ## Other distributions
 
@@ -153,17 +186,3 @@ This installs into `/usr/local`, plus `/etc/pam.d` and `/etc/xdg`. If Vela doesn
 ```sh
 sudo ln -s /usr/local/share/wayland-sessions/vela.desktop /usr/share/wayland-sessions/
 ```
-
-## First login
-
-Log out, pick **Vela** on the login screen, and log in. A few things to know:
-
-- **Super** opens Start, **Super+Tab** opens Task View, **Super+arrows** snap windows, and **Super+A**, **Super+N** and **Super+V** open quick settings, notifications and clipboard history.
-- The interface speaks **English and Italian**. Switch it in *Settings → Time & language*. It changes right away.
-- If the compositor crashes, it restarts on its own and your apps reconnect. If the screen was locked, it comes back locked.
-
-## If something goes wrong
-
-Run `vela-report`. It builds a ZIP with your description and the diagnostics you choose to include, shows you every file before exporting, and uploads nothing. Then [open an issue](https://github.com/vela-desktop/vela/issues) and attach it. From a TTY or over SSH, use `vela-report --cli`.
-
-Every report helps, especially from hardware other than the development machine.
