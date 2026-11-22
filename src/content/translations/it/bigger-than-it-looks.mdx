@@ -1,0 +1,94 @@
+---
+title: "Vela è più grande di quanto sembri"
+seoTitle: "Vela due settimane dopo la 0.1: novità, Discord e il progetto dietro il desktop"
+description: "Cosa è cambiato dalla 0.1, cosa arriva nelle prossime settimane, la community su Matrix e Discord, e come aiutare Vela anche senza essere sviluppatori."
+pubDate: 2026-11-22T12:00:00+01:00
+draft: false
+---
+
+import Aside from '../../../components/mdx/Aside.astro';
+import Figure from '../../../components/mdx/Figure.astro';
+import PullQuote from '../../../components/mdx/PullQuote.astro';
+import Stats from '../../../components/mdx/Stats.astro';
+import contextMenu from '../../../assets/screenshots/desktop-context-menu.webp';
+import keyboard from '../../../assets/screenshots/keyboard-settings.webp';
+
+Sono passate quasi due settimane dall'ultimo articolo. Mi mancava scrivere sul blog! In realtà ho scritto delle bozze, ma non le ho pubblicate perché sono ancora soltanto idee e voglio parlarne quando c'è qualcosa di concreto.
+
+Indizio: uno di questi articoli parla di RAM.
+
+## Cosa è cambiato dalla 0.1
+
+In queste due settimane sono successe tante cose, e ci siamo allontanati tantissimo dalla beta 0.1. Qualche giorno fa è uscita la [0.1.2](/releases/0.1.2/): lì ho fatto i backport di tutti i fix, tra cui anche quello del rendering del testo in alcuni casi specifici, che era una delle cose più percepibili. Tutte le feature, invece, sono rimaste in main, com'è previsto dal sistema di release.
+
+<Stats caption="Dal 31 ottobre, escluse backport, CI, documentazione e manutenzione." items={[
+  { value: '76', label: 'pull request unite' },
+  { value: '83.000', label: 'righe aggiunte', note: 'circa' },
+  { value: '7.700', label: 'righe rimosse', note: 'circa' },
+]} />
+
+Alcune tra le cose più interessanti secondo me:
+
+- **Vela Expressive**: il primo tema alternativo completo, ispirato a Material 3 Expressive, senza modificare il tema ufficiale ([#244](https://github.com/vela-desktop/vela/pull/244), [#248](https://github.com/vela-desktop/vela/pull/248)).
+- **Taskbar migliorata**: Super+1–9, drag & drop, badge, notifiche di attenzione e gestione dell'overflow ([#299](https://github.com/vela-desktop/vela/pull/299)).
+- **Menu contestuali ripensati**: addio al fastidioso «Mostra altre opzioni» e possibilità di nascondere determinate voci dalle Impostazioni ([#298](https://github.com/vela-desktop/vela/pull/298)).
+- **Personalizzazione della tastiera**: layout, comportamento di Caps Lock e Num Lock, scorciatoie personalizzate ([#311](https://github.com/vela-desktop/vela/pull/311)).
+- **Supporto sperimentale a Venus nelle VM**: una novità molto interessante per provare Vela senza GPU passthrough ([#251](https://github.com/vela-desktop/vela/pull/251)).
+- **Miglioramenti profondi alla gestione della memoria e alla sicurezza**: dall'eliminazione di allocazioni durante il rendering dei frame ai limiti sull'utilizzo delle risorse, fino all'hardening del compositor ([#250](https://github.com/vela-desktop/vela/pull/250), [#252](https://github.com/vela-desktop/vela/pull/252), [#258](https://github.com/vela-desktop/vela/pull/258)).
+
+<Figure src={keyboard} width="wide" alt="Le Impostazioni di Vela aperte su Tastiera › Digitazione: ripetizione dei tasti, tasto Caps Lock, tasto Compose, Num Lock all'avvio. A destra il pannello delle impostazioni rapide, in basso la taskbar, tutto con il tema Vela Expressive." caption="Le nuove impostazioni della tastiera, con il tema Vela Expressive." />
+
+<Figure src={contextMenu} alt="Il menu contestuale del desktop: Visualizza, Ordina per, Aggiorna, Nuovo, Impostazioni schermo, Personalizza, Apri nel terminale e una voce aggiunta da un'app, Visualizza le statistiche di utilizzo del disco." caption="Il menu contestuale del desktop: un solo menu, senza «Mostra altre opzioni»." />
+
+## Community
+
+Questo riguarda lo sviluppo vero e proprio. Nel frattempo devo ammettere un fallimento: il server Matrix. Al momento [Matrix](https://matrix.to/#/#vela:velade.org) conta 2 utenti, se escludiamo me. Beh, è un peccato, ma lo capisco. Matrix non lo hanno tutti e dover installare un client Matrix per iscriversi a una chat non è una cosa che si fa volentieri. Il server Matrix rimarrà, perché c'è comunque chi lo preferisce e sono sicuro che nei prossimi tempi acquisirà nuovi utenti, ma nel frattempo grazie all'aiuto di R3AP3R abbiamo aperto un [server Discord](https://discord.gg/3xu68uqkWt), visto che parlando con alcuni di voi ho notato che Discord è molto più apprezzato.
+
+## Come aiutare
+
+Non bisogna essere sviluppatori per [aiutare](/help/). Per fare un esempio, Vela al momento supporta soltanto l'italiano e l'inglese come lingue: nelle prossime settimane pubblicherò una piattaforma per la gestione dei file di lingue di Vela, così che ogni utente possa contribuire a tradurre i testi di Vela nella propria lingua. In realtà, penso che aggiungerò automaticamente qualche lingua con gli LLM per poi farli correggere alla comunità, per facilitare e velocizzare il lavoro. Penso che la maggior parte delle traduzioni saranno corrette, ma il tocco umano in queste cose è necessario. Confesso che anche la traduzione italiana dell'interfaccia di Vela non mi soddisfa a pieno.
+
+C'è anche un modo per sostenermi dal punto di vista economico, cioè il Patreon di Vela: [patreon.com/c/velade](https://www.patreon.com/c/velade)
+
+<Aside title="Vela resta gratuita">
+Vi dico subito che Vela è e rimarrà per sempre gratuita, e che chi mi sostiene su Patreon non ottiene nessuna funzionalità extra in Vela. Sostenermi su Patreon non è un acquisto: è un modo per aiutarmi a continuare lo sviluppo, a concentrarmi su Vela e a sostenere le spese.
+</Aside>
+
+## Il redesign
+
+Infine, il lavoro per il redesign continua in sordina:
+
+- sto pensando a un potenziale font ufficiale di Vela;
+- esperimenti per un eventuale tiling window dentro Vela, qualcosa di ibrido tra floating e tiling;
+- primi contributi a [oo7](https://github.com/linux-credentials/oo7) per il futuro Vela Secrets (per sostituire KWallet);
+- brainstorming su un futuro task manager++ di Vela: idee veramente ampie, molto più di un task manager. Pensate che ho persino pensato di farlo in Rust, in una repository separata.
+
+Ma per ora sono, appunto, idee. Alcune potrebbero trasformarsi in progetti concreti, altre cambieranno completamente, altre ancora potrebbero essere abbandonate.
+
+## Il progetto dietro Vela
+
+Nelle prossime settimane incomincerò anche a delineare meglio il progetto che c'è dietro Vela. Perché è qualcosa di grosso. Forse anche qualcosa di più grosso di me, lo ammetto. Ma penso di potercela fare, col vostro aiuto. Dopotutto, Vela è FOSS, e a questo serve, no?
+
+Comunque, con "delineare il progetto" intendo svelare cosa significa Vela, perché ho scritto "Modern. Fluid. Sharp." in [home page](/) e cosa significa "Efficiency through architecture, not austerity.". Mi rendo conto che al momento queste frasi possono sembrare buttate lì per attirare persone.
+
+<PullQuote>Efficiency through architecture, not austerity.</PullQuote>
+
+E chiaramente sono degli slogan di marketing, ma sono anche delle linee guida che prendo MOLTO sul serio mentre penso al design di Vela. Design inteso come progettazione, non come estetica.
+
+Vela si sta avvicinando a uno sviluppo tale della codebase che comincia a permettermi di dimostrare queste affermazioni dati alla mano. Non vedo l'ora di completare la [PR 109](https://github.com/vela-desktop/vela/pull/109), quella sulla suite di benchmark per comparare Vela con KDE Plasma, e farvi vedere i risultati. Ho già qualcosa di preliminare, ma è ancora troppo presto.
+
+Una cosa che forse non sono stato bravo a comunicare è che Vela mira a essere un desktop environment completo: ciò implica anche un ecosistema.
+
+Il fatto che Vela oggi non abbia una sua calcolatrice, un suo calendario, eccetera, non significa che non li avrà in futuro. Ma questo non vuol dire che, per ora, possa accettare contributi in merito: non fraintendetemi, ho già ricevuto contributi per aggiungere diverse applicazioni companion, ma non li posso accettare ora. Non posso aumentare la codebase di decine e decine di migliaia di righe di codice e sobbarcarmi la manutenzione di applicazioni che sono state fatte senza un'idea di ecosistema dietro. È ancora troppo presto.
+
+Ma cosa intendo, concretamente, per "un'idea di ecosistema"? Un'applicazione di Vela deve rispettare alcune regole:
+
+1. **Deve sembrare Vela.** Usa gli stessi componenti e lo stesso sistema di temi della shell: se passate a Vela Expressive, cambia anche lei. Un'applicazione fatta per conto suo resta indietro a ogni redesign.
+2. **Si integra con il resto del desktop.** Impostazioni, notifiche, ricerca dal menu Start, scorciatoie. Non basta che giri su Vela: deve farne parte.
+3. **Usa i servizi comuni, invece di reinventarli.** Per esempio le password: Vela Secrets è nella [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md) e arriverà entro il 2026, e da quel momento un'applicazione di Vela dovrà usare quello, non un sistema suo. È questo che trasforma tante applicazioni in un ecosistema.
+4. **Ha qualcuno che la mantiene, insieme al resto.** Segue lo stesso ciclo di release, viene tradotta con la stessa piattaforma, ha i suoi test. Ogni riga di codice che entra in Vela è una riga che qualcuno dovrà mantenere per anni.
+5. **Segue lo stesso metodo di sviluppo di Vela.** Design document prima del codice, revisioni, test: quello che ho raccontato in [Vela non è vibecoding](/it/blog/not-vibecoding/). Un'applicazione scritta in un pomeriggio, per quanto funzioni, non segue questo metodo.
+
+Quindi, se volete costruire qualcosa per Vela, la strada è un'altra: parlatene prima con me, prima di scrivere codice e prima di prendere qualsiasi decisione. Se è ancora un'idea astratta, scrivetemi dove preferite: su [Discord](https://discord.gg/3xu68uqkWt), su Telegram, anche per email. Quando l'idea prende forma si passa a una [issue su GitHub](https://github.com/vela-desktop/vela/issues), e solo dopo alla PR. E il design document lo rivedo sempre io, prima che si cominci. Non è per controllo: è l'unico modo per far sì che le applicazioni di Vela vadano tutte nella stessa direzione.
+
+Ma Vela diventerà un gioiellino. Ve lo prometto.
