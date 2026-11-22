@@ -1,0 +1,173 @@
+---
+// The Vela 0.1 trailer on a page of its own, /trailer/ and /it/trailer/: a
+// watch page, where the video is the main content, so that Google can list it
+// in video results (in a journal entry it's only an illustration of the text,
+// and Search Console reports it as "not on a watch page"). The same video
+// also opens the 0.1 entry.
+import { getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Video from '../mdx/Video.astro';
+import { DEFAULT_LANG, type Lang } from '../../lib/i18n';
+import { breadcrumbSchema, videoSchema } from '../../lib/schema';
+import { LINKS } from '../../consts';
+import trailer from '../../assets/videos/vela-0-1/trailer-1080p.webm';
+import trailerMp4 from '../../assets/videos/vela-0-1/trailer-1080p.mp4';
+import trailer4k from '../../assets/videos/vela-0-1/trailer-2160p.webm';
+import trailer4kMp4 from '../../assets/videos/vela-0-1/trailer-2160p.mp4';
+import trailerPoster from '../../assets/videos/vela-0-1/trailer.webp';
+import '../../styles/prose.css';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+/** When the trailer came out, with the 0.1 entry, and how long it is. */
+const RELEASED = new Date('2026-10-31T21:00:00+01:00');
+const DURATION = 'PT1M22S';
+
+const WORDS = {
+  en: {
+    title: 'The Vela 0.1 trailer',
+    seoTitle: 'Vela 0.1 trailer: a modern Linux desktop, recorded live',
+    description:
+      'The trailer of Vela 0.1, the first beta: the desktop, Settings and Files, snap layouts and accent colors, recorded live on Vela. 1 minute 22 seconds.',
+    label: 'Trailer',
+    dek: 'Vela 0.1, the first beta, in a minute and a half. Everything you see was recorded live on Vela.',
+    videoLabel:
+      'The Vela 0.1 trailer: the desktop, Settings and Files, snap layouts, accent colors, and the release’s closing card.',
+    body: [
+      'The trailer goes through what 0.1 brings together: the desktop and its shell, Vela’s own Files and Settings, snap layouts, and the accent colors. Nothing in it is a mockup: it’s Vela itself, with its own compositor and Vulkan renderer.',
+      'What’s in the release, what changed since the last alpha and who it’s ready for is in the journal entry.',
+    ],
+    entryLink: 'Read about Vela 0.1',
+    installLink: 'Install Vela',
+    crumbs: 'Trailer',
+    home: 'Home',
+  },
+  it: {
+    title: 'Il trailer di Vela 0.1',
+    seoTitle: 'Trailer di Vela 0.1: un desktop Linux moderno, registrato dal vivo',
+    description:
+      'Il trailer di Vela 0.1, la prima beta: il desktop, Settings e Files, gli snap layout e i colori d’accento, registrati dal vivo su Vela. 1 minuto e 22 secondi.',
+    label: 'Trailer',
+    dek: 'Vela 0.1, la prima beta, in un minuto e mezzo. Tutto quello che vedi è registrato dal vivo su Vela.',
+    videoLabel:
+      'Il trailer di Vela 0.1: il desktop, Settings e Files, gli snap layout, i colori d’accento e il cartello finale della release.',
+    body: [
+      'Il trailer attraversa quello che la 0.1 mette insieme: il desktop e la sua shell, Files e Settings scritte apposta per Vela, gli snap layout e i colori d’accento. Niente è un mockup: è Vela stessa, con il suo compositor e il suo renderer Vulkan.',
+      'Cosa c’è nella release, cosa è cambiato dall’ultima alpha e per chi è pronta lo trovi nell’articolo del Journal.',
+    ],
+    entryLink: 'Leggi l’articolo su Vela 0.1',
+    installLink: 'Installa Vela',
+    crumbs: 'Trailer',
+    home: 'Home',
+  },
+} as const;
+
+const words = WORDS[lang];
+const prefix = lang === DEFAULT_LANG ? '' : `/${lang}`;
+const path = `${prefix}/trailer/`;
+const entry = `${prefix}/blog/vela-0-1/`;
+// The same still as the player's poster (src/components/mdx/Video.astro), so
+// it's one file.
+const thumbnail = await getImage({ src: trailerPoster, format: 'webp', width: Math.min(trailerPoster.width, 1920) });
+// Social previews are 1200×630 (src/components/Head.astro).
+const preview = await getImage({ src: trailerPoster, format: 'jpg', width: 1200, height: 630, fit: 'cover' });
+
+const jsonLd = [
+  videoSchema({
+    name: words.title,
+    description: words.description,
+    thumbnail: thumbnail.src,
+    contentUrl: trailerMp4,
+    uploadDate: RELEASED,
+    duration: DURATION,
+    page: path,
+    lang,
+  }),
+  breadcrumbSchema([
+    [words.home, '/'],
+    [words.crumbs, path],
+  ]),
+];
+---
+
+<Base
+  title={words.title}
+  seoTitle={words.seoTitle}
+  description={words.description}
+  image={preview.src}
+  imageAlt={words.videoLabel}
+  lang={lang}
+  alternates={[
+    { lang: 'en', path: '/trailer/' },
+    { lang: 'it', path: '/it/trailer/' },
+  ]}
+  jsonLd={jsonLd}
+>
+  <article class="watch">
+    <header class="watch__header">
+      <p class="label label--accent">{words.label}</p>
+      <h1 class="watch__title">{words.title}</h1>
+    </header>
+
+    <div class="prose watch__body">
+      <Video
+        webm={trailer}
+        mp4={trailerMp4}
+        codecs="av01.0.09M.08"
+        quality="1080p"
+        qualities={[{ quality: '4K', webm: trailer4k, codecs: 'av01.0.13M.08', mp4: trailer4kMp4, mp4Codecs: 'hvc1.1.6.L153.B0' }]}
+        autoplay={false}
+        poster={trailerPoster}
+        width="wide"
+        label={words.videoLabel}
+      />
+      <p>{words.dek}</p>
+      {words.body.map((paragraph) => <p>{paragraph}</p>)}
+      <p class="watch__links">
+        <a href={entry}>{words.entryLink}</a>
+        <a href={LINKS.install}>{words.installLink}</a>
+      </p>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .watch {
+    padding-top: calc(var(--header-height) + var(--space-xl));
+    padding-bottom: var(--space-section);
+    background:
+      radial-gradient(50rem 26rem at 50% 0%, rgb(77 163 255 / 0.07), transparent 70%),
+      var(--paper);
+  }
+
+  .watch__header {
+    width: min(100% - 2 * var(--gutter), 56rem);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .watch__title {
+    margin-top: var(--space-s);
+    font-family: var(--font-serif);
+    font-size: var(--step-4);
+    font-weight: 420;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .watch__body {
+    margin-top: var(--space-xl);
+  }
+
+  .watch__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s) var(--space-l);
+    font-family: var(--font-body);
+    font-size: var(--step-0);
+  }
+</style>

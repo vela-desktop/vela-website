@@ -139,3 +139,33 @@ export function faqSchema(html: string): Thing {
   }
   return { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: questions };
 }
+
+/**
+ * A video that is the main content of its page (a watch page, like
+ * /trailer/): Google only lists those in video results. `duration` is ISO
+ * 8601 ("PT1M22S"), `thumbnail` and `contentUrl` absolute or root-relative.
+ */
+export function videoSchema(video: {
+  name: string;
+  description: string;
+  thumbnail: string;
+  contentUrl: string;
+  uploadDate: Date;
+  duration: string;
+  page: string;
+  lang: string;
+}): Thing {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: video.name,
+    description: video.description,
+    thumbnailUrl: [absolute(video.thumbnail)],
+    contentUrl: absolute(video.contentUrl),
+    uploadDate: video.uploadDate.toISOString(),
+    duration: video.duration,
+    url: absolute(video.page),
+    inLanguage: video.lang,
+    publisher: vela,
+  };
+}
