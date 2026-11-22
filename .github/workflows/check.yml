@@ -55,6 +55,9 @@ jobs:
             --include-fragments
             --exclude '^https://velade\.org/'
             --exclude '^https://matrix\.to/'
+            --exclude '^https://discord\.gg/'
+            --exclude '^https://www\.patreon\.com/'
+            --exclude '^https://x\.com/'
             --exclude '^https://github\.com/.*#discussion_r'
             ${{ github.event_name != 'schedule' && '--offline' || '' }}
             --no-progress
