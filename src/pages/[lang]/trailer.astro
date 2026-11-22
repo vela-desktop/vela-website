@@ -1,0 +1,13 @@
+---
+// The trailer's watch page in the other languages: /it/trailer/.
+import TrailerPage from '../../components/trailer/TrailerPage.astro';
+import { DEFAULT_LANG, LANGS, type Lang } from '../../lib/i18n';
+
+export function getStaticPaths() {
+  return LANGS.filter((lang) => lang !== DEFAULT_LANG).map((lang) => ({ params: { lang }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+---
+
+<TrailerPage lang={lang} />
