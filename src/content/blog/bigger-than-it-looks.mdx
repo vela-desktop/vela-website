@@ -1,0 +1,96 @@
+---
+title: "Vela is bigger than it looks"
+seoTitle: "Vela two weeks after 0.1: what's new, Discord, and the project behind the desktop"
+description: "What has changed since 0.1, what's coming in the next few weeks, the community on Matrix and Discord, and how to help Vela without being a developer."
+pubDate: 2026-11-22T12:00:00+01:00
+draft: false
+tags: ["Community"]
+writtenIn: it
+---
+
+import Aside from '../../components/mdx/Aside.astro';
+import Figure from '../../components/mdx/Figure.astro';
+import PullQuote from '../../components/mdx/PullQuote.astro';
+import Stats from '../../components/mdx/Stats.astro';
+import contextMenu from '../../assets/screenshots/desktop-context-menu.webp';
+import keyboard from '../../assets/screenshots/keyboard-settings.webp';
+
+It's been almost two weeks since the last post. I missed writing here! I have actually written a few drafts, but I haven't published them: they're still just ideas, and I want to talk about them once there's something concrete.
+
+A hint: one of them is about RAM.
+
+## What has changed since 0.1
+
+A lot has happened in these two weeks, and we've moved a long way from the 0.1 beta. [0.1.2](/releases/0.1.2/) came out a few days ago: that's where I backported all the fixes, including the one for text rendering in some specific cases, which was one of the most noticeable problems. All the features, on the other hand, stayed in main, as the release process intends.
+
+<Stats caption="Since October 31, excluding backports, CI, documentation and maintenance." items={[
+  { value: '76', label: 'pull requests merged' },
+  { value: '83,000', label: 'lines added', note: 'about' },
+  { value: '7,700', label: 'lines removed', note: 'about' },
+]} />
+
+Some of the most interesting ones, in my opinion:
+
+- **Vela Expressive**: the first complete alternative theme, inspired by Material 3 Expressive, without touching the official theme ([#244](https://github.com/vela-desktop/vela/pull/244), [#248](https://github.com/vela-desktop/vela/pull/248)).
+- **A better taskbar**: Super+1–9, drag and drop, badges, attention requests and overflow handling ([#299](https://github.com/vela-desktop/vela/pull/299)).
+- **Context menus, rethought**: goodbye to the annoying "Show more options", and you can hide specific entries from Settings ([#298](https://github.com/vela-desktop/vela/pull/298)).
+- **Keyboard customization**: layouts, Caps Lock and Num Lock behavior, custom shortcuts ([#311](https://github.com/vela-desktop/vela/pull/311)).
+- **Experimental Venus support in VMs**: a very interesting one, to try Vela without GPU passthrough ([#251](https://github.com/vela-desktop/vela/pull/251)).
+- **Deep improvements to memory management and security**: from removing allocations while frames are rendered, to limits on resource usage, to hardening the compositor ([#250](https://github.com/vela-desktop/vela/pull/250), [#252](https://github.com/vela-desktop/vela/pull/252), [#258](https://github.com/vela-desktop/vela/pull/258)).
+
+<Figure src={keyboard} width="wide" alt="Vela's Settings open on Keyboard › Typing: key repeat, Caps Lock key, Compose key, Num Lock at startup. On the right, the quick settings panel; at the bottom, the taskbar; all in the Vela Expressive theme." caption="The new keyboard settings, in the Vela Expressive theme." />
+
+<Figure src={contextMenu} alt="The desktop context menu: View, Sort by, Refresh, New, Display settings, Personalize, Open in Terminal, and an entry added by an app, for disk usage statistics." caption="The desktop context menu: a single menu, no &quot;Show more options&quot;." />
+
+## Community
+
+That's the development side. Meanwhile, I have to admit a failure: the Matrix server. Right now [Matrix](https://matrix.to/#/#vela:velade.org) has 2 users, not counting me. Well, it's a shame, but I get it. Not everyone has Matrix, and installing a Matrix client just to join a chat isn't something people do gladly. The Matrix server will stay, because some people do prefer it and I'm sure it will pick up new users over time. In the meantime, thanks to R3AP3R's help, we've opened a [Discord server](https://discord.gg/3xu68uqkWt): talking with some of you, I noticed Discord is much more popular.
+
+## How to help
+
+You don't need to be a developer to [help](/help/). For example, Vela currently only supports Italian and English: in the next few weeks I'll publish a platform for managing Vela's language files, so that anyone can help translate Vela into their own language. Actually, I think I'll add a few languages automatically with LLMs and then have the community correct them, to make the work easier and faster. I think most of the translations will be right, but these things need a human touch. I'll confess that even the Italian translation of Vela's interface doesn't fully satisfy me.
+
+There's also a way to support me financially: Vela's Patreon, [patreon.com/c/velade](https://www.patreon.com/c/velade).
+
+<Aside title="Vela stays free">
+Let me say it right away: Vela is and will always be free, and people who support me on Patreon get no extra features in Vela. Supporting me on Patreon isn't a purchase: it's a way to help me keep developing, keep focusing on Vela, and cover the costs.
+</Aside>
+
+## The redesign
+
+Finally, work on the redesign continues quietly:
+
+- I'm thinking about a possible official Vela font;
+- experiments with a possible tiling window inside Vela, something hybrid between floating and tiling;
+- first contributions to [oo7](https://github.com/linux-credentials/oo7) for the future Vela Secrets (to replace KWallet);
+- brainstorming on a future Vela task manager++: really broad ideas, much more than a task manager. I've even thought about writing it in Rust, in a separate repository.
+
+But for now, as I said, they're ideas. Some may turn into concrete projects, others will change completely, and others still may be dropped.
+
+## The project behind Vela
+
+In the next few weeks I'll also start outlining the project behind Vela more clearly. Because it's something big. Maybe even something bigger than me, I'll admit. But I think I can do it, with your help. After all, Vela is FOSS, and that's what it's for, right?
+
+Anyway, by "outlining the project" I mean revealing what Vela means, why I wrote "Modern. Fluid. Sharp." on the [home page](/), and what "Efficiency through architecture, not austerity." means. I realize that right now these lines may look like they were thrown in to attract people.
+
+<PullQuote>Efficiency through architecture, not austerity.</PullQuote>
+
+And of course they're marketing slogans, but they're also guidelines that I take VERY seriously while I think about Vela's design. Design as in engineering, not as in looks.
+
+Vela's codebase is getting to the point where I can start proving these claims with data. I can't wait to finish [PR 109](https://github.com/vela-desktop/vela/pull/109), the benchmark suite that compares Vela with KDE Plasma, and show you the results. I already have something preliminary, but it's still too early.
+
+One thing I may not have communicated well is that Vela aims to be a complete desktop environment: and that implies an ecosystem too.
+
+The fact that Vela doesn't have its own calculator, its own calendar and so on today doesn't mean it won't have them in the future. But that doesn't mean I can accept contributions for them yet: don't get me wrong, I've already received contributions adding several companion apps, but I can't accept them now. I can't grow the codebase by tens and tens of thousands of lines and take on the maintenance of apps that were built without an idea of an ecosystem behind them. It's still too early.
+
+So what do I mean, concretely, by "an idea of an ecosystem"? A Vela app has to follow a few rules:
+
+1. **It has to feel like Vela.** It uses the same components and the same theme system as the shell: if you switch to Vela Expressive, it changes too. An app built on its own falls behind with every redesign.
+2. **It integrates with the rest of the desktop.** Settings, notifications, search from the Start menu, shortcuts. Running on Vela isn't enough: it has to be part of it.
+3. **It uses the shared services instead of reinventing them.** Passwords, for example: Vela Secrets is on the [roadmap](https://github.com/vela-desktop/vela/blob/main/docs/roadmap.md) and will arrive by the end of 2026, and from then on a Vela app will have to use it, not a system of its own. That's what turns a lot of apps into an ecosystem.
+4. **Someone maintains it, together with everything else.** It follows the same release cycle, it's translated on the same platform, it has its own tests. Every line of code that goes into Vela is a line someone will have to maintain for years.
+5. **It follows Vela's development process.** Design documents before code, reviews, tests: what I described in [Vela isn’t vibecoding](/blog/not-vibecoding/). An app written in an afternoon, however well it works, doesn't follow that process.
+
+So if you want to build something for Vela, the path is a different one: talk to me first, before writing code and before making any decision. If it's still an abstract idea, write to me wherever you prefer: on [Discord](https://discord.gg/3xu68uqkWt), on Telegram, even by email. Once the idea takes shape, it moves to a [GitHub issue](https://github.com/vela-desktop/vela/issues), and only then to a PR. And I always review the design document myself, before work starts. It's not about control: it's the only way to make sure Vela's apps all go in the same direction.
+
+But Vela will become a little gem. I promise you.
