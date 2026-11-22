@@ -1,117 +1,26 @@
 ---
 import { slug } from 'github-slugger';
-import Base from '../../../layouts/Base.astro';
-import JournalLayout from '../../../components/journal/JournalLayout.astro';
-import { getPosts, topicUrl, type Post } from '../../../lib/posts';
-import { breadcrumbSchema } from '../../../lib/schema';
+import TopicPage from '../../../components/journal/TopicPage.astro';
+import { getPosts, getTranslations } from '../../../lib/posts';
+import { DEFAULT_LANG, type Lang } from '../../../lib/i18n';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
+  const translations = await getTranslations();
   const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
-  return tags.map((tag) => ({
-    params: { topic: slug(tag) },
-    props: { tag, posts: posts.filter((post) => post.data.tags.includes(tag)), allPosts: posts },
-  }));
+  return tags.map((tag) => {
+    const languages: Lang[] = [
+      DEFAULT_LANG,
+      ...new Set(translations.filter((post) => post.data.tags.includes(tag)).map((post) => post.lang)),
+    ];
+    return {
+      params: { topic: slug(tag) },
+      props: { tag, posts: posts.filter((post) => post.data.tags.includes(tag)), allPosts: posts, languages },
+    };
+  });
 }
 
-interface Props {
-  tag: string;
-  posts: Post[];
-  allPosts: Post[];
-}
-
-const { tag, posts, allPosts } = Astro.props;
-const count = `${posts.length} ${posts.length === 1 ? 'entry' : 'entries'}`;
+const { tag, posts, allPosts, languages } = Astro.props;
 ---
 
-<Base
-  title={`${tag} — Journal`}
-  description={`${count} from the Vela development journal tagged “${tag}”: long-form notes on building a modern Linux desktop, newest first.`}
-  jsonLd={[
-    breadcrumbSchema([
-      ['Vela', '/'],
-      ['Journal', '/blog/'],
-      [tag, topicUrl(tag)],
-    ]),
-  ]}
->
-  <div class="topic-page">
-    <header class="topic container--wide">
-      <div class="topic__rule" aria-hidden="true">
-        <span>Vela Journal</span>
-        <span>Topic</span>
-        <span>{count}</span>
-      </div>
-      <h1 class="topic__title">{tag}</h1>
-      <p class="topic__foot">
-        <span>{count} tagged “{tag}”, newest first.</span>
-        <a class="link" href="/blog/"><span class="arrow arrow--back" aria-hidden="true">←</span> All entries</a>
-      </p>
-    </header>
-
-    <div class="container--wide topic-page__body">
-      <JournalLayout posts={posts} allPosts={allPosts} headingLevel="h2" groupByYear eager />
-    </div>
-  </div>
-</Base>
-
-<style>
-  .topic-page {
-    padding-top: calc(var(--header-height) + var(--space-2xl));
-    padding-bottom: var(--space-section);
-    background:
-      radial-gradient(60rem 30rem at 85% 0%, rgb(70 214 224 / 0.07), transparent 70%),
-      linear-gradient(180deg, var(--ink-1), var(--paper) 30rem);
-  }
-
-  .topic__rule {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-block: 0.75rem;
-    border-block: 1px solid var(--line-strong);
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--text-faint);
-  }
-
-  .topic__title {
-    margin-top: var(--space-l);
-    font-family: var(--font-serif);
-    font-size: clamp(3rem, 1rem + 8vw, 8rem);
-    font-style: italic;
-    font-weight: 360;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
-    color: var(--teal);
-    overflow-wrap: anywhere;
-  }
-
-  .topic__foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.5rem 1.75rem;
-    margin-top: var(--space-xl);
-    padding-bottom: var(--space-l);
-    border-bottom: 1px solid var(--line-strong);
-    font-size: var(--step--1);
-    color: var(--text-muted);
-  }
-
-  .topic__foot a {
-    font-weight: 500;
-  }
-
-  .topic-page__body {
-    margin-top: var(--space-xl);
-  }
-
-  @media (max-width: 40rem) {
-    .topic__rule span:first-child {
-      display: none;
-    }
-  }
-</style>
+<TopicPage tag={tag} posts={posts} allPosts={allPosts} languages={languages} />

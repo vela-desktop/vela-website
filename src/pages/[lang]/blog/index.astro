@@ -1,0 +1,21 @@
+---
+// The journal's index in another language: /it/blog/.
+import JournalIndex from '../../../components/journal/JournalIndex.astro';
+import { getPosts, getTranslations } from '../../../lib/posts';
+import { DEFAULT_LANG, type Lang } from '../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const translations = await getTranslations();
+  const allPosts = await getPosts();
+  const langs = [...new Set(translations.map((post) => post.lang))];
+  const languages: Lang[] = [DEFAULT_LANG, ...langs];
+  return langs.map((lang) => ({
+    params: { lang },
+    props: { lang, posts: translations.filter((post) => post.lang === lang), allPosts, languages },
+  }));
+}
+
+const { lang, posts, allPosts, languages } = Astro.props;
+---
+
+<JournalIndex lang={lang} posts={posts} allPosts={allPosts} languages={languages} />

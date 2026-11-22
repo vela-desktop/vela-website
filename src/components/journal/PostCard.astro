@@ -1,10 +1,11 @@
 ---
 import PostCover from './PostCover.astro';
 import PostMeta from './PostMeta.astro';
-import { postUrl, type Post } from '../../lib/posts';
+import { postUrl, type Entry } from '../../lib/posts';
+import { DEFAULT_LANG, UI } from '../../lib/i18n';
 
 export interface Props {
-  post: Post;
+  post: Entry;
   number: number;
   /** Visual weight: "large" gets a wider cover and a bigger title. */
   size?: 'large' | 'small';
@@ -13,7 +14,7 @@ export interface Props {
 
 const { post, number, size = 'small', headingLevel = 'h3' } = Astro.props;
 const Heading = headingLevel;
-const kicker = `Entry ${String(number).padStart(2, '0')}`;
+const kicker = `${UI[post.lang ?? DEFAULT_LANG].entry} ${String(number).padStart(2, '0')}`;
 ---
 
 <article class:list={['card', `card--${size}`]}>

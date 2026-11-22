@@ -80,9 +80,39 @@ export function postUrl(post: { id: string; lang?: Lang }): string {
   return lang === DEFAULT_LANG ? `/blog/${post.id}/` : `/${lang}/blog/${post.id}/`;
 }
 
-/** The page listing every entry with a tag: "Renderer" → /blog/topics/renderer/. */
-export function topicUrl(tag: string): string {
-  return `/blog/topics/${slug(tag)}/`;
+/** The journal's index in a language: /blog/, /it/blog/. */
+export function journalUrl(lang: Lang = DEFAULT_LANG): string {
+  return lang === DEFAULT_LANG ? '/blog/' : `/${lang}/blog/`;
+}
+
+/** The journal's feed in a language: /rss.xml, /it/rss.xml. */
+export function feedUrl(lang: Lang = DEFAULT_LANG): string {
+  return lang === DEFAULT_LANG ? '/rss.xml' : `/${lang}/rss.xml`;
+}
+
+/**
+ * The page listing every entry with a tag: "Renderer" → /blog/topics/renderer/,
+ * /it/blog/topics/renderer/.
+ */
+export function topicUrl(tag: string, lang: Lang = DEFAULT_LANG): string {
+  return `${journalUrl(lang)}topics/${slug(tag)}/`;
+}
+
+/**
+ * Up to `limit` entries from `pool` on the same topics as `post`: the most
+ * tags in common first, then the newest. `exclude` (the pager's neighbours)
+ * and the entry itself are left out.
+ */
+export function relatedEntries<T extends Entry>(post: Entry, pool: T[], exclude: (Entry | undefined)[] = [], limit = 3): T[] {
+  const skip = new Set([post.id, ...exclude.map((entry) => entry?.id)]);
+  const tags = new Set(post.data.tags);
+  return pool
+    .filter((other) => !skip.has(other.id))
+    .map((other) => ({ other, shared: other.data.tags.filter((tag) => tags.has(tag)).length }))
+    .filter(({ shared }) => shared > 0)
+    .sort((a, b) => b.shared - a.shared || b.other.data.pubDate.valueOf() - a.other.data.pubDate.valueOf())
+    .slice(0, limit)
+    .map(({ other }) => other);
 }
 
 /** The generated social preview image of an entry (src/pages/og/blog/). */
@@ -98,19 +128,19 @@ const dateFormats = new Map(
   ]),
 );
 
-const shortDateFormat = new Intl.DateTimeFormat('en-GB', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
+const shortDateFormats = new Map(
+  Object.entries(LOCALES).map(([lang, { dateLocale }]) => [
+    lang,
+    new Intl.DateTimeFormat(dateLocale, { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }),
+  ]),
+);
 
 export function formatDate(date: Date, lang: Lang = DEFAULT_LANG): string {
   return dateFormats.get(lang)!.format(date);
 }
 
-export function formatShortDate(date: Date): string {
-  return shortDateFormat.format(date);
+export function formatShortDate(date: Date, lang: Lang = DEFAULT_LANG): string {
+  return shortDateFormats.get(lang)!.format(date);
 }
 
 /**

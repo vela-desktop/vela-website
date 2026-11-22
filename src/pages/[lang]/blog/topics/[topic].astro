@@ -1,0 +1,32 @@
+---
+// Topics in another language: /it/blog/topics/<tag>/, for the tags its
+// translated entries have.
+import { slug } from 'github-slugger';
+import TopicPage from '../../../../components/journal/TopicPage.astro';
+import { getPosts, getTranslations } from '../../../../lib/posts';
+import { DEFAULT_LANG, type Lang } from '../../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const allPosts = await getPosts();
+  const translations = await getTranslations();
+  const langs = [...new Set(translations.map((post) => post.lang))];
+  return langs.flatMap((lang) => {
+    const inLang = translations.filter((post) => post.lang === lang);
+    const tags = [...new Set(inLang.flatMap((post) => post.data.tags))];
+    return tags.map((tag) => {
+      const languages: Lang[] = [
+        DEFAULT_LANG,
+        ...new Set(translations.filter((post) => post.data.tags.includes(tag)).map((post) => post.lang)),
+      ];
+      return {
+        params: { lang, topic: slug(tag) },
+        props: { lang, tag, posts: inLang.filter((post) => post.data.tags.includes(tag)), allPosts, languages },
+      };
+    });
+  });
+}
+
+const { lang, tag, posts, allPosts, languages } = Astro.props;
+---
+
+<TopicPage lang={lang} tag={tag} posts={posts} allPosts={allPosts} languages={languages} />
