@@ -9,6 +9,8 @@ User=velade
 Group=velade
 Environment=HOME=/var/lib/velade
 Environment=PATH=/opt/node-v24/bin:/usr/local/bin:/usr/bin:/bin
+# Discord and Matrix settings for scripts/announce.mjs; optional (docs/deployment.md).
+EnvironmentFile=-/etc/velade/announce.env
 ExecStart=/var/lib/velade/vela-website/deploy/autodeploy.sh
 TimeoutStartSec=15min
 Nice=10
