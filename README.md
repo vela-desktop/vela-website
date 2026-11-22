@@ -55,8 +55,11 @@ tags: ["Renderer", "Wayland"]                    # optional
 - Entries without a cover get a generated one cut from Vela's wallpaper, and a
   matching social preview image with the title (`src/lib/og.ts`).
 - Use `.mdx` when an entry needs components. `src/components/mdx/` provides
-  `Figure` (optimized image with caption; `width="content" | "wide" | "full"`) and
-  `Aside` (a set-apart note).
+  `Figure` (optimized image with caption; `width="content" | "wide" | "full"`),
+  `Aside` (a set-apart note) and `BarChart` (benchmarks and comparisons: up to
+  three series, drawn at build time, with the data as a table underneath; put
+  Vela first so it keeps its color, and say how it was measured in `source`).
+  The draft `formatting-reference.mdx` shows every component.
 - Math is TeX: `$…$` inline, `$$` on the lines before and after a display
   formula. It becomes MathML at build time (KaTeX, `src/lib/markdown-plugins.mjs`),
   so pages load no math script or fonts. Keep plain numbers as text (`4×`, `125%`):

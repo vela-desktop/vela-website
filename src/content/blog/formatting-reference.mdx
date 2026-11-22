@@ -14,6 +14,7 @@ import Columns from '../../components/mdx/Columns.astro';
 import CommitList from '../../components/mdx/CommitList.astro';
 import PullQuote from '../../components/mdx/PullQuote.astro';
 import ReviewComment from '../../components/mdx/ReviewComment.astro';
+import BarChart from '../../components/mdx/BarChart.astro';
 import Stats from '../../components/mdx/Stats.astro';
 import Steps from '../../components/mdx/Steps.astro';
 import snap from '../../assets/screenshots/snap.webp';
@@ -109,6 +110,33 @@ With `variant="row"` and `marker="dot"`, short named stages sit side by side:
   { value: '1.1–1.9', label: 'ms of latency', note: 'at any rate' },
   { value: '0', label: 'missed refreshes' },
 ]} />
+
+## Charts
+
+<BarChart
+  title="Bars compared side by side"
+  unit="MB"
+  better="lower"
+  series={['Vela', 'Desktop B', 'Desktop C']}
+  data={[
+    { label: 'First measurement', values: [400, 820, 610] },
+    { label: 'Second measurement', values: [480, 1010, 700] },
+    { label: 'Third measurement', values: [530, 1190, null] },
+  ]}
+  caption="Example numbers, not a measurement: put Vela first, so it keeps the same color in every chart."
+  source="the hardware, the number of runs, and the PR or commit measured."
+/>
+
+<BarChart
+  title="One series needs no legend"
+  unit="ms"
+  decimals={1}
+  series={['Frame time']}
+  data={[
+    { label: 'Before', values: [9.4] },
+    { label: 'After', values: [3.1] },
+  ]}
+/>
 
 ## Columns
 
