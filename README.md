@@ -15,7 +15,8 @@ npm run build        # type-check and build to dist/ (drafts excluded)
 npm run preview      # serve dist/ locally
 ```
 
-The *What's new* page and the latest Beta release on *Install* are read from the
+The *What's new* page, the *Releases* pages (`/releases/`, one per version, with
+the notes written on GitHub) and the latest Beta release on *Install* are read from the
 GitHub API at build time (`src/lib/vela.ts`). Without network access the build
 still succeeds and those parts point to GitHub instead; set `GITHUB_TOKEN` to
 raise the API rate limit.
@@ -43,6 +44,7 @@ draft: true                                      # optional; drafts never reach 
 cover: ./cover.webp                              # optional, relative to the entry
 coverAlt: "What the cover shows"                 # required when cover is set
 tags: ["Renderer", "Wayland"]                    # optional
+release: "0.2.0"                                 # optional; the version it announces, linked from /releases/0.2.0/
 ---
 ```
 

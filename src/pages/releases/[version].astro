@@ -1,0 +1,184 @@
+---
+// One numbered release: /releases/0.1.2/. The notes are the ones written
+// on GitHub (src/lib/releases.ts), with the packages it published and the
+// journal entry that announced it, if there is one. Built from the GitHub
+// API: without it, there are no release pages and /releases/ says so.
+import type { GetStaticPaths } from 'astro';
+import Page from '../../layouts/Page.astro';
+import { releases, type Release } from '../../lib/vela';
+import { renderNotes } from '../../lib/releases';
+import { formatDate, getPosts, postUrl } from '../../lib/posts';
+
+export const getStaticPaths = (async () => {
+  const all = await releases();
+  return all.map((release, i) => ({
+    params: { version: release.version },
+    props: { release, newer: all[i - 1], older: all[i + 1] },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  release: Release;
+  newer?: Release;
+  older?: Release;
+}
+
+const { release, newer, older } = Astro.props;
+const { summary, html } = renderNotes(release.notes, release.tag);
+const announced = (await getPosts()).find((post) => post.data.release === release.version);
+const compare = older ? `${release.url.replace(/\/releases\/tag\/.*$/, '')}/compare/${older.tag}...${release.tag}` : undefined;
+const megabytes = (bytes: number) => (bytes / 1_000_000).toFixed(1);
+---
+
+<Page
+  frontmatter={{
+    title: `Vela ${release.version}`,
+    seoTitle: `Vela ${release.version} release notes — Vela, Linux desktop`,
+    description: summary || `${release.name}, released ${formatDate(release.published)}.`,
+    label: 'Release',
+  }}
+>
+  <dl class="release">
+    <div>
+      <dt>Released</dt>
+      <dd><time datetime={release.published.toISOString()}>{formatDate(release.published)}</time></dd>
+    </div>
+    <div>
+      <dt>Channel</dt>
+      <dd>Beta</dd>
+    </div>
+    {
+      release.packages.length > 0 && (
+        <div class="release__wide">
+          <dt>Packages</dt>
+          <dd>
+            {release.packages.map((pkg, i) => (
+              <>
+                {i > 0 && <span aria-hidden="true"> · </span>}
+                <span class="release__package">
+                  {pkg.label}, {megabytes(pkg.size)} MB
+                </span>
+              </>
+            ))}
+          </dd>
+        </div>
+      )
+    }
+  </dl>
+
+  <p class="release__links">
+    {
+      announced && (
+        <>
+          <a href={postUrl(announced)}>Read the announcement: {announced.data.title}</a>
+          <br />
+        </>
+      )
+    }
+    <a href="/install/">Install Vela</a> or <a href="/install/#updating">update it</a>
+    {' · '}
+    <a href={release.url} rel="noopener">The release on GitHub</a>
+    {
+      compare && (
+        <>
+          {' · '}
+          <a href={compare} rel="noopener">Every commit since {older!.version}</a>
+        </>
+      )
+    }
+  </p>
+
+  <div class="release__notes" set:html={html} />
+
+  <nav class="release__pager" aria-label="Other releases">
+    {
+      older ? (
+        <a href={`/releases/${older.version}/`} rel="prev">
+          <span class="label">Previous</span>
+          <span class="release__pager-title">Vela {older.version}</span>
+        </a>
+      ) : (
+        <span />
+      )
+    }
+    {
+      newer && (
+        <a class="release__pager-newer" href={`/releases/${newer.version}/`} rel="next">
+          <span class="label">Next</span>
+          <span class="release__pager-title">Vela {newer.version}</span>
+        </a>
+      )
+    }
+  </nav>
+
+  <p><a href="/releases/">All releases</a></p>
+</Page>
+
+<style>
+  .release {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr));
+    gap: 1rem 1.5rem;
+    margin: 0 0 1.5em;
+    padding: 1rem 0;
+    border-top: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .release__wide {
+    grid-column: 1 / -1;
+  }
+
+  .release dt {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .release dd {
+    margin: 0.3rem 0 0;
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    color: var(--text);
+  }
+
+  .release__package {
+    white-space: nowrap;
+  }
+
+  .release__links {
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    line-height: 1.8;
+  }
+
+  .release__pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 3em;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .release__pager a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    text-decoration: none;
+  }
+
+  .release__pager-newer {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .release__pager-title {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 600;
+    color: var(--text);
+  }
+</style>

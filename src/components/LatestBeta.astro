@@ -29,7 +29,7 @@ const megabytes = (bytes: number) => (bytes / 1_000_000).toFixed(1);
           </>
         ))}
         <span aria-hidden="true">·</span>
-        <a href={release.url} rel="noopener">Release notes on GitHub</a>
+        <a href={`/releases/${release.version}/`}>Release notes</a>
       </p>
       <p class="build__more">
         {more === 'changes' ? (
