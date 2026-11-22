@@ -178,6 +178,63 @@ systemctl list-timers velade-autodeploy.timer    # when the next check is
 With the timer active, publish only through it (or as `velade`): releases created
 by another account could not be pruned by the service.
 
+### Announcing new entries on Discord and Matrix
+
+After every check, the timer also runs `scripts/announce.mjs`. It reads the feeds
+of the live site (`current/rss.xml` and `current/it/rss.xml`, so every link
+already works), and posts each journal entry it hasn't announced yet: the title,
+the description and the link, with the Italian version alongside when there is
+one. What was announced is kept per channel in `/var/lib/velade/announced`.
+
+- The first run records the entries that already exist and posts nothing, so
+  the back catalogue is never announced. Entries published more than 14 days
+  ago are never announced either.
+- A channel that fails (the network, an expired token) is tried again on the
+  next run, two minutes later, without posting twice to the other. A failure
+  never stops a deploy.
+- Drafts aren't in the feeds, so they're never announced. Neither is a
+  translation published after its original: the original was announced
+  already.
+- A channel without its settings is skipped, and set up later it starts from
+  then on, without the entries it missed.
+
+The settings live outside the repository, in `/etc/velade/announce.env`, which
+the service reads at start:
+
+```sh
+# Discord: Server settings → Integrations → Webhooks → New Webhook, pick the
+# channel, Copy Webhook URL.
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/…
+
+# Matrix: an account that posts (a bot account is best), invited to the room
+# and joined. Its access token: Element → Settings → Help & About → Access
+# token. Signing that session out revokes the token, so use a session of its
+# own and leave it signed in.
+MATRIX_HOMESERVER=https://matrix.velade.org
+MATRIX_ACCESS_TOKEN=…
+MATRIX_ROOM=#announcements:velade.org      # an alias, or a room ID (!…:velade.org)
+```
+
+Once, as root:
+
+```sh
+install -d -m 0750 -o root -g velade /etc/velade
+install -m 0640 -o root -g velade /dev/null /etc/velade/announce.env
+editor /etc/velade/announce.env
+cp /var/lib/velade/vela-website/deploy/systemd/velade-autodeploy.service /etc/systemd/system/
+systemctl daemon-reload
+```
+
+To see what it would post, without posting or recording anything:
+
+```sh
+sudo -u velade sh -c 'cd /var/lib/velade/vela-website && set -a && . /etc/velade/announce.env && node scripts/announce.mjs --dry-run'
+```
+
+`journalctl -u velade-autodeploy.service` shows each post (`announce: posted …`)
+and each failure. To announce an entry again, delete its lines from
+`/var/lib/velade/announced`.
+
 ### By hand
 
 ```sh
