@@ -1,29 +1,31 @@
 ---
-import { formatShortDate, postUrl, readingTime, type Post } from '../../lib/posts';
+import { formatShortDate, postUrl, readingTime, type Entry } from '../../lib/posts';
+import { DEFAULT_LANG, UI, tagName } from '../../lib/i18n';
 
 export interface Props {
-  post: Post;
+  post: Entry;
   number: number;
   headingLevel?: 'h2' | 'h3';
 }
 
 const { post, number, headingLevel = 'h3' } = Astro.props;
 const Heading = headingLevel;
+const lang = post.lang ?? DEFAULT_LANG;
 ---
 
 <li class="row">
   <a class="row__link" href={postUrl(post)}>
     <span class="row__number" aria-hidden="true">{String(number).padStart(2, '0')}</span>
-    <time class="row__date" datetime={post.data.pubDate.toISOString()}>{formatShortDate(post.data.pubDate)}</time>
+    <time class="row__date" datetime={post.data.pubDate.toISOString()}>{formatShortDate(post.data.pubDate, lang)}</time>
     <span class="row__main">
       <Heading class="row__title">
-        {post.data.draft && <span class="row__draft">Draft</span>}
+        {post.data.draft && <span class="row__draft">{UI[lang].draft}</span>}
         {post.data.title}
       </Heading>
       <span class="row__description">{post.data.description}</span>
     </span>
     <span class="row__aside">
-      {post.data.tags.slice(0, 2).map((tag) => <span class="row__tag">{tag}</span>)}
+      {post.data.tags.slice(0, 2).map((tag) => <span class="row__tag">{tagName(tag, lang)}</span>)}
       <span class="row__time">{readingTime(post)} min</span>
       <span class="arrow" aria-hidden="true">→</span>
     </span>

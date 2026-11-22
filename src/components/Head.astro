@@ -1,7 +1,8 @@
 ---
 import { Font } from 'astro:assets';
 import { SITE, UMAMI } from '../consts';
-import { DEFAULT_LANG, LOCALES, type Lang } from '../lib/i18n';
+import { DEFAULT_LANG, FEEDS, LOCALES, type Lang } from '../lib/i18n';
+import { feedUrl } from '../lib/posts';
 
 export interface Props {
   /** The page's own title; the <title> adds SITE.titleSuffix to it. */
@@ -71,7 +72,7 @@ const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<link rel="alternate" type="application/rss+xml" title="Vela Journal" href="/rss.xml" />
+<link rel="alternate" type="application/rss+xml" title={FEEDS[lang].title} href={feedUrl(lang)} />
 <link rel="sitemap" href="/sitemap-index.xml" />
 <meta name="generator" content={Astro.generator} />
 

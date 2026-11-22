@@ -1,11 +1,12 @@
 ---
 import { Picture } from 'astro:assets';
 import wallpaper from '../../assets/brand/vela-wallpaper.svg?url';
-import { seed, type Post } from '../../lib/posts';
+import { seed, type Entry } from '../../lib/posts';
+import { DEFAULT_LANG, tagName } from '../../lib/i18n';
 import { ENTRY_COVERS } from './covers';
 
 export interface Props {
-  post?: Post;
+  post?: Entry;
   /** Shown on generated covers, e.g. "Entry 03". */
   kicker?: string;
   sizes?: string;
@@ -39,7 +40,7 @@ const style = [
   `--cover-hue: ${Math.round(-18 + pick(15, 36))}deg`,
   `--cover-flip: ${flip}`,
 ].join('; ');
-const firstTag = post?.data.tags[0];
+const firstTag = post?.data.tags[0] && tagName(post.data.tags[0], post.lang ?? DEFAULT_LANG);
 ---
 
 <div class:list={['cover', { 'cover--generated': !cover }, className]}>

@@ -10,10 +10,11 @@ import PostFeature from './PostFeature.astro';
 import PostCard from './PostCard.astro';
 import PostRow from './PostRow.astro';
 import JournalEmpty from './JournalEmpty.astro';
-import type { Post } from '../../lib/posts';
+import type { Entry } from '../../lib/posts';
+import { DEFAULT_LANG, UI } from '../../lib/i18n';
 
 export interface Props {
-  posts: Post[];
+  posts: Entry[];
   /** Cap the number of index rows (homepage); omit to list everything. */
   maxRows?: number;
   /** Heading level for entry titles. */
@@ -25,10 +26,11 @@ export interface Props {
    * Every published entry, when `posts` is only some of them (a topic page),
    * so entries keep the number they have in the whole journal.
    */
-  allPosts?: Post[];
+  allPosts?: Entry[];
 }
 
 const { posts, maxRows, headingLevel = 'h3', groupByYear = false, eager = false, allPosts = posts } = Astro.props;
+const ui = UI[posts[0]?.lang ?? DEFAULT_LANG];
 const numberOf = (i: number) => allPosts.length - allPosts.findIndex((post) => post.id === posts[i].id);
 
 const [feature, ...others] = posts;
@@ -38,13 +40,13 @@ const rows = maxRows === undefined ? rest : rest.slice(0, maxRows);
 
 const groups = groupByYear
   ? Object.entries(
-      rows.reduce<Record<string, Post[]>>((acc, post) => {
+      rows.reduce<Record<string, Entry[]>>((acc, post) => {
         const year = String(post.data.pubDate.getUTCFullYear());
         (acc[year] ??= []).push(post);
         return acc;
       }, {}),
     ).sort(([a], [b]) => Number(b) - Number(a))
-  : [['', rows] as [string, Post[]]];
+  : [['', rows] as [string, Entry[]]];
 ---
 
 {
@@ -74,7 +76,7 @@ const groups = groupByYear
       {rows.length > 0 && (
         <div class="journal-layout__index">
           {groups.map(([year, list]) => (
-            <section class="journal-layout__group" aria-label={year ? `Entries from ${year}` : 'More entries'}>
+            <section class="journal-layout__group" aria-label={year ? ui.entriesFrom(year) : ui.moreEntries}>
               {year && <p class="journal-layout__year">{year}</p>}
               <ol role="list">
                 {list.map((post) => (

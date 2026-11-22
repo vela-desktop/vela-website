@@ -1,7 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Article from '../../layouts/Article.astro';
-import { getPosts, getTranslations, type Post, type TranslatedPost } from '../../lib/posts';
+import { getPosts, getTranslations, relatedEntries, type Post, type TranslatedPost } from '../../lib/posts';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
@@ -13,6 +13,7 @@ export async function getStaticPaths() {
       translations: translations.filter((translation) => translation.id === post.id),
       newer: posts[i - 1],
       older: posts[i + 1],
+      related: relatedEntries(post, posts, [posts[i - 1], posts[i + 1]]),
     },
   }));
 }
@@ -22,12 +23,13 @@ interface Props {
   translations: TranslatedPost[];
   newer?: Post;
   older?: Post;
+  related: Post[];
 }
 
-const { post, translations, newer, older } = Astro.props;
+const { post, translations, newer, older, related } = Astro.props;
 const { Content, headings } = await render(post);
 ---
 
-<Article post={post} translations={translations} newer={newer} older={older} headings={headings}>
+<Article post={post} translations={translations} newer={newer} older={older} headings={headings} related={related}>
   <Content />
 </Article>

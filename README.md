@@ -67,6 +67,14 @@ tags: ["Renderer", "Wayland"]                    # optional
 
 The build fails on invalid front matter, so mistakes are caught before publishing.
 
+Every entry ends with entries on the same topics (most tags in common, then
+the newest, leaving out the pager's two), a link to the Matrix space and a
+button that copies its address. The journal index has a search field: after
+the build, Pagefind indexes the entries (`src/lib/pagefind.mjs`) into
+`dist/pagefind/`, one index per language, and the field loads it on first use.
+It only works on a built site (`npm run build && npm run preview`), not in
+`astro dev`, and stays hidden without JavaScript.
+
 ### Translations
 
 An entry can also be published in another language. The translation goes in
@@ -81,12 +89,15 @@ Its front matter is `title`, `description` and `pubDate`, plus optionally
 `seoTitle`, `updatedDate`, `draft` and `coverAlt`; tags and cover come from the
 original. The two pages link to each other ("Leggi in italiano" / "Read in
 English") and declare each other with `hreflang`, in the sitemap too. A
-translation has its own social preview image, and stays out of the journal
-index, the topic pages and the RSS feed, which are in English. When the
-original changes, update the translation and set its `updatedDate`.
+translation has its own social preview image. Each language with at least one
+translation also gets its own journal index (`/it/blog/`, which says how many
+entries are only in English), topic pages (`/it/blog/topics/<tag>/`) and RSS
+feed (`/it/rss.xml`); tag names can be translated with `tagName()` in
+`src/lib/i18n.ts`, while their URLs stay the English slug. When the original
+changes, update the translation and set its `updatedDate`.
 
 Languages are listed in `src/lib/i18n.ts`, with the words around an entry
-(byline, dates, pager) in each; a new one also needs adding to the sitemap's
+(byline, dates, pager, index, search) in each; a new one also needs adding to the sitemap's
 `i18n` option in `astro.config.mjs`. A translation in a language not listed
 there, or of an entry that doesn't exist, fails the build. A draft translation
 (`draft: true`) can be written first and waits for its original.
@@ -100,11 +111,12 @@ src/consts.ts           site metadata, links, supported GPUs and distributions,
 src/lib/i18n.ts         journal languages and the words around an entry in each
 src/styles/             tokens.css (design tokens), global.css, prose.css
 src/components/home/    the five homepage chapters
-src/components/journal/ journal layouts: feature, card, row, cover, empty state
+src/components/journal/ journal layouts: index, topic page, search, feature, card,
+                        row, cover, empty state
 src/layouts/            Base (every page), Page (Markdown pages), Article (journal entries)
-src/pages/              routes: /, /blog/, /blog/<entry>/, /<lang>/blog/<entry>/,
-                        /blog/topics/<tag>/, /changes/, /install/, /faq/, /privacy/,
-                        /rss.xml, /robots.txt, 404
+src/pages/              routes: /, /blog/, /blog/<entry>/, /blog/topics/<tag>/, the
+                        same under /<lang>/, /changes/, /install/, /faq/, /privacy/,
+                        /rss.xml, /<lang>/rss.xml, /robots.txt, 404
 src/assets/             screenshots, brand artwork, fonts
 .github/workflows/      CI: type-check, build, link check, Lighthouse on desktop and
                         mobile (lighthouserc.json, lighthouserc.mobile.json)

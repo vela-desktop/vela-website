@@ -6,6 +6,7 @@ import { satteri } from '@astrojs/markdown-satteri';
 import { headingAnchors, math, tableWrap } from './src/lib/markdown-plugins.mjs';
 import { UMAMI } from './src/consts.ts';
 import { lastModified } from './src/lib/lastmod.mjs';
+import { pagefind } from './src/lib/pagefind.mjs';
 
 const analytics = new URL(UMAMI.src).origin;
 const lastmod = lastModified();
@@ -73,6 +74,7 @@ export default defineConfig({
         return date ? { ...item, lastmod: date.toISOString() } : item;
       },
     }),
+    pagefind(),
   ],
   markdown: {
     processor: satteri({ features: { math: true }, hastPlugins: [math, headingAnchors, tableWrap] }),
@@ -88,10 +90,12 @@ export default defineConfig({
   // without 'unsafe-inline'; style="" attributes are allowed, since components
   // pass CSS custom properties through them. The only other origin is Umami
   // (src/consts.ts): its tracker, the replay recorder's worker, and the endpoint
-  // both send to. Header-only directives (frame-ancestors) are set in Apache.
+  // both send to. 'wasm-unsafe-eval' lets the journal's search (Pagefind) run
+  // its WebAssembly; it allows compiling WebAssembly, not eval(). Header-only
+  // directives (frame-ancestors) are set in Apache.
   security: {
     csp: {
-      scriptDirective: { resources: ["'self'", analytics] },
+      scriptDirective: { resources: ["'self'", "'wasm-unsafe-eval'", analytics] },
       styleDirective: {
         resources: ["'self'", { resource: "'unsafe-inline'", kind: 'attribute' }],
       },

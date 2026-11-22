@@ -31,6 +31,30 @@ export const COPY: Record<Lang, { label: string; copy: string; copied: string; f
   it: { label: 'Copia il codice negli appunti', copy: 'Copia', copied: 'Copiato', failed: 'Copia non riuscita' },
 };
 
+/** The journal's RSS feed in each language (src/lib/feed.ts). */
+export const FEEDS: Record<Lang, { title: string; description: string }> = {
+  en: {
+    title: 'Vela Journal',
+    description: 'Long-form notes from the development of Vela, a modern Linux desktop environment.',
+  },
+  it: {
+    title: 'Vela Journal (italiano)',
+    description: 'Note lunghe dallo sviluppo di Vela, un desktop environment Linux moderno, in italiano.',
+  },
+};
+
+/**
+ * Journal tags in other languages, where the English name doesn't work as is.
+ * The URL of a topic is the English name's slug in every language.
+ */
+const TAGS: Partial<Record<Lang, Record<string, string>>> = {
+  it: { 'Daily use': 'Uso quotidiano', Engineering: 'Sviluppo', Reference: 'Riferimento' },
+};
+
+export function tagName(tag: string, lang: Lang = DEFAULT_LANG): string {
+  return TAGS[lang]?.[tag] ?? tag;
+}
+
 /** The words around a journal entry. */
 export const UI = {
   en: {
@@ -63,6 +87,54 @@ export const UI = {
     contents: 'In this entry',
     /** The self-link after each heading, for screen readers. */
     sectionLink: (heading: string) => `Link to section: ${heading}`,
+    /** "Entry 05": the kicker on covers and the feature. */
+    entry: 'Entry',
+    latest: 'Latest',
+    readEntry: 'Read the entry',
+    entriesFrom: (year: string) => `Entries from ${year}`,
+    entries: (count: number) => `${count} ${count === 1 ? 'entry' : 'entries'}`,
+    /** The end of an entry: where to talk about it, and its link. */
+    discuss: ['Questions, ideas or disagreements? ', 'Talk about it on Matrix', '.'],
+    copyLink: 'Copy link',
+    linkCopied: 'Link copied',
+    copyFailed: 'Couldn’t copy',
+    related: 'On the same topic',
+    /** The journal index. */
+    index: {
+      title: 'Journal',
+      rule: 'Development journal',
+      heading: ['The ', 'Journal'],
+      description:
+        'The Vela development journal: long-form notes on building a Linux desktop — the compositor, the renderer, the shell, and the reasoning behind them.',
+      intro:
+        'Notes on building a desktop: the compositor and renderer, the shell, and the decisions behind them — written up at length, with the details left in.',
+      noEntries: 'No entries yet',
+      rss: 'Subscribe by RSS',
+      source: 'Source on GitHub',
+      lastEntry: 'Last entry',
+      /** On a translated index, the entries that only exist in English. */
+      untranslated: (_count: number) => '',
+      untranslatedLink: '',
+    },
+    /** A topic page. */
+    topic: {
+      title: (tag: string) => `${tag} — Journal`,
+      description: (count: string, tag: string) =>
+        `${count} from the Vela development journal tagged “${tag}”: long-form notes on building a modern Linux desktop, newest first.`,
+      rule: 'Topic',
+      tagged: (count: string, tag: string) => `${count} tagged “${tag}”, newest first.`,
+      all: 'All entries',
+    },
+    /** The journal's search, in the masthead of the index. */
+    search: {
+      label: 'Search the journal',
+      placeholder: 'Search the journal',
+      // Filled in by the page's script: {count} and {query}.
+      one: '1 entry for “{query}”',
+      many: '{count} entries for “{query}”',
+      none: 'Nothing in the journal for “{query}”.',
+      failed: 'Search isn’t available right now.',
+    },
     /** The controls of a journal video's player, for screen readers. */
     player: {
       play: 'Play',
@@ -98,6 +170,48 @@ export const UI = {
     translatedFrom: { en: 'Tradotto dall’inglese.', it: '' } as Record<Lang, string>,
     contents: 'In questo articolo',
     sectionLink: (heading: string) => `Link alla sezione: ${heading}`,
+    entry: 'Articolo',
+    latest: 'Ultimo',
+    readEntry: 'Leggi l’articolo',
+    entriesFrom: (year: string) => `Articoli del ${year}`,
+    entries: (count: number) => `${count} ${count === 1 ? 'articolo' : 'articoli'}`,
+    discuss: ['Domande, idee o obiezioni? ', 'Parliamone su Matrix', '.'],
+    copyLink: 'Copia link',
+    linkCopied: 'Link copiato',
+    copyFailed: 'Copia non riuscita',
+    related: 'Sullo stesso argomento',
+    index: {
+      title: 'Journal',
+      rule: 'Diario di sviluppo',
+      heading: ['Il ', 'Journal'],
+      description:
+        'Il diario di sviluppo di Vela in italiano: note lunghe sulla costruzione di un desktop Linux, dal compositor al renderer alla shell, e le ragioni dietro le scelte.',
+      intro:
+        'Note sulla costruzione di un desktop: il compositor e il renderer, la shell e le decisioni dietro di loro, raccontate per esteso e senza tagliare i dettagli.',
+      noEntries: 'Ancora nessun articolo',
+      rss: 'Iscriviti via RSS',
+      source: 'Codice su GitHub',
+      lastEntry: 'Ultimo articolo',
+      untranslated: (count: number) =>
+        count === 1 ? 'Un altro articolo è disponibile solo in inglese.' : `Altri ${count} articoli sono disponibili solo in inglese.`,
+      untranslatedLink: 'Il Journal in inglese',
+    },
+    topic: {
+      title: (tag: string) => `${tag} — Journal`,
+      description: (count: string, tag: string) =>
+        `${count} del diario di sviluppo di Vela sull’argomento “${tag}”: note lunghe sulla costruzione di un desktop Linux moderno, dal più recente.`,
+      rule: 'Argomento',
+      tagged: (count: string, tag: string) => `${count} sull’argomento “${tag}”, dal più recente.`,
+      all: 'Tutti gli articoli',
+    },
+    search: {
+      label: 'Cerca nel Journal',
+      placeholder: 'Cerca nel Journal',
+      one: '1 articolo per “{query}”',
+      many: '{count} articoli per “{query}”',
+      none: 'Nessun articolo per “{query}”.',
+      failed: 'La ricerca non è disponibile in questo momento.',
+    },
     player: {
       play: 'Riproduci',
       pause: 'Pausa',

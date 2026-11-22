@@ -6,8 +6,8 @@ import type { MarkdownHeading } from 'astro';
 import Base from './Base.astro';
 import PostMeta from '../components/journal/PostMeta.astro';
 import SailMark from '../components/journal/SailMark.astro';
-import { formatDate, ogImageUrl, postUrl, readingTime, topicUrl, type Entry } from '../lib/posts';
-import { DEFAULT_LANG, UI } from '../lib/i18n';
+import { feedUrl, formatDate, formatShortDate, journalUrl, ogImageUrl, postUrl, readingTime, topicUrl, type Entry } from '../lib/posts';
+import { DEFAULT_LANG, UI, tagName } from '../lib/i18n';
 import { AUTHOR, LINKS } from '../consts';
 import { articleSchema, breadcrumbSchema } from '../lib/schema';
 import '../styles/prose.css';
@@ -20,9 +20,11 @@ interface Props {
   older?: Entry;
   /** The entry's headings, for the list of sections beside it. */
   headings?: MarkdownHeading[];
+  /** Entries on the same topics, in the same language (relatedEntries()). */
+  related?: Entry[];
 }
 
-const { post, translations = [], newer, older, headings = [] } = Astro.props;
+const { post, translations = [], newer, older, headings = [], related = [] } = Astro.props;
 const { title, seoTitle, description, pubDate, updatedDate, cover, coverAlt, tags } = post.data;
 const lang = post.lang ?? DEFAULT_LANG;
 const ui = UI[lang];
@@ -55,21 +57,21 @@ const alternates = [post, ...translations].map((entry) => ({ lang: entry.lang ??
     articleSchema(post, ogImage, translations),
     breadcrumbSchema([
       ['Vela', '/'],
-      ['Journal', '/blog/'],
+      ['Journal', journalUrl(lang)],
       [title, postUrl(post)],
     ]),
   ]}
 >
-  <article class="article">
+  <article class="article" data-pagefind-body data-pagefind-meta={`date:${formatDate(pubDate, lang)}`}>
     <header class="article__header">
-      <a class="article__back" href="/blog/">
+      <a class="article__back" href={journalUrl(lang)} data-pagefind-ignore>
         <span class="arrow arrow--back" aria-hidden="true">←</span> {ui.journal}
       </a>
 
       {
         tags.length > 0 && (
           <ul class="article__tags" role="list" aria-label={ui.topics}>
-            {tags.map((tag) => <li><a href={topicUrl(tag)}>{tag}</a></li>)}
+            {tags.map((tag) => <li><a href={topicUrl(tag, lang)}>{tagName(tag, lang)}</a></li>)}
           </ul>
         )
       }
@@ -125,7 +127,7 @@ const alternates = [post, ...translations].map((entry) => ({ lang: entry.lang ??
     <div class="article__layout">
       {
         showContents && (
-          <nav class="contents" aria-labelledby="contents-title">
+          <nav class="contents" aria-labelledby="contents-title" data-pagefind-ignore>
             <div class="contents__inner">
               <p class="contents__title" id="contents-title">{ui.contents}</p>
               <ol class="contents__list" role="list">
@@ -144,7 +146,7 @@ const alternates = [post, ...translations].map((entry) => ({ lang: entry.lang ??
       </div>
     </div>
 
-    <footer class="article__end">
+    <footer class="article__end" data-pagefind-ignore>
       <div class="article__mark">
         <span class="article__mark-rule" aria-hidden="true"></span>
         <SailMark size={22} />
@@ -154,9 +156,41 @@ const alternates = [post, ...translations].map((entry) => ({ lang: entry.lang ??
       <p class="article__colophon">
         {ui.published(formatDate(pubDate, lang))}{' '}
         {updatedDate && <>{ui.lastUpdated(formatDate(updatedDate, lang))}{' '}</>}
-        {ui.follow[0]}<a href={LINKS.rss}>{ui.follow[1]}</a>{ui.follow[2]}
+        {ui.follow[0]}<a href={feedUrl(lang)}>{ui.follow[1]}</a>{ui.follow[2]}
         <a href={LINKS.repo} rel="noopener">{ui.follow[3]}</a>{ui.follow[4]}
       </p>
+
+      <p class="article__discuss">
+        <span>{ui.discuss[0]}<a href={LINKS.matrix} rel="noopener">{ui.discuss[1]}</a>{ui.discuss[2]}</span>
+        <button
+          type="button"
+          class="article__copy"
+          data-copy-link
+          data-copied={ui.linkCopied}
+          data-failed={ui.copyFailed}
+          hidden
+        >
+          {ui.copyLink}
+        </button>
+      </p>
+
+      {
+        related.length > 0 && (
+          <nav class="article__related" aria-labelledby="related-title">
+            <p class="label" id="related-title">{ui.related}</p>
+            <ul role="list">
+              {related.map((other) => (
+                <li>
+                  <a href={postUrl(other)}>
+                    <span class="article__related-title">{other.data.title}</span>
+                    <time datetime={other.data.pubDate.toISOString()}>{formatShortDate(other.data.pubDate, lang)}</time>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
 
       {
         (newer || older) && (
@@ -179,7 +213,7 @@ const alternates = [post, ...translations].map((entry) => ({ lang: entry.lang ??
         )
       }
 
-      <a class="article__all link" href="/blog/">{ui.allEntries} <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="article__all link" href={journalUrl(lang)}>{ui.allEntries} <span class="arrow" aria-hidden="true">→</span></a>
     </footer>
   </article>
 </Base>
@@ -485,6 +519,81 @@ const alternates = [post, ...translations].map((entry) => ({ lang: entry.lang ??
 
   .article__colophon a {
     color: var(--text);
+  }
+
+  .article__discuss {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+    margin-top: var(--space-m);
+    font-size: var(--step--1);
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .article__discuss a {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .article__copy {
+    padding: 0.3rem 0.85rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: none;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: var(--step--2);
+    cursor: pointer;
+    transition:
+      border-color var(--duration-normal) var(--ease-decelerate),
+      color var(--duration-normal) var(--ease-decelerate);
+  }
+
+  .article__copy:hover {
+    border-color: var(--line-bright);
+    color: var(--text);
+  }
+
+  .article__related {
+    margin-top: var(--space-2xl);
+  }
+
+  .article__related ul {
+    margin-top: var(--space-s);
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .article__related a {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding-block: 0.85rem;
+    border-bottom: 1px solid var(--line);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .article__related-title {
+    font-family: var(--font-serif);
+    font-size: var(--step-1);
+    line-height: 1.25;
+  }
+
+  .article__related a:hover .article__related-title {
+    color: var(--teal);
+  }
+
+  .article__related time {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--text-faint);
   }
 
   .article__pager {

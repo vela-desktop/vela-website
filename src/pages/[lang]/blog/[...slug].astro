@@ -3,7 +3,7 @@
 // entries translated into the same language.
 import { render } from 'astro:content';
 import Article from '../../../layouts/Article.astro';
-import { getTranslations, type Entry, type TranslatedPost } from '../../../lib/posts';
+import { getTranslations, relatedEntries, type Entry, type TranslatedPost } from '../../../lib/posts';
 import { DEFAULT_LANG, LANGS } from '../../../lib/i18n';
 
 export async function getStaticPaths() {
@@ -17,6 +17,7 @@ export async function getStaticPaths() {
         translations: [post.original, ...translations.filter((other) => other.id === post.id && other.lang !== lang)],
         newer: inLang[i - 1],
         older: inLang[i + 1],
+        related: relatedEntries(post, inLang, [inLang[i - 1], inLang[i + 1]]),
       },
     }));
   });
@@ -27,12 +28,13 @@ interface Props {
   translations: Entry[];
   newer?: TranslatedPost;
   older?: TranslatedPost;
+  related: TranslatedPost[];
 }
 
-const { post, translations, newer, older } = Astro.props;
+const { post, translations, newer, older, related } = Astro.props;
 const { Content, headings } = await render(post.entry);
 ---
 
-<Article post={post} translations={translations} newer={newer} older={older} headings={headings}>
+<Article post={post} translations={translations} newer={newer} older={older} headings={headings} related={related}>
   <Content />
 </Article>

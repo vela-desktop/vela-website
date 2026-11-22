@@ -1,0 +1,223 @@
+---
+// Search across the journal's entries in one language, with Pagefind. The
+// index is written after the build (src/lib/pagefind.mjs) and split by the
+// language of each page, so /it/blog/ only finds Italian entries. The field
+// needs JavaScript and the built index: without them it stays hidden, and the
+// page is the full list of entries it already was.
+import { DEFAULT_LANG, UI, type Lang } from '../../lib/i18n';
+
+interface Props {
+  lang?: Lang;
+  /** The element the results replace while there is a query. */
+  replaces: string;
+}
+
+const { lang = DEFAULT_LANG, replaces } = Astro.props;
+const words = UI[lang].search;
+const strings = JSON.stringify({ one: words.one, many: words.many, none: words.none, failed: words.failed });
+---
+
+<div class="journal-search" data-journal-search data-replaces={replaces} data-strings={strings} hidden>
+  <label class="visually-hidden" for="journal-search-input">{words.label}</label>
+  <input
+    id="journal-search-input"
+    class="journal-search__input"
+    type="search"
+    placeholder={words.placeholder}
+    autocomplete="off"
+    spellcheck="false"
+    aria-controls="journal-search-results"
+  />
+  <div id="journal-search-results" class="journal-search__results" hidden>
+    <p class="journal-search__status" role="status"></p>
+    <ol class="journal-search__list" role="list"></ol>
+  </div>
+</div>
+
+<script>
+  interface Strings {
+    one: string;
+    many: string;
+    none: string;
+    failed: string;
+  }
+  interface Result {
+    url: string;
+    excerpt: string;
+    meta: { title?: string; date?: string };
+  }
+  interface Pagefind {
+    init(): Promise<void>;
+    debouncedSearch(query: string, options?: object, ms?: number): Promise<{ results: { data(): Promise<Result> }[] } | null>;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-journal-search]');
+  const listing = root && document.querySelector<HTMLElement>(root.dataset.replaces ?? '');
+  if (root && listing) {
+    const input = root.querySelector<HTMLInputElement>('input')!;
+    const results = root.querySelector<HTMLElement>('.journal-search__results')!;
+    const status = root.querySelector<HTMLElement>('.journal-search__status')!;
+    const list = root.querySelector<HTMLOListElement>('.journal-search__list')!;
+    const strings = JSON.parse(root.dataset.strings ?? '{}') as Strings;
+    const fill = (template: string, query: string, count = 0) =>
+      template.replace('{count}', String(count)).replace('{query}', query);
+
+    // Loaded on first use: the index is only fetched by those who search.
+    let pagefind: Promise<Pagefind> | undefined;
+    const load = () => {
+      // A path, not a module specifier: the file only exists in the built site.
+      const path = '/pagefind/pagefind.js';
+      pagefind ??= (import(/* @vite-ignore */ path) as Promise<Pagefind>).then(async (module) => {
+        await module.init();
+        return module;
+      });
+      return pagefind;
+    };
+
+    const show = (searching: boolean) => {
+      results.hidden = !searching;
+      listing.hidden = searching;
+    };
+
+    const run = async () => {
+      const query = input.value.trim();
+      if (!query) {
+        show(false);
+        return;
+      }
+      try {
+        const search = await (await load()).debouncedSearch(query, {}, 180);
+        // null: a newer query has replaced this one.
+        if (!search || input.value.trim() !== query) return;
+        const found = await Promise.all(search.results.slice(0, 12).map((result) => result.data()));
+        list.replaceChildren(
+          ...found.map((entry) => {
+            const item = document.createElement('li');
+            const link = document.createElement('a');
+            link.className = 'journal-search__result';
+            link.href = entry.url;
+            const title = document.createElement('span');
+            title.className = 'journal-search__title';
+            title.textContent = entry.meta.title ?? entry.url;
+            const excerpt = document.createElement('span');
+            excerpt.className = 'journal-search__excerpt';
+            // Pagefind escapes the entry's text and only adds <mark>.
+            excerpt.innerHTML = entry.excerpt;
+            link.append(title, excerpt);
+            if (entry.meta.date) {
+              const date = document.createElement('span');
+              date.className = 'journal-search__date';
+              date.textContent = entry.meta.date;
+              link.append(date);
+            }
+            item.append(link);
+            return item;
+          }),
+        );
+        const count = search.results.length;
+        status.textContent = count === 0 ? fill(strings.none, query) : fill(count === 1 ? strings.one : strings.many, query, count);
+      } catch {
+        list.replaceChildren();
+        status.textContent = strings.failed;
+      }
+      show(true);
+    };
+
+    input.addEventListener('input', run);
+    input.addEventListener('focus', () => void load().catch(() => {}), { once: true });
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && input.value) {
+        input.value = '';
+        show(false);
+      }
+    });
+    root.hidden = false;
+  }
+</script>
+
+<style>
+  .journal-search {
+    margin-top: var(--space-m);
+  }
+
+  .journal-search__input {
+    width: 100%;
+    max-width: 28rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.03);
+    color: inherit;
+    font: inherit;
+    font-size: var(--step--1);
+  }
+
+  .journal-search__input::placeholder {
+    color: var(--text-faint);
+  }
+
+  .journal-search__input:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+    border-color: transparent;
+  }
+
+  .journal-search__results {
+    margin-top: var(--space-xl);
+  }
+
+  .journal-search__status {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .journal-search__list {
+    margin-top: var(--space-m);
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line-strong);
+  }
+
+  /* Results are created by the script, so they don't get Astro's scoping. */
+  .journal-search__list :global(.journal-search__result) {
+    display: grid;
+    gap: 0.35rem;
+    padding-block: var(--space-m);
+    border-bottom: 1px solid var(--line);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .journal-search__list :global(.journal-search__title) {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    line-height: 1.15;
+  }
+
+  .journal-search__list :global(.journal-search__result:hover .journal-search__title),
+  .journal-search__list :global(.journal-search__result:focus-visible .journal-search__title) {
+    color: var(--teal);
+  }
+
+  .journal-search__list :global(.journal-search__excerpt) {
+    max-width: 48rem;
+    font-size: var(--step--1);
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  .journal-search__list :global(.journal-search__excerpt mark) {
+    background: none;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .journal-search__list :global(.journal-search__date) {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--text-faint);
+  }
+</style>

@@ -1,6 +1,6 @@
 // Progressive enhancements. The site is complete without this file: it only
 // adds the header's scrolled state, reveal-on-scroll, the light/dark
-// comparison handle and copy buttons on code blocks.
+// comparison handle, copy buttons on code blocks and the one for an entry's link.
 
 import { COPY, DEFAULT_LANG, isLang } from '../lib/i18n';
 
@@ -84,4 +84,31 @@ if (navigator.clipboard) {
     pre.replaceWith(wrapper);
     wrapper.append(pre, button);
   });
+}
+
+// ── Copy an entry's link ────────────────────────────────────────────────────
+// The canonical address, without the section the reader is at. The button's
+// words come from the page (Article.astro); the result is announced, as above.
+const copyLink = document.querySelector<HTMLButtonElement>('[data-copy-link]');
+if (copyLink && navigator.clipboard) {
+  const label = copyLink.textContent?.trim() ?? '';
+  const status = document.createElement('span');
+  status.className = 'visually-hidden';
+  status.setAttribute('role', 'status');
+  copyLink.after(status);
+  copyLink.addEventListener('click', async () => {
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
+    try {
+      await navigator.clipboard.writeText(canonical ?? `${location.origin}${location.pathname}`);
+      copyLink.textContent = copyLink.dataset.copied ?? label;
+    } catch {
+      copyLink.textContent = copyLink.dataset.failed ?? label;
+    }
+    status.textContent = copyLink.textContent;
+    window.setTimeout(() => {
+      copyLink.textContent = label;
+      status.textContent = '';
+    }, 1600);
+  });
+  copyLink.hidden = false;
 }

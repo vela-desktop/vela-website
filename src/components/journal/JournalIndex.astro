@@ -1,0 +1,195 @@
+---
+// The journal's index in one language: /blog/ and /it/blog/. A translated
+// index lists the entries translated into its language, numbered as in the
+// whole journal, and says how many are only in English.
+import Base from '../../layouts/Base.astro';
+import JournalLayout from './JournalLayout.astro';
+import JournalSearch from './JournalSearch.astro';
+import { feedUrl, formatDate, journalUrl, type Entry } from '../../lib/posts';
+import { DEFAULT_LANG, LANGS, UI, type Lang } from '../../lib/i18n';
+import { LINKS } from '../../consts';
+
+interface Props {
+  lang?: Lang;
+  posts: Entry[];
+  /** Every entry of the journal, in its original language, for numbering. */
+  allPosts: Entry[];
+  /** The languages this index exists in, for the alternate links. */
+  languages?: Lang[];
+}
+
+const { lang = DEFAULT_LANG, posts, allPosts, languages = [...LANGS] } = Astro.props;
+const ui = UI[lang];
+const words = ui.index;
+const count = posts.length;
+const latest = posts[0]?.data.pubDate;
+const untranslated = allPosts.length - count;
+---
+
+<Base
+  title={words.title}
+  description={words.description}
+  lang={lang}
+  alternates={languages.map((other) => ({ lang: other, path: journalUrl(other) }))}
+>
+  <div class="journal-page">
+    <header class="masthead container--wide">
+      <div class="masthead__rule" aria-hidden="true">
+        <span>Vela</span>
+        <span>{words.rule}</span>
+        <span>{count === 0 ? words.noEntries : ui.entries(count)}</span>
+      </div>
+      <h1 class="masthead__title">
+        {words.heading[0]}<em>{words.heading[1]}</em>
+      </h1>
+      <div class="masthead__foot">
+        <p class="masthead__intro">{words.intro}</p>
+        <ul class="masthead__links" role="list">
+          <li><a class="link" href={feedUrl(lang)}>{words.rss}</a></li>
+          <li><a class="link" href={LINKS.repo} rel="noopener">{words.source} <span class="arrow arrow--ne" aria-hidden="true">↗</span></a></li>
+          {
+            latest && (
+              <li class="masthead__updated">
+                {words.lastEntry}{' '}
+                <time datetime={latest.toISOString()}>{formatDate(latest, lang)}</time>
+              </li>
+            )
+          }
+        </ul>
+      </div>
+      {count > 1 && <JournalSearch lang={lang} replaces="#journal-entries" />}
+    </header>
+
+    <div class="container--wide journal-page__body" id="journal-entries">
+      <JournalLayout posts={posts} allPosts={allPosts} headingLevel="h2" groupByYear eager />
+      {
+        lang !== DEFAULT_LANG && untranslated > 0 && (
+          <p class="journal-page__untranslated">
+            {words.untranslated(untranslated)}{' '}
+            <a class="link" href={journalUrl(DEFAULT_LANG)} hreflang={DEFAULT_LANG}>
+              {words.untranslatedLink} <span class="arrow" aria-hidden="true">→</span>
+            </a>
+          </p>
+        )
+      }
+    </div>
+  </div>
+</Base>
+
+<style>
+  /* The masthead stays compact, so the latest entry starts on the first
+   * screen instead of below it. */
+  .journal-page {
+    padding-top: calc(var(--header-height) + var(--space-xl));
+    padding-bottom: var(--space-section);
+    background:
+      radial-gradient(60rem 30rem at 85% 0%, rgb(70 214 224 / 0.07), transparent 70%),
+      linear-gradient(180deg, var(--ink-1), var(--paper) 30rem);
+  }
+
+  .masthead__rule {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.75rem;
+    border-block: 1px solid var(--line-strong);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .masthead__title {
+    margin-top: var(--space-m);
+    font-family: var(--font-serif);
+    font-size: clamp(3.5rem, 1rem + 7.5vw, 8rem);
+    font-weight: 360;
+    line-height: 0.85;
+    letter-spacing: -0.045em;
+    text-wrap: nowrap;
+  }
+
+  .masthead__title em {
+    font-style: italic;
+    color: var(--teal);
+  }
+
+  .masthead__foot {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--space-m);
+    align-items: end;
+    margin-top: var(--space-l);
+    padding-bottom: var(--space-m);
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .masthead__intro {
+    grid-column: 1 / span 6;
+    font-size: var(--step-0);
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .masthead__links {
+    grid-column: 8 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem 1.75rem;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+    font-weight: 500;
+  }
+
+  .masthead__updated {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    font-weight: 400;
+    color: var(--text-faint);
+    align-self: center;
+  }
+
+  .journal-page__body {
+    margin-top: var(--space-xl);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .masthead__title {
+      animation: masthead-in var(--duration-entrance) var(--ease-expressive) both;
+    }
+  }
+
+  @keyframes masthead-in {
+    from { opacity: 0; transform: translate3d(0, 0.15em, 0); filter: blur(8px); }
+    to { opacity: 1; transform: none; filter: none; }
+  }
+
+  @media (max-width: 64rem) {
+    .masthead__intro,
+    .masthead__links {
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .masthead__rule span:first-child {
+      display: none;
+    }
+  }
+  .journal-page__untranslated {
+    margin-top: var(--space-2xl);
+    padding-top: var(--space-l);
+    border-top: 1px solid var(--line-strong);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .journal-page__untranslated a {
+    font-weight: 500;
+  }
+</style>
