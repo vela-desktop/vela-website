@@ -24,6 +24,8 @@ const blog = defineCollection({
         cover: image().optional(),
         coverAlt: z.string().optional(),
         tags: z.array(z.string().min(1)).default([]),
+        /** The Vela version the entry announces ("0.1.0"): its release page links to it. */
+        release: z.string().regex(/^\d+\.\d+\.\d+$/).optional(),
         /** The language the entry was first written in; the others are translations of it. */
         writtenIn: z.enum(LANGS).default(DEFAULT_LANG),
       })

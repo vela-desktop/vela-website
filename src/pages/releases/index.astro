@@ -1,0 +1,108 @@
+---
+// Every numbered release of Vela, newest first, each linking to its notes
+// (src/pages/releases/[version].astro). /changes/ lists what lands on main
+// in between.
+import Page from '../../layouts/Page.astro';
+import { releases } from '../../lib/vela';
+import { renderNotes } from '../../lib/releases';
+import { formatDate } from '../../lib/posts';
+import { LINKS } from '../../consts';
+
+const all = await releases();
+---
+
+<Page
+  frontmatter={{
+    title: 'Releases',
+    seoTitle: 'Vela releases: release notes for every version',
+    description: 'Every numbered release of Vela, the Linux desktop: what changed, the packages it ships, and how to update.',
+    label: 'Changes',
+  }}
+>
+  <p>
+    The Beta channel installs these releases: prebuilt, signed, and checked before they're
+    installed. To see every change as it lands on the main branch, before it reaches a release, read <a
+      href={LINKS.changes}>What’s new</a
+    >.
+  </p>
+
+  {
+    all.length > 0 ? (
+      <ol class="releases" role="list">
+        {all.map((release, i) => (
+          <li>
+            <h2>
+              <a href={`/releases/${release.version}/`}>Vela {release.version}</a>
+              {i === 0 && <span class="releases__latest label label--accent">Latest</span>}
+            </h2>
+            <p class="releases__date">
+              <time datetime={release.published.toISOString()}>{formatDate(release.published)}</time>
+            </p>
+            <p>{renderNotes(release.notes, release.tag).summary}</p>
+          </li>
+        ))}
+      </ol>
+    ) : (
+      <p>
+        The releases couldn’t be read when this page was built. They’re all on <a
+          href={`${LINKS.repo}/releases`}
+          rel="noopener">GitHub</a
+        >.
+      </p>
+    )
+  }
+
+  <p class="releases__follow">
+    To hear about the next one, follow the <a href={`${LINKS.repo}/releases.atom`}>releases feed</a>, or
+    watch the repository on GitHub for releases only.
+  </p>
+</Page>
+
+<style>
+  .releases {
+    margin: 2em 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .releases li {
+    margin: 0;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .releases h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+  }
+
+  .releases h2 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .releases h2 a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--line-bright);
+  }
+
+  .releases__date {
+    margin: 0.35rem 0 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+
+  .releases__latest {
+    font-size: 0.625rem;
+  }
+
+  .releases__follow {
+    margin-top: 2.5em;
+    font-size: 0.9em;
+    color: var(--text-muted);
+  }
+</style>

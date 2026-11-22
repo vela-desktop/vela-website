@@ -22,6 +22,13 @@ export interface BetaRelease {
   url: string;
 }
 
+/** A numbered release, with its notes as written on GitHub (Markdown). */
+export interface Release extends BetaRelease {
+  /** The release's title on GitHub, e.g. "Vela 0.1.2 Beta". */
+  name: string;
+  notes: string;
+}
+
 export type ChangeKind = 'New' | 'Improved' | 'Fixed' | 'Faster' | 'Security';
 
 export interface Change {
@@ -59,6 +66,8 @@ function get<T>(path: string): Promise<T | null> {
 
 interface GitHubRelease {
   draft: boolean;
+  name: string | null;
+  body: string | null;
   published_at: string;
   html_url: string;
   tag_name: string;
@@ -74,26 +83,36 @@ const PACKAGES = [
   { label: `${SUPPORT.ubuntu} DEB`, name: /^vela_\d[^/]*_amd64\.deb$/ },
 ];
 
-/** The newest numbered Beta release, as installed by `vela-update --channel beta`. */
-export async function latestBeta(): Promise<BetaRelease | null> {
-  const releases = await get<GitHubRelease[]>('/releases?per_page=10');
-  for (const release of releases ?? []) {
+/**
+ * Vela's numbered releases (tags v0.x.y), newest first, each with the
+ * packages it published. Drafts and other tags are left out.
+ */
+export async function releases(): Promise<Release[]> {
+  const list = await get<GitHubRelease[]>('/releases?per_page=100');
+  const found: Release[] = [];
+  for (const release of list ?? []) {
     const version = release.tag_name.match(/^v(0\.\d+\.\d+)$/)?.[1];
     if (release.draft || !version) continue;
     const packages = PACKAGES.flatMap(({ label, name }) => {
       const asset = release.assets.find((asset) => name.test(asset.name));
       return asset ? [{ label, size: asset.size }] : [];
     });
-    if (packages.length === 0) continue;
-    return {
+    found.push({
       version,
       tag: release.tag_name,
+      name: release.name?.trim() || `Vela ${version}`,
       published: new Date(release.published_at),
       packages,
       url: release.html_url,
-    };
+      notes: release.body ?? '',
+    });
   }
-  return null;
+  return found.sort((a, b) => b.published.valueOf() - a.published.valueOf());
+}
+
+/** The newest numbered Beta release, as installed by `vela-update --channel beta`. */
+export async function latestBeta(): Promise<BetaRelease | null> {
+  return (await releases()).find((release) => release.packages.length > 0) ?? null;
 }
 
 interface GitHubCommit {

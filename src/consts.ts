@@ -105,6 +105,7 @@ export const LINKS = {
   rss: '/rss.xml',
   faq: '/faq/',
   changes: '/changes/',
+  releases: '/releases/',
   privacy: '/privacy/',
 } as const;
 
