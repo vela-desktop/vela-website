@@ -6,6 +6,46 @@ import { cloneCommand as clone } from '../../lib/vela';
 
 const cloneCommand = await clone();
 const repoDisplay = LINKS.repo.replace('https://', '');
+
+/** Where people talk, report and support: the homepage's Community block. */
+const channels = [
+  {
+    kind: 'Chat',
+    name: 'Discord',
+    href: LINKS.discord,
+    text: 'The busiest place to talk: ask for help, share your setup, follow what’s coming.',
+  },
+  {
+    kind: 'Chat',
+    name: 'Matrix',
+    href: LINKS.matrix,
+    text: 'The Vela Desktop space, for discussions, support, announcements and development. Any Matrix account works.',
+  },
+  {
+    kind: 'Discuss',
+    name: 'GitHub Discussions',
+    href: LINKS.discussions,
+    text: 'Questions, ideas and proposals that stay put and turn up in search, unlike a chat.',
+  },
+  {
+    kind: 'Report',
+    name: 'GitHub issues',
+    href: LINKS.issues,
+    text: 'Bugs and feature requests. Attach the ZIP from vela-report: you choose what goes in it.',
+  },
+  {
+    kind: 'Follow',
+    name: 'X',
+    href: LINKS.x,
+    text: 'News, releases and work in progress, as it happens.',
+  },
+  {
+    kind: 'Support',
+    name: 'Patreon',
+    href: LINKS.patreon,
+    text: 'Fund Vela’s development and get a members-only journal from behind the scenes. Vela itself stays free, with every feature.',
+  },
+];
 ---
 
 <section id="open-source" class="open" aria-labelledby="open-title">
@@ -87,15 +127,31 @@ const repoDisplay = LINKS.repo.replace('https://', '');
       </li>
     </ol>
 
-    <div class="community" data-reveal>
-      <h3 class="community__label label">Community</h3>
-      <p class="community__text">
-        Questions, ideas, or just want to say what works and what doesn’t? Join the Vela Desktop
-        space on Matrix, for discussions, support, announcements and development. Any Matrix
-        account works.
-      </p>
-      <a class="community__link link" href={LINKS.matrix} rel="noopener">Join on Matrix <span class="arrow arrow--ne" aria-hidden="true">↗</span></a>
-    </div>
+    <section class="community" aria-labelledby="community-title" data-reveal>
+      <div class="community__head">
+        <h3 id="community-title" class="community__label label">Community</h3>
+        <p class="community__text">
+          Questions, ideas, or just want to say what works and what doesn’t? Come and talk about
+          it, report what breaks, or help Vela keep going.
+        </p>
+      </div>
+
+      <ul class="channels" role="list">
+        {
+          channels.map((channel) => (
+            <li>
+              <a class="channel" href={channel.href} rel="noopener">
+                <span class="channel__kind label">{channel.kind}</span>
+                <span class="channel__name">
+                  {channel.name} <span class="arrow arrow--ne" aria-hidden="true">↗</span>
+                </span>
+                <span class="channel__text">{channel.text}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
 
     <a class="repo" href={LINKS.repo} rel="noopener" data-reveal>
       <span class="repo__label label">The source</span>
@@ -295,14 +351,17 @@ const repoDisplay = LINKS.repo.replace('https://', '');
 
   /* ── Community ── */
   .community {
+    margin-top: var(--space-2xl);
+    padding-top: var(--space-l);
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .community__head {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     column-gap: var(--gutter);
     row-gap: var(--space-s);
     align-items: baseline;
-    margin-top: var(--space-2xl);
-    padding: var(--space-l) 0;
-    border-block: 1px solid var(--line-strong);
   }
 
   .community__label {
@@ -311,16 +370,66 @@ const repoDisplay = LINKS.repo.replace('https://', '');
   }
 
   .community__text {
-    grid-column: 4 / span 6;
+    grid-column: 4 / span 7;
     font-size: var(--step-1);
     line-height: 1.5;
     color: var(--text);
   }
 
-  .community__link {
-    grid-column: 10 / -1;
-    justify-self: end;
-    font-weight: 500;
+  .channels {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gutter);
+    margin-top: var(--space-xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  .channels li {
+    display: flex;
+  }
+
+  .channel {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    padding: var(--space-m);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: rgb(2 6 12 / 0.55);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition:
+      border-color var(--duration-fast) linear,
+      background-color var(--duration-fast) linear;
+  }
+
+  .channel:hover {
+    border-color: var(--line-bright);
+    background: rgb(2 6 12 / 0.8);
+  }
+
+  .channel__kind {
+    color: var(--text-faint);
+  }
+
+  .channel__name {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text);
+  }
+
+  .channel__name .arrow {
+    font-size: 0.7em;
+    color: var(--teal);
+  }
+
+  .channel__text {
+    font-size: var(--step--1);
+    line-height: 1.55;
   }
 
   /* ── The big link ── */
@@ -368,9 +477,12 @@ const repoDisplay = LINKS.repo.replace('https://', '');
     .open__status-badge,
     .open__status-text,
     .community__label,
-    .community__text,
-    .community__link {
+    .community__text {
       grid-column: 1 / -1;
+    }
+
+    .channels {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .paths {
@@ -380,14 +492,11 @@ const repoDisplay = LINKS.repo.replace('https://', '');
     .path:first-child {
       grid-column: 1 / -1;
     }
-
-    .community__link {
-      justify-self: start;
-    }
   }
 
   @media (max-width: 40rem) {
-    .paths {
+    .paths,
+    .channels {
       grid-template-columns: minmax(0, 1fr);
     }
 

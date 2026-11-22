@@ -33,8 +33,17 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { label: 'What’s new', href: LINKS.changes },
       { label: 'FAQ', href: LINKS.faq },
       { label: 'Documentation', href: LINKS.docs, external: true },
+    ],
+  },
+  {
+    title: 'Community',
+    links: [
+      { label: 'Discord', href: LINKS.discord, external: true },
+      { label: 'Matrix', href: LINKS.matrix, external: true },
+      { label: 'Discussions', href: LINKS.discussions, external: true },
       { label: 'Issues', href: LINKS.issues, external: true },
-      { label: 'Community on Matrix', href: LINKS.matrix, external: true },
+      { label: 'X', href: LINKS.x, external: true },
+      { label: 'Support on Patreon', href: LINKS.patreon, external: true },
     ],
   },
   {
@@ -114,7 +123,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
 
   .site-footer__top {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr));
     gap: var(--space-xl) var(--gutter);
     padding-bottom: var(--space-2xl);
   }
@@ -218,7 +227,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
 
   @media (max-width: 60rem) {
     .site-footer__top {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .site-footer__brand {
@@ -226,7 +235,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
     }
   }
 
-  @media (max-width: 36rem) {
+  @media (max-width: 44rem) {
     .site-footer__top {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

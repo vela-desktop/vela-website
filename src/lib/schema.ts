@@ -14,7 +14,7 @@ const vela: Thing = {
   name: SITE.name,
   url: absolute('/'),
   logo: absolute('/brand/vela-icon-512.png'),
-  sameAs: [LINKS.repo],
+  sameAs: [LINKS.repo, LINKS.x],
 };
 
 /** The author of the journal. */

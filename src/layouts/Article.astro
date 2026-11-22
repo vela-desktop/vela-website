@@ -161,7 +161,12 @@ const alternates = [post, ...translations].map((entry) => ({ lang: entry.lang ??
       </p>
 
       <p class="article__discuss">
-        <span>{ui.discuss[0]}<a href={LINKS.matrix} rel="noopener">{ui.discuss[1]}</a>{ui.discuss[2]}</span>
+        <span>
+          {ui.discuss[0]}<a href={LINKS.discord} rel="noopener">{ui.discuss[1]}</a>{ui.discuss[2]}<a
+            href={LINKS.matrix}
+            rel="noopener">{ui.discuss[3]}</a
+          >{ui.discuss[4]}
+        </span>
         <button
           type="button"
           class="article__copy"

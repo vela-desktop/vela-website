@@ -94,6 +94,7 @@ const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
 {modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@VelaDesktop" />
 {jsonLd.map((data) => <script type="application/ld+json" set:html={json(data)} />)}
 
 <Font cssVariable="--font-family-sans" preload={[{ style: 'normal' }]} />

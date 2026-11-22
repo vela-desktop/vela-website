@@ -94,7 +94,7 @@ export const UI = {
     entriesFrom: (year: string) => `Entries from ${year}`,
     entries: (count: number) => `${count} ${count === 1 ? 'entry' : 'entries'}`,
     /** The end of an entry: where to talk about it, and its link. */
-    discuss: ['Questions, ideas or disagreements? ', 'Talk about it on Matrix', '.'],
+    discuss: ['Questions, ideas or disagreements? Talk about it on ', 'Discord', ' or ', 'Matrix', '.'],
     copyLink: 'Copy link',
     linkCopied: 'Link copied',
     copyFailed: 'Couldn’t copy',
@@ -175,7 +175,7 @@ export const UI = {
     readEntry: 'Leggi l’articolo',
     entriesFrom: (year: string) => `Articoli del ${year}`,
     entries: (count: number) => `${count} ${count === 1 ? 'articolo' : 'articoli'}`,
-    discuss: ['Domande, idee o obiezioni? ', 'Parliamone su Matrix', '.'],
+    discuss: ['Domande, idee o obiezioni? Parliamone su ', 'Discord', ' o su ', 'Matrix', '.'],
     copyLink: 'Copia link',
     linkCopied: 'Link copiato',
     copyFailed: 'Copia non riuscita',

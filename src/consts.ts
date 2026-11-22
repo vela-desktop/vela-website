@@ -84,6 +84,16 @@ export const LINKS = {
   issues: `${REPO}/issues`,
   /** The Vela Desktop space on Matrix, as in the Vela README's Community section. */
   matrix: 'https://matrix.to/#/#vela:velade.org',
+  /** The Vela Discord server's invite. */
+  discord: 'https://discord.gg/3xu68uqkWt',
+  /**
+   * Vela's Patreon. Members get a members-only development journal, its
+   * discussions, priority for requests and early access to journal entries;
+   * never features in Vela or a say in its decisions.
+   */
+  patreon: 'https://www.patreon.com/c/velade',
+  discussions: `${REPO}/discussions`,
+  x: 'https://x.com/VelaDesktop',
   commits: `${REPO}/commits/main`,
   docs: `${REPO}/tree/main/docs`,
   rendererDoc: `${REPO}/blob/main/docs/renderer.md`,
