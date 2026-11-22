@@ -55,9 +55,9 @@ Run:
 
 For Experimental, run `sh vela/packaging/vela-update` instead: it builds `vela-git` from the latest commit on `main`.
 
-## Fedora 44
+## Fedora 44 and 45
 
-On {SUPPORT.fedora} (x86_64), Vela installs as a native `vela` RPM, with the same updater. {SUPPORT.fedora} doesn't ship Cosign in its repositories, and the Beta can't be installed without it, so install the official Cosign {COSIGN.version} RPM from Sigstore first. The second line checks the download against the checksum Sigstore published, and stops if it doesn't match:
+On Fedora 44 and 45 (x86_64), Vela installs as a native `vela` RPM, built separately for each, with the same updater. The Beta can't be installed without Cosign, and Fedora 44 doesn't ship it in its repositories, so install the official Cosign {COSIGN.version} RPM from Sigstore first. The second line checks the download against the checksum Sigstore published, and stops if it doesn't match:
 
 <CosignCommands format="rpm" />
 
@@ -66,8 +66,20 @@ Only get Cosign from the official Sigstore releases: Vela trusts it to check eve
 <BetaCommands before={['sudo dnf install git curl rpm-build dnf5-plugins']} />
 
 <Aside title="Fedora support is new">
-  The RPMs are built and test-installed in a fresh {SUPPORT.fedora} container before every release, but they've had little testing on real hardware so far. Other Fedora releases, other DNF-based distributions and the immutable variants, such as Silverblue and Kinoite, aren't supported by the installer. There you can [build from source](#other-distributions).
+  The RPMs are built and test-installed in fresh Fedora 44 and 45 containers before every release, but they've had little testing on real hardware so far. Fedora 45 RPMs start with Vela 0.1.2: on Fedora 45, `vela-update` can't install or go back to an earlier release. Other Fedora releases, other DNF-based distributions and the immutable variants, such as Silverblue and Kinoite, aren't supported by the installer. There you can [build from source](#other-distributions).
 </Aside>
+
+### After upgrading from Fedora 44 to 45
+
+A `vela-update` installed from a Fedora 44 RPM may refuse Fedora 45 before it can fetch the new package. Run the updater from a fresh checkout of Vela instead, once, with the channel you already have:
+
+```sh
+git clone https://github.com/vela-desktop/vela.git vela-fedora-45
+sh vela-fedora-45/packaging/vela-update --channel beta           # if you have vela (Beta)
+sh vela-fedora-45/packaging/vela-update --channel experimental   # if you have vela-git (Experimental)
+```
+
+Run only the line for your package. Never install a Fedora 44 RPM on Fedora 45.
 
 ## Ubuntu 26.10
 

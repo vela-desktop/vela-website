@@ -51,7 +51,7 @@ export const SUPPORT = {
   wlroots: 'wlroots 0.20',
   /** Distributions with signed Beta packages and vela-update. */
   arch: ['Arch Linux', 'CachyOS', 'EndeavourOS'],
-  fedora: 'Fedora 44',
+  fedora: 'Fedora 44/45',
   ubuntu: 'Ubuntu 26.10',
 } as const;
 
