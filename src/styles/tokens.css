@@ -32,6 +32,15 @@
   --mint: #5bdeca;            /* logo ribbon */
   --coral: #ff9158;           /* the wallpaper's spark — use sparingly */
 
+  /* Chart series (src/components/mdx/BarChart.astro), in this order: Vela's
+   * teal, the coral, a violet. One step darker than --teal and --coral, so
+   * they sit in the same lightness band; checked as a set on --paper for
+   * contrast (≥ 3:1) and for telling them apart with each kind of color
+   * blindness. */
+  --chart-1: #1fa3ad;
+  --chart-2: #e06c35;
+  --chart-3: #8578e4;
+
   --line: rgb(170 205 255 / 0.1);
   --line-strong: rgb(170 205 255 / 0.2);
   --line-bright: rgb(200 225 255 / 0.36);

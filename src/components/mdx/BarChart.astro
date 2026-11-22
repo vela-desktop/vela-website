@@ -1,0 +1,339 @@
+---
+// A bar chart, for MDX journal entries: benchmarks, a before and after,
+// Vela next to another desktop. Horizontal bars, one group per measurement,
+// up to three series compared side by side. Drawn at build time in HTML and
+// CSS: no script, no library. In feed readers, which drop the site's CSS, it
+// falls back to its text ("Vela: 412 MB") and the table of the data.
+//
+//   import BarChart from '../../components/mdx/BarChart.astro';
+//   <BarChart
+//     title="Memory after login"
+//     unit="MB"
+//     better="lower"
+//     series={['Vela', 'KDE Plasma']}
+//     data={[
+//       { label: 'Idle desktop', values: [412, 890] },
+//       { label: 'Five windows open', values: [498, 1040] },
+//     ]}
+//     source="Median of 10 runs on a Ryzen 7 7840U, 32 GB, Ubuntu 26.10. Benchmark suite, PR #109."
+//   />
+//
+// `values` follow the order of `series`; null marks a measurement a series
+// doesn't have. Colors follow the series' position, never its rank: put Vela
+// first so it keeps the same color in every chart. Every value is printed at
+// the tip of its bar, and a table of the data sits under the chart.
+import { LOCALES, isLang } from '../../lib/i18n';
+
+export interface Props {
+  title: string;
+  /** Printed after every value: "MB", "ms", "%". */
+  unit?: string;
+  /** Which way is good, for measurements where it isn't obvious. */
+  better?: 'lower' | 'higher';
+  /** One to three names; one series needs no legend, its title says what it is. */
+  series: string[];
+  data: { label: string; values: (number | null)[] }[];
+  /** Digits after the decimal point (default: 0). */
+  decimals?: number;
+  /** The end of the scale; by default a round number just above the largest value. */
+  max?: number;
+  caption?: string;
+  /** How it was measured: hardware, runs, the commit or PR. */
+  source?: string;
+}
+
+const { title, unit, better, series, data, decimals = 0, max, caption, source } = Astro.props;
+
+if (series.length < 1 || series.length > 3) {
+  throw new Error(`BarChart "${title}": series takes one to three names, not ${series.length}.`);
+}
+for (const row of data) {
+  if (row.values.length !== series.length) {
+    throw new Error(`BarChart "${title}": "${row.label}" has ${row.values.length} values for ${series.length} series.`);
+  }
+  if (row.values.some((value) => value !== null && (!Number.isFinite(value) || value < 0))) {
+    throw new Error(`BarChart "${title}": "${row.label}" has a value that isn't a number of zero or more.`);
+  }
+}
+
+const param = Astro.params.lang ?? '';
+const lang = isLang(param) ? param : 'en';
+const words = {
+  en: { lower: 'lower is better', higher: 'higher is better', data: 'Show the data', missing: 'not measured', source: 'Source' },
+  it: { lower: 'più basso è meglio', higher: 'più alto è meglio', data: 'Mostra i dati', missing: 'non misurato', source: 'Fonte' },
+}[lang];
+
+const number = new Intl.NumberFormat(LOCALES[lang].dateLocale, {
+  minimumFractionDigits: decimals,
+  maximumFractionDigits: decimals,
+});
+const format = (value: number) => (unit ? `${number.format(value)} ${unit}` : number.format(value));
+
+// A round end for the scale: 1, 2, 2.5 or 5 times a power of ten, so bars of
+// the same chart compare by length and the longest doesn't touch the edge.
+function niceCeiling(value: number): number {
+  if (value <= 0) return 1;
+  const power = 10 ** Math.floor(Math.log10(value));
+  const step = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find((m) => m * power >= value) ?? 10;
+  return step * power;
+}
+const largest = Math.max(0, ...data.flatMap((row) => row.values.filter((value): value is number => value !== null)));
+const end = max ?? niceCeiling(largest);
+const share = (value: number) => Math.min(1, value / end).toFixed(4);
+
+const subtitle = [unit, better && words[better]].filter(Boolean).join(' · ');
+const id = `chart-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+---
+
+<figure class="chart" aria-labelledby={`${id}-title`}>
+  <header class="chart__header">
+    <p class="chart__title" id={`${id}-title`}>{title}</p>
+    {subtitle && <p class="chart__subtitle">{subtitle}</p>}
+  </header>
+
+  {
+    series.length > 1 && (
+      <ul class="chart__legend" role="list" aria-hidden="true">
+        {series.map((name, i) => (
+          <li>
+            <span class={`chart__swatch chart__swatch--${i + 1}`} />
+            {name}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  <div class="chart__plot">
+    {
+      data.map((row) => (
+        <div class="chart__group" role="group" aria-label={row.label}>
+          <p class="chart__label" aria-hidden="true">{row.label}</p>
+          <div class="chart__bars">
+          {row.values.map((value, i) => (
+            <div class="chart__row">
+              {series.length > 1 && <span class="sr-only">{series[i]}: </span>}
+              {value === null ? (
+                <span class="chart__value chart__value--missing">{words.missing}</span>
+              ) : (
+                <>
+                  <span class={`chart__bar chart__bar--${i + 1}`} style={`--share: ${share(value)}`} />
+                  <span class="chart__value">{format(value)}</span>
+                </>
+              )}
+            </div>
+          ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <details class="chart__data">
+    <summary>{words.data}</summary>
+    <div class="table-wrap" tabindex="0">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><span class="sr-only">{title}</span></th>
+            {series.map((name) => <th scope="col">{name}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {
+            data.map((row) => (
+              <tr>
+                <th scope="row">{row.label}</th>
+                {row.values.map((value) => (
+                  <td>{value === null ? '—' : format(value)}</td>
+                ))}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  {
+    (caption || source) && (
+      <figcaption>
+        {caption}
+        {caption && source && ' '}
+        {source && (
+          <span class="chart__source">
+            {words.source}: {source}
+          </span>
+        )}
+      </figcaption>
+    )
+  }
+</figure>
+
+<style>
+  .chart {
+    grid-column: wide;
+    --chart-thickness: 14px;
+    /* Room kept at the end of each bar for its value. */
+    --chart-label-room: 7.5rem;
+  }
+
+  .chart__header {
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .chart__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 600;
+    line-height: var(--leading-snug);
+    color: var(--text);
+  }
+
+  .chart__subtitle {
+    margin: 0.3rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+
+  .chart__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .chart__legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .chart__swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .chart__plot {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 1.25rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .chart__bars {
+    display: grid;
+    gap: 4px;
+    padding-block: 2px;
+    /* The baseline every bar grows from. */
+    border-left: 1px solid var(--line-bright);
+  }
+
+  .chart__label {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  .chart__row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: var(--chart-thickness);
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .chart__bar {
+    flex: none;
+    width: calc(var(--share) * (100% - var(--chart-label-room)));
+    min-width: 2px;
+    height: var(--chart-thickness);
+    /* Square where it starts, rounded where the value is. */
+    border-radius: 0 4px 4px 0;
+    transition: filter var(--duration-fast) var(--ease-standard);
+  }
+
+  .chart__value {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--text);
+  }
+
+  .chart__value--missing {
+    padding-left: 0.6rem;
+    color: var(--text-faint);
+  }
+
+  /* Pointing at a bar brings it forward and lets the others step back. */
+  .chart__plot:hover .chart__row:not(:hover) {
+    opacity: 0.55;
+  }
+
+  .chart__row:hover .chart__bar {
+    filter: brightness(1.15);
+  }
+
+  .chart__bar--1,
+  .chart__swatch--1 {
+    background: var(--chart-1);
+  }
+
+  .chart__bar--2,
+  .chart__swatch--2 {
+    background: var(--chart-2);
+  }
+
+  .chart__bar--3,
+  .chart__swatch--3 {
+    background: var(--chart-3);
+  }
+
+  .chart__data {
+    margin-top: 0.75rem;
+  }
+
+  .chart__data summary {
+    width: fit-content;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+
+  .chart__data .table-wrap {
+    margin-top: 0.75rem;
+  }
+
+  .chart__data td {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chart__source {
+    color: var(--text-faint);
+  }
+
+  @media (forced-colors: active) {
+    .chart__bar,
+    .chart__swatch {
+      background: CanvasText;
+      forced-color-adjust: none;
+    }
+  }
+</style>
