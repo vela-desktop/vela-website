@@ -4,11 +4,12 @@ title: "Install Vela"
 seoTitle: "Install Vela, a modern Linux desktop environment"
 description: "Try Vela in a window on your current desktop, or install it and pick it at the login screen."
 label: "Get started"
-updated: 2026-11-08
+updated: 2026-11-22
 ---
 
 import Aside from '../components/mdx/Aside.astro';
 import LatestBeta from '../components/LatestBeta.astro';
+import DistroPicker from '../components/install/DistroPicker.astro';
 import BetaCommands from '../components/install/BetaCommands.astro';
 import CosignCommands from '../components/install/CosignCommands.astro';
 import { COSIGN, SUPPORT, LINKS } from '../consts';
@@ -27,21 +28,11 @@ Vela is beta software. You can use it every day, and every release passes the fu
 
 Vela is developed and tested daily on an AMD Radeon RX 9070 XT with Mesa/RADV. NVIDIA, Intel, NVK, virtual machines and hybrid-GPU laptops are supported paths, but have had less testing. The <a href={LINKS.hardware}>hardware coverage</a> page lists exactly what has been verified and where.
 
-## Try it without logging out
+## Pick your distribution
 
-The safest first look: build Vela and run it in a window inside your current Wayland desktop, like a virtual monitor. Nothing is installed.
+<DistroPicker />
 
-```sh
-git clone https://github.com/vela-desktop/vela.git
-cd vela
-cmake -B build -G Ninja
-cmake --build build
-sh scripts/run-nested.sh
-```
-
-You'll need the build dependencies listed under [Other distributions](#other-distributions) below, or the [lists for every distribution](https://github.com/vela-desktop/vela/blob/main/docs/development.md#distribution-dependencies) in the developer guide. Your host desktop keeps the Super key, so in nested mode many shortcuts also work with Alt; the [shortcut reference](https://github.com/vela-desktop/vela/blob/main/docs/shortcuts.md) lists them.
-
-A nested session is great for exploring, but it can't tell you whether Vela works with your monitor and driver directly. For that, you need a real session.
+Only want a look first? [Try it in a window](#try-it-without-logging-out) inside your current desktop: nothing is installed, but you build it from source.
 
 ## Beta or Experimental
 
@@ -94,6 +85,14 @@ On Ubuntu, Experimental always builds Vela on your machine: `vela-update` instal
   CI builds the DEB and test-installs it in a fresh {SUPPORT.ubuntu} container, and it has been tried in a virtual machine with GPU passthrough, but real hardware hasn't been tested much yet. Other Ubuntu releases aren't supported.
 </Aside>
 
+## First login
+
+Log out, pick **Vela** on the login screen, and log in. A few things to know:
+
+- **Super** opens Start, **Super+Tab** opens Task View, **Super+arrows** snap windows, and **Super+A**, **Super+N** and **Super+V** open quick settings, notifications and clipboard history.
+- The interface speaks **English and Italian**. Switch it in *Settings → Time & language*. It changes right away.
+- If the compositor crashes, it restarts on its own and your apps reconnect. If the screen was locked, it comes back locked.
+
 ## Updating
 
 *Settings → System → Updates* shows whether an update is available and what's new: a Beta release's notes, or Experimental's commits. Vela checks by itself once a day, never on a metered connection, and sends a notification when there's something new. **Install now** runs `vela-update` in a terminal, where the package manager asks for your password. When it's done, sign out and back in to use the new version.
@@ -117,6 +116,28 @@ sudo dnf install ~/.cache/vela-update/packages/<package>.x86_64.rpm
 # Ubuntu
 sudo apt-get install --allow-downgrades --reinstall ~/.cache/vela-update/packages/<package>_amd64.deb
 ```
+
+## If something goes wrong
+
+Run `vela-report`. It builds a ZIP with your description and the diagnostics you choose to include, shows you every file before exporting, and uploads nothing. Then [open an issue](https://github.com/vela-desktop/vela/issues) and attach it. From a TTY or over SSH, use `vela-report --cli`.
+
+Every report helps, especially from hardware other than the development machine.
+
+## Try it without logging out
+
+The safest first look: build Vela and run it in a window inside your current Wayland desktop, like a virtual monitor. Nothing is installed.
+
+```sh
+git clone https://github.com/vela-desktop/vela.git
+cd vela
+cmake -B build -G Ninja
+cmake --build build
+sh scripts/run-nested.sh
+```
+
+You'll need the build dependencies listed under [Other distributions](#other-distributions) below, or the [lists for every distribution](https://github.com/vela-desktop/vela/blob/main/docs/development.md#distribution-dependencies) in the developer guide. Your host desktop keeps the Super key, so in nested mode many shortcuts also work with Alt; the [shortcut reference](https://github.com/vela-desktop/vela/blob/main/docs/shortcuts.md) lists them.
+
+A nested session is great for exploring, but it can't tell you whether Vela works with your monitor and driver directly. For that, you need a real session.
 
 ## Other distributions
 
@@ -153,17 +174,3 @@ This installs into `/usr/local`, plus `/etc/pam.d` and `/etc/xdg`. If Vela doesn
 ```sh
 sudo ln -s /usr/local/share/wayland-sessions/vela.desktop /usr/share/wayland-sessions/
 ```
-
-## First login
-
-Log out, pick **Vela** on the login screen, and log in. A few things to know:
-
-- **Super** opens Start, **Super+Tab** opens Task View, **Super+arrows** snap windows, and **Super+A**, **Super+N** and **Super+V** open quick settings, notifications and clipboard history.
-- The interface speaks **English and Italian**. Switch it in *Settings → Time & language*. It changes right away.
-- If the compositor crashes, it restarts on its own and your apps reconnect. If the screen was locked, it comes back locked.
-
-## If something goes wrong
-
-Run `vela-report`. It builds a ZIP with your description and the diagnostics you choose to include, shows you every file before exporting, and uploads nothing. Then [open an issue](https://github.com/vela-desktop/vela/issues) and attach it. From a TTY or over SSH, use `vela-report --cli`.
-
-Every report helps, especially from hardware other than the development machine.

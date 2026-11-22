@@ -1,0 +1,44 @@
+---
+layout: ../layouts/Page.astro
+title: "Help Vela"
+seoTitle: "Help Vela, a Linux desktop: test, report, translate, contribute"
+description: "You don't need to write code to help Vela: test it on your hardware, report what breaks, help other users, spread the word, or support it on Patreon."
+label: "Get involved"
+updated: 2026-11-22
+---
+
+import { LINKS } from '../consts';
+
+Vela is built in the open, and it gets better with every person who uses it and says what they found. Most of that help has nothing to do with code: the most useful thing you can do is try Vela on your computer and say how it went.
+
+## Try it on your hardware
+
+Vela is developed on an AMD Radeon RX 9070 XT with Mesa/RADV, and every release passes the GPU test suites on AMD and NVIDIA. Everything else has had less testing: Intel GPUs, NVK, hybrid-GPU laptops, virtual machines, and the Fedora and Ubuntu packages on real hardware. Every computer that isn't the development machine teaches Vela something.
+
+[Install it](/install/), use it for a while, and tell how it went on <a href={LINKS.discord}>Discord</a>, <a href={LINKS.matrix}>Matrix</a> or <a href={LINKS.discussions}>GitHub Discussions</a>: your GPU and driver, your distribution, your monitors, what works and what doesn't. The <a href={LINKS.hardware}>hardware coverage</a> page lists what has been verified so far.
+
+## Report what breaks
+
+When something goes wrong, run `vela-report`. It builds a ZIP with your description and the diagnostics you choose, shows you every file before exporting, and uploads nothing. Then <a href={LINKS.issues}>open an issue</a> and attach it. From a TTY or over SSH, use `vela-report --cli`.
+
+A good report says what you did, what you expected, and what happened instead. A report about a bug that happens every time, with the steps to make it happen, is worth ten about one that happened once.
+
+## Help other users
+
+On <a href={LINKS.discord}>Discord</a> and <a href={LINKS.matrix}>Matrix</a>, people ask how to install Vela on their distribution, why a shortcut doesn't work, whether their GPU is supported. If you've been there, your answer is often faster and better than mine.
+
+## Spread the word
+
+Vela is new, and most people who'd like it haven't heard of it yet. A <a href={LINKS.repo}>star on GitHub</a> helps it turn up when people look for a Linux desktop. Sharing an entry from the [blog](/blog/), or the [trailer](/trailer/), with someone who'd care helps even more.
+
+## Translate
+
+Vela speaks English and Italian, and more languages are on the <a href={LINKS.roadmap}>roadmap</a>. The interface is translated with Qt Linguist, in the `i18n` folders of the repository. If you'd like to translate it into your language, <a href={LINKS.issues}>open an issue</a> first, so we can agree on how to do it before you start.
+
+## Write code and documentation
+
+Fixes, tests and documentation are welcome. Read the <a href={LINKS.contributing}>contribution guide</a>: it explains how to build and test Vela, and how to format your changes. Before larger changes, open an issue to talk about it, and sign off your commits under the Developer Certificate of Origin. For renderer or shell changes, say which GPU and driver you tested on: a CI run without a GPU doesn't prove a GPU fix.
+
+## Support it on Patreon
+
+On <a href={LINKS.patreon}>Patreon</a>, from €5 a month. Members get a members-only development journal (screenshots, experiments, work in progress and the discussions around them), and on the higher tiers priority for their requests and early access to blog entries. Vela itself is and will stay free: no feature is held back for supporters, and supporting it buys no say in its decisions.

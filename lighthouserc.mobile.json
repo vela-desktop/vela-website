@@ -11,7 +11,8 @@
         "http://localhost/blog/topics/renderer/",
         "http://localhost/install/",
         "http://localhost/changes/",
-        "http://localhost/faq/"
+        "http://localhost/faq/",
+        "http://localhost/help/"
       ],
       "numberOfRuns": 1,
       "settings": {}

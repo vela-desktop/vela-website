@@ -28,7 +28,7 @@ const starCount = await stars();
           NAV.map((item) => {
             const current = item.href === '/blog/' ? isJournal : item.href === path;
             return (
-              <li class:list={{ 'nav__item--secondary': item.href.startsWith('/#') }}>
+              <li class:list={[item.from !== 'phone' && `nav__item--${item.from}`]}>
                 <a href={item.href} aria-current={current ? 'page' : undefined}>
                   {item.label}
                 </a>
@@ -151,6 +151,7 @@ const starCount = await stars();
     gap: 0.5em;
     padding: 0.5rem 0.6rem;
     font-size: var(--step--1);
+    white-space: nowrap;
     font-weight: 500;
     color: var(--text-muted);
     text-decoration: none;
@@ -212,10 +213,18 @@ const starCount = await stars();
   .nav__github svg {
     width: 1rem;
     height: 1rem;
+    flex: none;
+  }
+
+  /* Below this, six links and GitHub no longer fit on one line. */
+  @media (max-width: 62rem) {
+    .nav__item--desktop {
+      display: none;
+    }
   }
 
   @media (max-width: 40rem) {
-    .nav__item--secondary {
+    .nav__item--tablet {
       display: none;
     }
 
@@ -224,7 +233,7 @@ const starCount = await stars();
     }
   }
 
-  /* Phones keep Install and Journal; GitHub shrinks to its mark and the stars. */
+  /* Phones keep Install and Blog; GitHub shrinks to its mark and the stars. */
   @media (max-width: 40rem) {
     .nav a {
       padding-inline: 0.45rem;
